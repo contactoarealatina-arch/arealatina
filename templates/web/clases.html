@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Clases y horarios | Área Latina Estudio{% endblock %}
+{% block descripcion %}Horarios de salsa, bachata, reggaetón, urbano, tango y Kids Dance en Área Latina Estudio, Puerto Montt.{% endblock %}
+
+{% block contenido %}
+
+<header class="page-header">
+    <div class="container">
+        <span class="etiqueta">Horarios</span>
+        <h1>Nuestras clases</h1>
+        <p>
+            Revisa los horarios vigentes y encuentra el que mejor te acomoda.
+            Si no ves tu estilo, escríbenos y te avisamos cuando abramos un grupo nuevo.
+        </p>
+    </div>
+</header>
+
+<section class="seccion">
+    <div class="container">
+
+        <!-- Filtros por estilo -->
+        <div class="filtros fade-in">
+            <a href="{% url 'web:clases' %}"
+               class="filtro-pill {% if not estilo_activo %}activo{% endif %}">Todas</a>
+            {% for valor, etiqueta in estilos %}
+                <a href="{% url 'web:clases' %}?estilo={{ valor }}"
+                   class="filtro-pill {% if estilo_activo == valor %}activo{% endif %}">{{ etiqueta }}</a>
+            {% endfor %}
+        </div>
+
+        <div class="row g-4">
+            {% for clase in clases %}
+            <div class="col-md-6 col-lg-4 fade-in">
+                <article class="card-al card-clase">
+                    <div class="encabezado">
+                        <span class="emoji">{{ clase.emoji }}</span>
+                        <div>
+                            <h3>{{ clase.get_nombre_display }}</h3>
+                            <span class="badge-nivel">{{ clase.get_nivel_display }}</span>
+                        </div>
+                    </div>
+
+                    {% if clase.descripcion %}
+                        <p class="mb-0">{{ clase.descripcion }}</p>
+                    {% endif %}
+
+                    <div class="dato-clase">
+                        <i class="bi bi-calendar-week"></i>
+                        <span>{{ clase.dias_semana }}</span>
+                    </div>
+                    <div class="dato-clase">
+                        <i class="bi bi-clock"></i>
+                        <span>{{ clase.hora_inicio|time:"H:i" }} - {{ clase.hora_fin|time:"H:i" }} hrs</span>
+                    </div>
+                    <div class="dato-clase">
+                        <i class="bi bi-door-open"></i>
+                        <span>{{ clase.sala }}</span>
+                    </div>
+                    <div class="dato-clase">
+                        <i class="bi bi-person-badge"></i>
+                        <span>
+                            {% if clase.profesora %}
+                                {{ clase.profesora.get_full_name|default:clase.profesora.username }}
+                            {% else %}
+                                Por confirmar
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <a href="{% url 'web:contacto' %}" class="btn btn-acento-outline btn-sm mt-2 align-self-start">
+                        Inscribirme
+                    </a>
+                </article>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="card-al text-center">
+                    <i class="bi bi-music-note-beamed texto-acento" style="font-size: 2.5rem;"></i>
+                    <h3 class="h4 mt-3">Todavía no hay clases publicadas</h3>
+                    <p class="mb-4">
+                        {% if estilo_activo %}
+                            No hay clases activas de este estilo por ahora.
+                        {% else %}
+                            Estamos preparando los horarios del próximo período.
+                        {% endif %}
+                        Escríbenos y te avisamos apenas se abran.
+                    </p>
+                    <a href="{% url 'web:contacto' %}" class="btn btn-acento">Consultar horarios</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="cta-franja">
+    <div class="container fade-in">
+        <h2>¿No encuentras tu horario?</h2>
+        <p>Cuéntanos qué días puedes y buscamos la mejor alternativa para ti.</p>
+        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg">Escríbenos</a>
+    </div>
+</section>
+
+{% endblock %}

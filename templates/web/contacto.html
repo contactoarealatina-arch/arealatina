@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Contacto | Área Latina Estudio{% endblock %}
+{% block descripcion %}Escríbenos para conocer horarios, planes y matrículas de Área Latina Estudio en Puerto Montt.{% endblock %}
+
+{% block contenido %}
+
+<header class="page-header">
+    <div class="container">
+        <span class="etiqueta">Hablemos</span>
+        <h1>Contacto</h1>
+        <p>Cuéntanos qué estilo te interesa y te respondemos con horarios y valores.</p>
+    </div>
+</header>
+
+<section class="seccion">
+    <div class="container">
+        <div class="row g-5">
+
+            <!-- Formulario -->
+            <div class="col-lg-7 fade-in">
+                <span class="etiqueta">Envíanos un mensaje</span>
+                <h2 class="seccion-titulo">Te respondemos a la brevedad</h2>
+                <div class="linea-acento izquierda"></div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre *</label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.nombre.errors %}<li>{{ error }}</li>{% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email *</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.email.errors %}<li>{{ error }}</li>{% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form.telefono.id_for_label }}" class="form-label">Teléfono</label>
+                            {{ form.telefono }}
+                            {% if form.telefono.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.telefono.errors %}<li>{{ error }}</li>{% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form.mensaje.id_for_label }}" class="form-label">Mensaje *</label>
+                            {{ form.mensaje }}
+                            {% if form.mensaje.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.mensaje.errors %}<li>{{ error }}</li>{% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-acento btn-lg">
+                                <i class="bi bi-send me-2"></i>Enviar mensaje
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Datos de contacto -->
+            <div class="col-lg-5">
+                <div class="d-flex flex-column gap-3">
+
+                    <div class="card-al fade-in d-flex flex-row align-items-start gap-3">
+                        <div class="beneficio-icono mb-0 flex-shrink-0" style="width:56px;height:56px;font-size:1.5rem;">
+                            <i class="bi bi-geo-alt"></i>
+                        </div>
+                        <div>
+                            <h3 class="h5 mb-1">Dirección</h3>
+                            <p class="mb-0">{{ academia.direccion_completa }}</p>
+                        </div>
+                    </div>
+
+                    <div class="card-al fade-in d-flex flex-row align-items-start gap-3">
+                        <div class="beneficio-icono mb-0 flex-shrink-0" style="width:56px;height:56px;font-size:1.5rem;">
+                            <i class="bi bi-telephone"></i>
+                        </div>
+                        <div>
+                            <h3 class="h5 mb-1">Teléfono</h3>
+                            <p class="mb-0">
+                                <a href="tel:{{ academia.telefono_link }}">{{ academia.telefono }}</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card-al fade-in d-flex flex-row align-items-start gap-3">
+                        <div class="beneficio-icono mb-0 flex-shrink-0" style="width:56px;height:56px;font-size:1.5rem;">
+                            <i class="bi bi-envelope"></i>
+                        </div>
+                        <div>
+                            <h3 class="h5 mb-1">Email</h3>
+                            <p class="mb-0">
+                                <a href="mailto:{{ academia.email }}">{{ academia.email }}</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card-al fade-in d-flex flex-row align-items-start gap-3">
+                        <div class="beneficio-icono mb-0 flex-shrink-0" style="width:56px;height:56px;font-size:1.5rem;">
+                            <i class="bi bi-whatsapp"></i>
+                        </div>
+                        <div>
+                            <h3 class="h5 mb-1">WhatsApp</h3>
+                            <p class="mb-0">
+                                <a href="{{ academia.whatsapp }}" target="_blank" rel="noopener">
+                                    Escríbenos directo
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== MAPA ==================== -->
+<section class="seccion bg-seccion pt-0">
+    <div class="container">
+        <div class="text-center fade-in mb-4">
+            <span class="etiqueta">Dónde estamos</span>
+            <h2 class="seccion-titulo">Ven a vernos</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="mapa-wrapper fade-in">
+            <iframe
+                src="https://www.google.com/maps?q={{ academia.direccion_maps|urlencode }}&output=embed"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                title="Mapa de {{ academia.direccion_completa }}"></iframe>
+        </div>
+
+        <!-- Dirección bajo el mapa -->
+        <div class="mapa-direccion fade-in">
+            <div class="mapa-direccion-info">
+                <div class="beneficio-icono mb-0 flex-shrink-0">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <div>
+                    <span class="etiqueta mb-1">Nuestra sala</span>
+                    <h3 class="h4 mb-1">Guillermo Gallardo 310</h3>
+                    <p class="mb-0">5400000 · Puerto Montt, Región de Los Lagos</p>
+                </div>
+            </div>
+
+            <a href="https://www.google.com/maps/dir/?api=1&destination={{ academia.direccion_maps|urlencode }}"
+               target="_blank" rel="noopener"
+               class="btn btn-acento flex-shrink-0">
+                <i class="bi bi-signpost-split me-2"></i>Cómo llegar
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

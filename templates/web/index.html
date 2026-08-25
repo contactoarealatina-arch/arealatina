@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block titulo %}Área Latina Estudio | Academia de baile en Puerto Montt{% endblock %}
+
+{% block contenido %}
+
+<!-- ==================== HERO ==================== -->
+<section class="hero">
+    <canvas id="particulas"></canvas>
+    <div class="container hero-contenido">
+        <img src="{% static 'img/logo-blanco.jpg' %}" alt="Área Latina Estudio" class="hero-logo">
+        <h1 class="hero-titulo">
+            Donde el ritmo <span class="destacado">te transforma</span>
+        </h1>
+        <p class="hero-bajada">
+            Academia de baile en Puerto Montt. Salsa, bachata, ritmos urbanos y mucho más,
+            para todas las edades y todos los niveles.
+        </p>
+        <div class="d-flex flex-wrap gap-3 justify-content-center">
+            <a href="{% url 'web:clases' %}" class="btn btn-acento btn-lg">Ver clases</a>
+            <a href="{% url 'web:contacto' %}" class="btn btn-acento-outline btn-lg">Contáctanos</a>
+        </div>
+    </div>
+    <a href="#estilos" class="hero-flecha" aria-label="Ir a los estilos">
+        <i class="bi bi-chevron-double-down"></i>
+    </a>
+</section>
+
+<!-- ==================== ESTILOS ==================== -->
+<section id="estilos" class="seccion bg-seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Nuestros estilos</span>
+            <h2 class="seccion-titulo">Elige tu ritmo</h2>
+            <div class="linea-acento"></div>
+            <p class="seccion-bajada">
+                Seis formas distintas de moverte. Da lo mismo si nunca has bailado:
+                empezamos desde cero y avanzamos a tu ritmo.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            {% for estilo in estilos %}
+            <div class="col-md-6 col-lg-4 fade-in">
+                <a href="{% url 'web:clases' %}?estilo={{ estilo.slug }}" class="text-decoration-none">
+                    <article class="card-al card-estilo">
+                        <span class="emoji">{{ estilo.emoji }}</span>
+                        <h3 class="text-white">{{ estilo.nombre }}</h3>
+                        <p>{{ estilo.texto }}</p>
+                    </article>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== POR QUE AREA LATINA ==================== -->
+<section class="seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Por qué elegirnos</span>
+            <h2 class="seccion-titulo">¿Por qué Área Latina?</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="row g-4 text-center">
+            {% for beneficio in beneficios %}
+            <div class="col-md-4 fade-in">
+                <div class="beneficio-icono">
+                    <i class="bi {{ beneficio.icono }}"></i>
+                </div>
+                <h3 class="h4 mb-3">{{ beneficio.titulo }}</h3>
+                <p>{{ beneficio.texto }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== CTA FINAL ==================== -->
+<section class="cta-franja">
+    <div class="container fade-in">
+        <h2>Tu primera clase te está esperando</h2>
+        <p>
+            Escríbenos y te contamos horarios, planes y todo lo que necesitas
+            para empezar esta semana.
+        </p>
+        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg">Quiero inscribirme</a>
+    </div>
+</section>
+
+{% endblock %}

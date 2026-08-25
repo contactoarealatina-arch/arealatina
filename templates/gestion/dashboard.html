@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block titulo %}Panel de gestión | Área Latina Estudio{% endblock %}
+
+{% block contenido %}
+<section class="seccion" style="padding-top: calc(var(--navbar-alto) + 48px);">
+    <div class="container">
+
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+            <div>
+                <span class="etiqueta">Panel interno</span>
+                <h1 class="mb-0">Hola, {{ user.nombre_corto }}</h1>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="/admin/" class="btn btn-acento-outline btn-sm">
+                    <i class="bi bi-gear me-1"></i>Administración
+                </a>
+                <a href="{% url 'asistencia:mis_clases' %}" class="btn btn-acento-outline btn-sm">
+                    <i class="bi bi-clipboard-check me-1"></i>Asistencia
+                </a>
+                <form method="post" action="{% url 'usuarios:logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-acento btn-sm">Salir</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Estadisticas -->
+        <div class="row g-3 mb-5">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="valor texto-acento">{{ alumnos_activos }}</div>
+                    <div class="etiqueta-stat">Alumnos activos</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="valor">{{ clases_activas }}</div>
+                    <div class="etiqueta-stat">Clases activas</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="valor">${{ ingresos_mes|intcomma }}</div>
+                    <div class="etiqueta-stat">Ingresos del mes</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="valor">{{ pagos_pendientes }}</div>
+                    <div class="etiqueta-stat">Pagos por cobrar</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Suscripciones por vencer -->
+            <div class="col-lg-6">
+                <div class="card-al h-100">
+                    <h2 class="h5 mb-3">Suscripciones que vencen esta semana</h2>
+                    {% if por_vencer %}
+                        <div class="table-responsive">
+                            <table class="table tabla-al align-middle mb-0">
+                                <thead>
+                                    <tr><th>Alumno</th><th>Plan</th><th>Vence</th></tr>
+                                </thead>
+                                <tbody>
+                                {% for s in por_vencer %}
+                                    <tr>
+                                        <td>{{ s.alumno.nombre_completo }}</td>
+                                        <td class="texto-suave">{{ s.plan.nombre }}</td>
+                                        <td class="texto-acento">{{ s.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="mb-0">No hay suscripciones por vencer en los próximos 7 días.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Ultimos pagos -->
+            <div class="col-lg-6">
+                <div class="card-al h-100">
+                    <h2 class="h5 mb-3">Últimos pagos</h2>
+                    {% if ultimos_pagos %}
+                        <div class="table-responsive">
+                            <table class="table tabla-al align-middle mb-0">
+                                <thead>
+                                    <tr><th>Fecha</th><th>Alumno</th><th>Monto</th><th>Estado</th></tr>
+                                </thead>
+                                <tbody>
+                                {% for p in ultimos_pagos %}
+                                    <tr>
+                                        <td class="texto-suave">{{ p.fecha_pago|date:"d/m" }}</td>
+                                        <td>{{ p.alumno.nombre_completo }}</td>
+                                        <td>${{ p.monto_clp|intcomma }}</td>
+                                        <td><span class="badge-nivel">{{ p.get_estado_display }}</span></td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="mb-0">Todavía no hay pagos registrados.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}
