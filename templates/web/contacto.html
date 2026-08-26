@@ -114,6 +114,7 @@
                         </div>
                     </div>
 
+                    {% if academia.whatsapp %}
                     <div class="card-al fade-in d-flex flex-row align-items-start gap-3">
                         <div class="beneficio-icono mb-0 flex-shrink-0" style="width:56px;height:56px;font-size:1.5rem;">
                             <i class="bi bi-whatsapp"></i>
@@ -124,6 +125,21 @@
                                 <a href="{{ academia.whatsapp }}" target="_blank" rel="noopener">
                                     Escríbenos directo
                                 </a>
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="card-al fade-in d-flex flex-row align-items-start gap-3">
+                        <div class="beneficio-icono mb-0 flex-shrink-0" style="width:56px;height:56px;font-size:1.5rem;">
+                            <i class="bi bi-instagram"></i>
+                        </div>
+                        <div>
+                            <h3 class="h5 mb-1">Síguenos</h3>
+                            <p class="mb-0">
+                                <a href="{{ academia.instagram }}" target="_blank" rel="noopener">@arealatina.oficial</a>
+                                <span class="texto-suave"> · </span>
+                                <a href="{{ academia.facebook }}" target="_blank" rel="noopener">Facebook</a>
                             </p>
                         </div>
                     </div>

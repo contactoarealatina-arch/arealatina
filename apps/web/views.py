@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.shortcuts import redirect, render
 
-from apps.gestion.models import Clase
+from apps.gestion.models import Clase, Plan
 
 from .forms import ContactoForm
 
@@ -91,11 +91,97 @@ EQUIPO = [
 ]
 
 
+# OJO: cifras de referencia. Reemplazar por las reales de la academia.
+ESTADISTICAS = [
+    {'valor': 8, 'sufijo': '+', 'etiqueta': 'Anos ensenando'},
+    {'valor': 500, 'sufijo': '+', 'etiqueta': 'Alumnos que han pasado'},
+    {'valor': 6, 'sufijo': '', 'etiqueta': 'Estilos distintos'},
+    {'valor': 4, 'sufijo': '', 'etiqueta': 'Profesores en sala'},
+]
+
+# OJO: testimonios de referencia. Reemplazar por opiniones reales.
+TESTIMONIOS = [
+    {
+        'texto': 'Llegue sin saber mover un pie y a los dos meses ya estaba bailando '
+                 'en la fiesta de fin de ano. El ambiente hace toda la diferencia.',
+        'nombre': 'Nombre Apellido',
+        'detalle': 'Alumna de Bachata',
+    },
+    {
+        'texto': 'Mi hija entro a Kids Dance con seis anos. Se suelta, hace amigas y '
+                 'llega feliz a la casa. Para mi eso vale mas que cualquier cosa.',
+        'nombre': 'Nombre Apellido',
+        'detalle': 'Apoderado Kids Dance',
+    },
+    {
+        'texto': 'Habia probado otras academias y siempre me senti el mas nuevo. Aca '
+                 'te acompanan de verdad hasta que te sale.',
+        'nombre': 'Nombre Apellido',
+        'detalle': 'Alumno de Salsa',
+    },
+]
+
+# Galeria: cuando haya fotos reales, dejarlas en static/img/galeria/ y poner
+# aqui la ruta en 'imagen' (ej: 'img/galeria/clase-salsa.jpg'). Mientras
+# 'imagen' este vacio se muestra un mosaico de color con el emoji del estilo.
+GALERIA = [
+    {'imagen': '', 'emoji': '\U0001F483', 'titulo': 'Clase de salsa', 'alto': True},
+    {'imagen': '', 'emoji': '\U0001F339', 'titulo': 'Bachata en pareja', 'alto': False},
+    {'imagen': '', 'emoji': '\U0001F525', 'titulo': 'Grupo de reggaeton', 'alto': False},
+    {'imagen': '', 'emoji': '\U0001F3A4', 'titulo': 'Taller urbano', 'alto': False},
+    {'imagen': '', 'emoji': '\U0001F476', 'titulo': 'Kids Dance', 'alto': False},
+    {'imagen': '', 'emoji': '\U0001F3B6', 'titulo': 'Muestra de fin de ano', 'alto': True},
+]
+
+PREGUNTAS = [
+    {
+        'p': 'Nunca he bailado, sirve igual?',
+        'r': 'Si. La mayoria llega sin experiencia. Los grupos iniciales parten desde '
+             'el paso basico y nadie te va a apurar.',
+    },
+    {
+        'p': 'Necesito venir en pareja?',
+        'r': 'No. Se puede venir solo o sola. En las clases de pareja vamos rotando, '
+             'asi que siempre hay con quien bailar.',
+    },
+    {
+        'p': 'Que ropa tengo que usar?',
+        'r': 'Ropa comoda con la que puedas moverte y zapatillas limpias de suela lisa. '
+             'Para tango y salsa avanzada conviene zapato de baile, pero no es obligatorio.',
+    },
+    {
+        'p': 'Puedo tomar una clase de prueba?',
+        'r': 'Si. Escribenos y coordinamos una clase suelta para que conozcas al grupo '
+             'antes de tomar un plan.',
+    },
+    {
+        'p': 'Desde que edad reciben ninos?',
+        'r': 'Kids Dance recibe desde los 5 anos. Para adultos no hay edad maxima: '
+             'tenemos alumnos de todas las edades.',
+    },
+    {
+        'p': 'Como se pagan las clases?',
+        'r': 'En efectivo en el estudio o por transferencia. Los planes son mensuales '
+             'y tambien existe la opcion de clase suelta.',
+    },
+]
+
+
 def index(request):
     return render(request, 'web/index.html', {
         'seccion': 'inicio',
         'estilos': ESTILOS_HOME,
         'beneficios': BENEFICIOS,
+        'estadisticas': ESTADISTICAS,
+        'galeria': GALERIA,
+        'testimonios': TESTIMONIOS,
+        'preguntas': PREGUNTAS,
+        'planes': Plan.objects.filter(activo=True),
+        'clases_destacadas': (
+            Clase.objects.filter(activa=True)
+            .select_related('profesora')
+            .order_by('nombre', 'hora_inicio')[:3]
+        ),
     })
 
 

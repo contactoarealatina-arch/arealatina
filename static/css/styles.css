@@ -283,15 +283,33 @@ p {
         linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
     background-size: 100% 100%, 100% 100%, 46px 46px, 46px 46px;
     pointer-events: none;
+    transition: opacity 1.2s ease;
+    z-index: 1;
 }
 
-#particulas {
+/* Las dos capas de fondo del hero ocupan el mismo espacio.
+   Cual se ve lo decide data-nivel, que pone capacidades.js. */
+#particulas,
+#hero-webgl {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none;
+    display: block;
 }
+
+#particulas { pointer-events: auto; }
+#hero-webgl { pointer-events: none; }
+
+/* Equipo potente: manda WebGL, se apaga el canvas 2D. */
+html[data-nivel="alto"] #particulas { display: none; }
+
+/* Equipo intermedio o justo: nunca se crea el contexto WebGL. */
+html:not([data-nivel="alto"]) #hero-webgl { display: none; }
+html[data-nivel="bajo"] #particulas { display: none; }
+
+/* Mientras WebGL no haya arrancado, el degradado CSS tapa el hueco. */
+html[data-webgl="activo"] .hero::before { opacity: 0.35; }
 
 .hero-contenido {
     position: relative;
@@ -863,4 +881,565 @@ p {
 
     .mapa-direccion .btn { width: 100%; }
     .mapa-wrapper iframe { height: 300px; }
+}
+
+/* ==========================================================================
+   CAPA INTERACTIVA
+   Todo lo de aqui abajo se degrada solo: si data-nivel es "bajo" o el equipo
+   no tiene mouse, los efectos se apagan y queda el diseno plano.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Cursor propio (solo cuando hay mouse de verdad)
+   -------------------------------------------------------------------------- */
+.cursor-punto,
+.cursor-aro {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    margin-left: -4px;
+    margin-top: -4px;
+}
+
+.cursor-punto {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-accent);
+}
+
+.cursor-aro {
+    width: 34px;
+    height: 34px;
+    margin-left: -17px;
+    margin-top: -17px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 87, 34, 0.55);
+    transition: width 0.25s ease, height 0.25s ease, margin 0.25s ease,
+                background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.cursor-aro.activo {
+    width: 56px;
+    height: 56px;
+    margin-left: -28px;
+    margin-top: -28px;
+    background-color: rgba(255, 87, 34, 0.12);
+    border-color: var(--color-accent);
+}
+
+/* El cursor del sistema se oculta solo si el propio ya esta montado. */
+html[data-puntero="fino"] body.con-cursor-propio,
+html[data-puntero="fino"] body.con-cursor-propio a,
+html[data-puntero="fino"] body.con-cursor-propio button {
+    cursor: none;
+}
+
+/* En pantallas tactiles jamas se dibuja. */
+html[data-puntero="grueso"] .cursor-punto,
+html[data-puntero="grueso"] .cursor-aro {
+    display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Navbar que se esconde al bajar
+   -------------------------------------------------------------------------- */
+.navbar-al {
+    transform: translateY(0);
+    transition: transform 0.35s ease, background-color var(--transicion),
+                box-shadow var(--transicion);
+}
+
+.navbar-al.oculta {
+    transform: translateY(-100%);
+}
+
+/* --------------------------------------------------------------------------
+   Hero: logo con inclinacion y titulo que entra por lineas
+   -------------------------------------------------------------------------- */
+.hero-contenido {
+    z-index: 3;
+}
+
+.hero-logo-marco {
+    display: inline-block;
+    transform-style: preserve-3d;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+}
+
+.hero-titulo .linea-titulo {
+    display: block;
+    opacity: 0;
+    transform: translateY(28px);
+    animation: entraLinea 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.hero-titulo .linea-titulo:nth-child(1) { animation-delay: 0.15s; }
+.hero-titulo .linea-titulo:nth-child(2) { animation-delay: 0.32s; }
+
+.hero-bajada,
+.hero-contenido .d-flex {
+    opacity: 0;
+    animation: entraLinea 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+}
+
+@keyframes entraLinea {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Nivel bajo: sin animacion de entrada, el contenido esta desde el inicio. */
+html[data-nivel="bajo"] .hero-titulo .linea-titulo,
+html[data-nivel="bajo"] .hero-bajada,
+html[data-nivel="bajo"] .hero-contenido .d-flex {
+    opacity: 1;
+    transform: none;
+    animation: none;
+}
+
+/* --------------------------------------------------------------------------
+   Cinta de estilos en movimiento
+   -------------------------------------------------------------------------- */
+.cinta {
+    overflow: hidden;
+    background-color: var(--color-accent);
+    border-top: 1px solid var(--color-accent-dark);
+    border-bottom: 1px solid var(--color-accent-dark);
+    padding: 0.85rem 0;
+    white-space: nowrap;
+}
+
+.cinta-pista {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.5rem;
+    animation: correCinta 32s linear infinite;
+}
+
+.cinta-item {
+    font-family: var(--font-titulo);
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #FFFFFF;
+    letter-spacing: 0.02em;
+}
+
+.cinta-sep {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.8rem;
+}
+
+@keyframes correCinta {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+html[data-nivel="bajo"] .cinta-pista { animation: none; }
+
+/* --------------------------------------------------------------------------
+   Estadisticas
+   -------------------------------------------------------------------------- */
+.seccion-compacta {
+    padding: 64px 0;
+}
+
+.stat-numero {
+    font-family: var(--font-titulo);
+    font-weight: 800;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    line-height: 1;
+    background: linear-gradient(180deg, var(--color-accent-lite), var(--color-accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* Evita que el ancho salte mientras el numero sube. */
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-etiqueta {
+    font-family: var(--font-titulo);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    margin-top: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Cards con inclinacion 3D
+   -------------------------------------------------------------------------- */
+[data-tilt] {
+    transform-style: preserve-3d;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color var(--transicion), box-shadow var(--transicion);
+    will-change: transform;
+}
+
+/* El brillo sigue al cursor dentro de la card. */
+.card-al[data-tilt]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at var(--brillo-x, 50%) var(--brillo-y, 50%),
+                rgba(255, 138, 101, 0.14), transparent 55%);
+    opacity: 0;
+    transition: opacity var(--transicion);
+    pointer-events: none;
+}
+
+.card-al[data-tilt]:hover::after {
+    opacity: 1;
+}
+
+.card-al {
+    position: relative;
+}
+
+/* Sin mouse no hay inclinacion posible: se limpia el transform. */
+html[data-puntero="grueso"] [data-tilt],
+html[data-nivel="bajo"] [data-tilt] {
+    transform: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Card de estilo con flecha
+   -------------------------------------------------------------------------- */
+.card-enlace {
+    display: block;
+    height: 100%;
+}
+
+.card-estilo h3 {
+    color: var(--color-text);
+}
+
+.card-flecha {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    margin-top: 1.25rem;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    color: var(--color-accent);
+    transition: all var(--transicion);
+}
+
+.card-estilo:hover .card-flecha {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #FFFFFF;
+    transform: translateX(4px);
+}
+
+/* --------------------------------------------------------------------------
+   Galeria
+   -------------------------------------------------------------------------- */
+.galeria {
+    display: grid;
+    /* min() evita el desborde en pantallas de 320px. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 1rem;
+}
+
+.galeria-item {
+    position: relative;
+    margin: 0;
+    border-radius: var(--radio);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    aspect-ratio: 4 / 3;
+    background-color: var(--color-bg-card);
+}
+
+.galeria-alto {
+    grid-row: span 2;
+    aspect-ratio: 4 / 5;
+}
+
+.galeria-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.galeria-item:hover img {
+    transform: scale(1.06);
+}
+
+.galeria-vacia {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        radial-gradient(circle at 30% 25%, rgba(255, 87, 34, 0.22), transparent 60%),
+        linear-gradient(140deg, var(--color-bg-card), var(--color-bg));
+}
+
+.galeria-emoji {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    opacity: 0.85;
+    filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.5));
+}
+
+.galeria-item figcaption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 2.5rem 1rem 0.9rem;
+    font-family: var(--font-titulo);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #FFFFFF;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+}
+
+/* --------------------------------------------------------------------------
+   Planes
+   -------------------------------------------------------------------------- */
+.card-plan {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.card-plan.destacado {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-accent), 0 18px 44px rgba(255, 87, 34, 0.16);
+}
+
+.cinta-destacado {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--color-accent);
+    color: #FFFFFF;
+    font-family: var(--font-titulo);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.9rem;
+    border-radius: 50px;
+    white-space: nowrap;
+}
+
+.plan-precio {
+    font-family: var(--font-titulo);
+    font-size: clamp(1.9rem, 5vw, 2.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--color-text);
+    margin-top: 0.75rem;
+}
+
+.plan-moneda {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    vertical-align: super;
+    margin-right: 2px;
+}
+
+.plan-periodo {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1rem;
+}
+
+.plan-detalle {
+    font-size: 0.92rem;
+    margin-bottom: 1.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Testimonios
+   -------------------------------------------------------------------------- */
+.card-testimonio {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+.card-testimonio .comilla {
+    font-size: 2rem;
+    color: var(--color-accent);
+    opacity: 0.55;
+    margin-bottom: 0.5rem;
+}
+
+.card-testimonio p {
+    font-style: italic;
+    flex-grow: 1;
+    margin-bottom: 1.5rem;
+}
+
+.card-testimonio footer {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.testimonio-avatar {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-accent);
+    background-color: rgba(255, 87, 34, 0.12);
+    border: 1px solid rgba(255, 87, 34, 0.35);
+}
+
+.card-testimonio cite {
+    display: block;
+    font-family: var(--font-titulo);
+    font-style: normal;
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 0.95rem;
+}
+
+.testimonio-detalle {
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Preguntas frecuentes
+   -------------------------------------------------------------------------- */
+.accordion-al .accordion-item {
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radio);
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+}
+
+.accordion-al .accordion-button {
+    background-color: transparent;
+    color: var(--color-text);
+    font-family: var(--font-titulo);
+    font-weight: 500;
+    font-size: 1.02rem;
+    padding: 1.15rem 1.35rem;
+    box-shadow: none;
+}
+
+.accordion-al .accordion-button:not(.collapsed) {
+    color: var(--color-accent);
+    background-color: rgba(255, 87, 34, 0.06);
+}
+
+.accordion-al .accordion-button:focus {
+    box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.2);
+}
+
+.accordion-al .accordion-button::after {
+    filter: brightness(0) saturate(100%) invert(45%) sepia(85%)
+            saturate(2500%) hue-rotate(348deg);
+}
+
+.accordion-al .accordion-body {
+    color: var(--color-text-muted);
+    padding: 0 1.35rem 1.35rem;
+}
+
+/* ==========================================================================
+   COMPATIBILIDAD TRANSVERSAL
+   Desde un celular de 320px hasta una pantalla ultra ancha.
+   ========================================================================== */
+
+/* Respeto de la muesca / bordes redondeados en celulares */
+@supports (padding: max(0px)) {
+    .navbar-al > .container,
+    .footer-al > .container {
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+    }
+}
+
+/* Pantallas muy angostas (320px) */
+@media (max-width: 400px) {
+    .cinta-item { font-size: 0.9rem; }
+    .galeria { grid-template-columns: 1fr; }
+    .galeria-alto { grid-row: span 1; aspect-ratio: 4 / 3; }
+    .btn { padding: 0.65rem 1.4rem; }
+    .hero-logo { width: min(240px, 70vw); }
+}
+
+/* Tablet en vertical */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .seccion { padding: 80px 0; }
+    .galeria-alto { grid-row: span 1; aspect-ratio: 4 / 3; }
+}
+
+/* Pantallas anchas: el contenido no se estira sin control */
+@media (min-width: 1600px) {
+    .container { max-width: 1400px; }
+    .seccion { padding: 120px 0; }
+}
+
+/* Alto de pantalla corto (celular apaisado, netbook) */
+@media (max-height: 640px) and (orientation: landscape) {
+    .hero { min-height: auto; padding: 120px 0 80px; }
+    .hero-logo { width: min(200px, 30vw); }
+    .hero-flecha { display: none; }
+}
+
+/* Dispositivos tactiles: areas de toque comodas y sin efectos de hover */
+@media (hover: none) {
+    .btn { min-height: 46px; }
+    .navbar-al .nav-link { min-height: 44px; display: flex; align-items: center; }
+    .redes a { width: 46px; height: 46px; }
+    .card-al:hover { transform: none; }
+    .galeria-item:hover img { transform: none; }
+}
+
+/* Preferencia del sistema de reducir movimiento: se apaga todo */
+@media (prefers-reduced-motion: reduce) {
+    .cinta-pista,
+    .hero-titulo .linea-titulo,
+    .hero-bajada,
+    .hero-contenido .d-flex {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    [data-tilt],
+    .galeria-item img {
+        transition: none !important;
+        transform: none !important;
+    }
+
+    .navbar-al.oculta { transform: none; }
+}
+
+/* Modo de alto contraste (Windows) */
+@media (forced-colors: active) {
+    .card-al,
+    .accordion-al .accordion-item { border: 1px solid CanvasText; }
+    .cursor-punto, .cursor-aro { display: none; }
+}
+
+/* Impresion: fondo blanco y sin adornos */
+@media print {
+    body { background: #FFFFFF; color: #000000; }
+    .navbar-al, .footer-al, .cinta, .hero-flecha,
+    #particulas, #hero-webgl, .cursor-punto, .cursor-aro { display: none !important; }
+    .card-al { border: 1px solid #CCCCCC; }
+    p, .texto-suave { color: #333333; }
 }

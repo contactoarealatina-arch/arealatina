@@ -170,8 +170,9 @@ ACADEMIA = {
     'direccion': 'Guillermo Gallardo 310, Puerto Montt',
     'direccion_completa': 'Guillermo Gallardo 310, 5400000 Puerto Montt, Los Lagos',
     'direccion_maps': 'Guillermo Gallardo 310, Puerto Montt, Los Lagos, Chile',
-    'instagram': 'https://www.instagram.com/arealatinaestudio',
-    'facebook': 'https://www.facebook.com/arealatinaestudio',
-    'tiktok': 'https://www.tiktok.com/@arealatinaestudio',
-    'whatsapp': 'https://wa.me/56900000000',
+    # Redes: deja en blanco las que todavia no existen y no se muestran en el sitio.
+    'instagram': 'https://www.instagram.com/arealatina.oficial/',
+    'facebook': 'https://www.facebook.com/latinasouthpm/',
+    'tiktok': '',
+    'whatsapp': '',
 }

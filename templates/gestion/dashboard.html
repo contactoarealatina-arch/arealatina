@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load formato %}
 
 {% block titulo %}Panel de gestión | Área Latina Estudio{% endblock %}
 
@@ -42,7 +42,7 @@
             </div>
             <div class="col-6 col-lg-3">
                 <div class="stat-card">
-                    <div class="valor">${{ ingresos_mes|intcomma }}</div>
+                    <div class="valor">${{ ingresos_mes|clp }}</div>
                     <div class="etiqueta-stat">Ingresos del mes</div>
                 </div>
             </div>
@@ -97,7 +97,7 @@
                                     <tr>
                                         <td class="texto-suave">{{ p.fecha_pago|date:"d/m" }}</td>
                                         <td>{{ p.alumno.nombre_completo }}</td>
-                                        <td>${{ p.monto_clp|intcomma }}</td>
+                                        <td>${{ p.monto_clp|clp }}</td>
                                         <td><span class="badge-nivel">{{ p.get_estado_display }}</span></td>
                                     </tr>
                                 {% endfor %}
