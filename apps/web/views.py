@@ -1,4 +1,8 @@
-"""Vistas del sitio publico de Area Latina Estudio."""
+"""Vistas del sitio publico de Area Latina Estudio.
+
+Los textos visibles van con tildes y enes correctas: son los que lee el
+visitante. Los comentarios y nombres de variables van sin tildes.
+"""
 from django.conf import settings
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -13,21 +17,21 @@ ESTILOS_HOME = [
         'emoji': '\U0001F483',
         'nombre': 'Salsa',
         'slug': 'SALSA',
-        'texto': 'Ritmo caribeno, giros y mucha energia. Aprende desde los pasos '
-                 'basicos hasta figuras en pareja.',
+        'texto': 'Ritmo caribeño, giros y mucha energía. Aprende desde los pasos '
+                 'básicos hasta figuras en pareja.',
     },
     {
         'emoji': '\U0001F339',
         'nombre': 'Bachata',
         'slug': 'BACHATA',
-        'texto': 'Sensualidad y conexion. El baile mas romantico del Caribe, '
+        'texto': 'Sensualidad y conexión. El baile más romántico del Caribe, '
                  'paso a paso y sin apuro.',
     },
     {
         'emoji': '\U0001F525',
-        'nombre': 'Reggaeton',
+        'nombre': 'Reggaetón',
         'slug': 'REGGAETON',
-        'texto': 'Actitud, fuerza y coreografias urbanas al ritmo de lo que suena hoy.',
+        'texto': 'Actitud, fuerza y coreografías urbanas al ritmo de lo que suena hoy.',
     },
     {
         'emoji': '\U0001F3A4',
@@ -40,14 +44,14 @@ ESTILOS_HOME = [
         'emoji': '\U0001F3B6',
         'nombre': 'Tango',
         'slug': 'TANGO',
-        'texto': 'Elegancia, postura y abrazo. Una tradicion que se baila con el alma.',
+        'texto': 'Elegancia, postura y abrazo. Una tradición que se baila con el alma.',
     },
     {
         'emoji': '\U0001F476',
         'nombre': 'Kids Dance',
         'slug': 'KIDS',
-        'texto': 'Clases ludicas para ninos y ninas: coordinacion, ritmo y mucha '
-                 'diversion en grupo.',
+        'texto': 'Clases lúdicas para niños y niñas: coordinación, ritmo y mucha '
+                 'diversión en grupo.',
     },
 ]
 
@@ -55,13 +59,13 @@ BENEFICIOS = [
     {
         'icono': 'bi-award',
         'titulo': 'Profesores con experiencia',
-        'texto': 'Nuestro equipo lleva anos sobre el escenario y en la sala de clases. '
-                 'Te acompanamos desde tu primer paso.',
+        'texto': 'Nuestro equipo lleva años sobre el escenario y en la sala de clases. '
+                 'Te acompañamos desde tu primer paso.',
     },
     {
         'icono': 'bi-people',
         'titulo': 'Ambiente familiar',
-        'texto': 'Aca nadie mira mal a quien recien empieza. Se baila, se rie y se hacen '
+        'texto': 'Acá nadie mira mal a quien recién empieza. Se baila, se ríe y se hacen '
                  'amigos en cada clase.',
     },
     {
@@ -74,48 +78,49 @@ BENEFICIOS = [
 
 EQUIPO = [
     {
-        'nombre': 'Profesora 1',
+        'nombre': 'Nombre Apellido',
         'especialidad': 'Salsa y Bachata',
-        'bio': 'Bailarina y coreografa con anos de experiencia en ritmos caribenos.',
+        'bio': 'Bailarina y coreógrafa con años de experiencia en ritmos caribeños.',
     },
     {
-        'nombre': 'Profesora 2',
-        'especialidad': 'Reggaeton y Urbano',
-        'bio': 'Especialista en estilos urbanos y coreografias de alto impacto.',
+        'nombre': 'Nombre Apellido',
+        'especialidad': 'Reggaetón y Urbano',
+        'bio': 'Especialista en estilos urbanos y coreografías de alto impacto.',
     },
     {
-        'nombre': 'Profesor 3',
+        'nombre': 'Nombre Apellido',
         'especialidad': 'Tango',
-        'bio': 'Formado en tango de salon, ensena tecnica, postura y conexion en pareja.',
+        'bio': 'Formado en tango de salón, enseña técnica, postura y conexión en pareja.',
     },
 ]
 
-
-# OJO: cifras de referencia. Reemplazar por las reales de la academia.
+# OJO: cifras de referencia inventadas. Reemplazar por las reales antes de
+# publicar el sitio.
 ESTADISTICAS = [
-    {'valor': 8, 'sufijo': '+', 'etiqueta': 'Anos ensenando'},
-    {'valor': 500, 'sufijo': '+', 'etiqueta': 'Alumnos que han pasado'},
-    {'valor': 6, 'sufijo': '', 'etiqueta': 'Estilos distintos'},
-    {'valor': 4, 'sufijo': '', 'etiqueta': 'Profesores en sala'},
+    {'valor': 8, 'sufijo': '+', 'etiqueta': 'Años enseñando'},
+    {'valor': 500, 'sufijo': '+', 'etiqueta': 'Alumnos'},
+    {'valor': 6, 'sufijo': '', 'etiqueta': 'Estilos'},
+    {'valor': 4, 'sufijo': '', 'etiqueta': 'Profesores'},
 ]
 
-# OJO: testimonios de referencia. Reemplazar por opiniones reales.
+# OJO: testimonios ficticios. No pueden salir publicados asi: hay que
+# reemplazarlos por opiniones reales o quitar la seccion.
 TESTIMONIOS = [
     {
-        'texto': 'Llegue sin saber mover un pie y a los dos meses ya estaba bailando '
-                 'en la fiesta de fin de ano. El ambiente hace toda la diferencia.',
+        'texto': 'Llegué sin saber mover un pie y a los dos meses ya estaba bailando '
+                 'en la fiesta de fin de año. El ambiente hace toda la diferencia.',
         'nombre': 'Nombre Apellido',
         'detalle': 'Alumna de Bachata',
     },
     {
-        'texto': 'Mi hija entro a Kids Dance con seis anos. Se suelta, hace amigas y '
-                 'llega feliz a la casa. Para mi eso vale mas que cualquier cosa.',
+        'texto': 'Mi hija entró a Kids Dance con seis años. Se suelta, hace amigas y '
+                 'llega feliz a la casa. Para mí eso vale más que cualquier cosa.',
         'nombre': 'Nombre Apellido',
         'detalle': 'Apoderado Kids Dance',
     },
     {
-        'texto': 'Habia probado otras academias y siempre me senti el mas nuevo. Aca '
-                 'te acompanan de verdad hasta que te sale.',
+        'texto': 'Había probado otras academias y siempre me sentí el más nuevo. Acá '
+                 'te acompañan de verdad hasta que te sale.',
         'nombre': 'Nombre Apellido',
         'detalle': 'Alumno de Salsa',
     },
@@ -127,42 +132,42 @@ TESTIMONIOS = [
 GALERIA = [
     {'imagen': '', 'emoji': '\U0001F483', 'titulo': 'Clase de salsa', 'alto': True},
     {'imagen': '', 'emoji': '\U0001F339', 'titulo': 'Bachata en pareja', 'alto': False},
-    {'imagen': '', 'emoji': '\U0001F525', 'titulo': 'Grupo de reggaeton', 'alto': False},
+    {'imagen': '', 'emoji': '\U0001F525', 'titulo': 'Grupo de reggaetón', 'alto': False},
     {'imagen': '', 'emoji': '\U0001F3A4', 'titulo': 'Taller urbano', 'alto': False},
     {'imagen': '', 'emoji': '\U0001F476', 'titulo': 'Kids Dance', 'alto': False},
-    {'imagen': '', 'emoji': '\U0001F3B6', 'titulo': 'Muestra de fin de ano', 'alto': True},
+    {'imagen': '', 'emoji': '\U0001F3B6', 'titulo': 'Muestra de fin de año', 'alto': True},
 ]
 
 PREGUNTAS = [
     {
-        'p': 'Nunca he bailado, sirve igual?',
-        'r': 'Si. La mayoria llega sin experiencia. Los grupos iniciales parten desde '
-             'el paso basico y nadie te va a apurar.',
+        'p': '¿Nunca he bailado, sirve igual?',
+        'r': 'Sí. La mayoría llega sin experiencia. Los grupos iniciales parten desde '
+             'el paso básico y nadie te va a apurar.',
     },
     {
-        'p': 'Necesito venir en pareja?',
+        'p': '¿Necesito venir en pareja?',
         'r': 'No. Se puede venir solo o sola. En las clases de pareja vamos rotando, '
-             'asi que siempre hay con quien bailar.',
+             'así que siempre hay con quien bailar.',
     },
     {
-        'p': 'Que ropa tengo que usar?',
-        'r': 'Ropa comoda con la que puedas moverte y zapatillas limpias de suela lisa. '
+        'p': '¿Qué ropa tengo que usar?',
+        'r': 'Ropa cómoda con la que puedas moverte y zapatillas limpias de suela lisa. '
              'Para tango y salsa avanzada conviene zapato de baile, pero no es obligatorio.',
     },
     {
-        'p': 'Puedo tomar una clase de prueba?',
-        'r': 'Si. Escribenos y coordinamos una clase suelta para que conozcas al grupo '
+        'p': '¿Puedo tomar una clase de prueba?',
+        'r': 'Sí. Escríbenos y coordinamos una clase suelta para que conozcas al grupo '
              'antes de tomar un plan.',
     },
     {
-        'p': 'Desde que edad reciben ninos?',
-        'r': 'Kids Dance recibe desde los 5 anos. Para adultos no hay edad maxima: '
+        'p': '¿Desde qué edad reciben niños?',
+        'r': 'Kids Dance recibe desde los 5 años. Para adultos no hay edad máxima: '
              'tenemos alumnos de todas las edades.',
     },
     {
-        'p': 'Como se pagan las clases?',
+        'p': '¿Cómo se pagan las clases?',
         'r': 'En efectivo en el estudio o por transferencia. Los planes son mensuales '
-             'y tambien existe la opcion de clase suelta.',
+             'y también existe la opción de clase suelta.',
     },
 ]
 
@@ -228,7 +233,7 @@ def _notificar_por_email(mensaje):
     cuerpo = (
         f'Nombre: {mensaje.nombre}\n'
         f'Email: {mensaje.email}\n'
-        f'Telefono: {mensaje.telefono or "No indicado"}\n\n'
+        f'Teléfono: {mensaje.telefono or "No indicado"}\n\n'
         f'{mensaje.mensaje}'
     )
     send_mail(

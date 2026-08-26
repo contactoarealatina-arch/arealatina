@@ -14,7 +14,7 @@ class Clase(TimeStampedModel):
     class Estilo(models.TextChoices):
         SALSA = 'SALSA', 'Salsa'
         BACHATA = 'BACHATA', 'Bachata'
-        REGGAETON = 'REGGAETON', 'Reggaeton'
+        REGGAETON = 'REGGAETON', 'Reggaetón'
         URBANO = 'URBANO', 'Urbano'
         TANGO = 'TANGO', 'Tango'
         KIDS = 'KIDS', 'Kids Dance'

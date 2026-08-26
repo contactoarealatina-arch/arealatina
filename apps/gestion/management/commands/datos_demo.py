@@ -14,7 +14,7 @@ User = get_user_model()
 PROFESORAS = [
     ('camila', 'Camila', 'Soto'),
     ('daniela', 'Daniela', 'Ruiz'),
-    ('matias', 'Matias', 'Vera'),
+    ('matias', 'Matías', 'Vera'),
 ]
 
 PLANES = [
@@ -25,13 +25,13 @@ PLANES = [
 ]
 
 CLASES = [
-    ('SALSA', 'INICIAL', 'Lunes y Miercoles', time(19, 0), time(20, 0), 'Sala 1', 20, 0),
-    ('SALSA', 'INTERMEDIO', 'Lunes y Miercoles', time(20, 0), time(21, 0), 'Sala 1', 20, 0),
+    ('SALSA', 'INICIAL', 'Lunes y Miércoles', time(19, 0), time(20, 0), 'Sala 1', 20, 0),
+    ('SALSA', 'INTERMEDIO', 'Lunes y Miércoles', time(20, 0), time(21, 0), 'Sala 1', 20, 0),
     ('BACHATA', 'TODOS', 'Martes y Jueves', time(19, 30), time(20, 30), 'Sala 1', 20, 0),
-    ('REGGAETON', 'TODOS', 'Miercoles y Viernes', time(20, 0), time(21, 0), 'Sala 2', 25, 1),
+    ('REGGAETON', 'TODOS', 'Miércoles y Viernes', time(20, 0), time(21, 0), 'Sala 2', 25, 1),
     ('URBANO', 'INICIAL', 'Viernes', time(18, 30), time(19, 30), 'Sala 2', 25, 1),
     ('TANGO', 'TODOS', 'Jueves', time(21, 0), time(22, 0), 'Sala 1', 16, 2),
-    ('KIDS', 'INICIAL', 'Sabado', time(11, 0), time(12, 0), 'Sala 2', 18, 1),
+    ('KIDS', 'INICIAL', 'Sábado', time(11, 0), time(12, 0), 'Sala 2', 18, 1),
 ]
 
 
