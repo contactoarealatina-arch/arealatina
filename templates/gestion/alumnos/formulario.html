@@ -1,0 +1,360 @@
+{% extends 'gestion/base_gestion.html' %}
+{% load formato %}
+
+{% block titulo %}{% if editando %}Editar alumno{% else %}Nuevo alumno{% endif %}{% endblock %}
+{% block encabezado %}{% if editando %}Editar {{ alumno.nombre_completo }}{% else %}Nuevo alumno{% endif %}{% endblock %}
+{% block subtitulo %}
+    {% if editando %}
+        <div class="g-subtitulo">Los cambios quedan registrados en la auditoría</div>
+    {% else %}
+        <div class="g-subtitulo">Cuatro pasos. Solo los datos personales son obligatorios.</div>
+    {% endif %}
+{% endblock %}
+
+{% block acciones %}
+    <a href="{% if editando %}{% url 'gestion:alumno_detalle' alumno.pk %}{% else %}{% url 'gestion:alumnos' %}{% endif %}"
+       class="g-btn g-btn-neutro g-btn-sm">
+        <i class="bi bi-arrow-left"></i> Cancelar
+    </a>
+{% endblock %}
+
+{% block contenido %}
+
+{% if form.non_field_errors %}
+    <div class="g-banner g-banner-peligro">
+        <i class="bi bi-exclamation-triangle"></i>
+        <div>{{ form.non_field_errors }}</div>
+    </div>
+{% endif %}
+
+{% if not editando %}
+<!-- Indicador de pasos -->
+<div class="g-pasos">
+    <div class="g-paso activo"><span class="g-paso-num">1</span><span class="g-paso-texto">Datos personales</span></div>
+    <div class="g-paso-linea"></div>
+    <div class="g-paso"><span class="g-paso-num">2</span><span class="g-paso-texto">Contacto</span></div>
+    <div class="g-paso-linea"></div>
+    <div class="g-paso"><span class="g-paso-num">3</span><span class="g-paso-texto">Inscripción</span></div>
+    <div class="g-paso-linea"></div>
+    <div class="g-paso"><span class="g-paso-num">4</span><span class="g-paso-texto">Pago inicial</span></div>
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="g-form"
+      {% if not editando %}data-pasos{% endif %} novalidate>
+    {% csrf_token %}
+
+    <!-- ============ PASO 1 — Datos personales ============ -->
+    <div class="g-panel-paso {% if editando %}visible{% endif %}">
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">Datos personales</h2>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <div class="g-campo">
+                        <label for="{{ form.nombre_completo.id_for_label }}">Nombre completo *</label>
+                        {{ form.nombre_completo }}
+                        {% for e in form.nombre_completo.errors %}<div class="g-error">{{ e }}</div>{% endfor %}
+                        <input type="hidden" data-resumen-campo="Nombre" value="">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="g-campo">
+                        <label for="{{ form.rut.id_for_label }}">RUT *</label>
+                        {{ form.rut }}
+                        <div class="g-error" id="avisoRut"></div>
+                        {% for e in form.rut.errors %}<div class="g-error">{{ e }}</div>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="g-campo">
+                        <label for="{{ form.fecha_nacimiento.id_for_label }}">Fecha de nacimiento</label>
+                        {{ form.fecha_nacimiento }}
+                        {% for e in form.fecha_nacimiento.errors %}<div class="g-error">{{ e }}</div>{% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="g-campo">
+                        <label for="{{ form.genero.id_for_label }}">Género</label>
+                        {{ form.genero }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="g-campo">
+                        <label for="{{ form.estado.id_for_label }}">Estado</label>
+                        {{ form.estado }}
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <label>Foto de perfil</label>
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        {% if alumno.foto %}
+                            <img src="{{ alumno.foto.url }}" alt="Foto actual" class="g-foto-preview" id="previewFoto">
+                        {% else %}
+                            <div class="g-foto-preview" id="previewFoto"><i class="bi bi-person"></i></div>
+                        {% endif %}
+                        <div style="flex:1;min-width:200px">
+                            <input type="file" name="foto" accept="image/*"
+                                   class="g-input" data-preview="#previewFoto"
+                                   id="{{ form.foto.id_for_label }}">
+                            <div class="g-ayuda">Opcional. Se ve al instante antes de guardar.</div>
+                            {% for e in form.foto.errors %}<div class="g-error">{{ e }}</div>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ PASO 2 — Contacto ============ -->
+    <div class="g-panel-paso {% if editando %}visible{% endif %}">
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">Contacto</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="g-campo">
+                        <label for="{{ form.telefono.id_for_label }}">Teléfono celular</label>
+                        {{ form.telefono }}
+                        {% for e in form.telefono.errors %}<div class="g-error">{{ e }}</div>{% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="g-campo">
+                        <label for="{{ form.email.id_for_label }}">Email</label>
+                        {{ form.email }}
+                        {% for e in form.email.errors %}<div class="g-error">{{ e }}</div>{% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="g-campo">
+                        <label for="{{ form.direccion.id_for_label }}">Dirección</label>
+                        {{ form.direccion }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">Contacto de emergencia</h2>
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <div class="g-campo">
+                        <label for="{{ form.contacto_emergencia.id_for_label }}">Nombre *</label>
+                        {{ form.contacto_emergencia }}
+                        {% for e in form.contacto_emergencia.errors %}<div class="g-error">{{ e }}</div>{% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="g-campo">
+                        <label for="{{ form.telefono_emergencia.id_for_label }}">Teléfono *</label>
+                        {{ form.telefono_emergencia }}
+                        {% for e in form.telefono_emergencia.errors %}<div class="g-error">{{ e }}</div>{% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="g-campo">
+                        <label for="{{ form.relacion_emergencia.id_for_label }}">Relación</label>
+                        {{ form.relacion_emergencia }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if editando %}
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">Observaciones</h2>
+            {{ form.observaciones }}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if not editando %}
+    <!-- ============ PASO 3 — Inscripción ============ -->
+    <div class="g-panel-paso">
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">Clases a las que asistirá</h2>
+            {% if form_plan.fields.clases.queryset %}
+                <div class="row g-2" data-opciones>
+                    {% for opcion in form_plan.clases %}
+                    <div class="col-md-6">
+                        <label class="g-opcion">
+                            {{ opcion.tag }}
+                            <span class="g-opcion-texto">
+                                <strong>{{ opcion.choice_label }}</strong>
+                            </span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="g-muted mb-0">
+                    No hay clases activas todavía.
+                    <a href="{% url 'gestion:clase_nueva' %}">Crear una clase</a>
+                </p>
+            {% endif %}
+        </div>
+
+        <div class="g-card mb-3" data-vencimiento>
+            <h2 class="g-card-titulo">Plan contratado</h2>
+            {% if form_plan.fields.plan.queryset %}
+                <div class="row g-2 mb-3" data-opciones>
+                    {% for opcion in form_plan.plan %}
+                    <div class="col-md-6 col-lg-3">
+                        <label class="g-opcion">
+                            {{ opcion.tag }}
+                            <span class="g-opcion-texto">
+                                <strong>{{ opcion.choice_label }}</strong>
+                            </span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="g-campo">
+                            <label for="{{ form_plan.fecha_inicio.id_for_label }}">Fecha de inicio</label>
+                            {{ form_plan.fecha_inicio }}
+                            {% for e in form_plan.fecha_inicio.errors %}<div class="g-error">{{ e }}</div>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <label>Vence el</label>
+                        <div class="g-banner g-banner-naranja mb-0">
+                            <i class="bi bi-calendar-event"></i>
+                            <div data-vencimiento-salida>Elige un plan y una fecha de inicio</div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border-color:var(--al-border)">
+
+                <label class="g-opcion" style="max-width:320px">
+                    {{ form_plan.pago_matricula }}
+                    <span class="g-opcion-texto">
+                        <strong>¿Pagó matrícula?</strong>
+                        <span>Se registra como un pago aparte</span>
+                    </span>
+                </label>
+
+                <div id="bloqueMatricula" class="mt-3" style="max-width:320px" hidden>
+                    <label for="{{ form_plan.monto_matricula.id_for_label }}">Monto de la matrícula (CLP)</label>
+                    {{ form_plan.monto_matricula }}
+                    {% for e in form_plan.monto_matricula.errors %}<div class="g-error">{{ e }}</div>{% endfor %}
+                </div>
+            {% else %}
+                <p class="g-muted mb-0">
+                    No hay planes activos.
+                    <a href="{% url 'gestion:plan_nuevo' %}">Crear un plan</a>
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ============ PASO 4 — Pago inicial ============ -->
+    <div class="g-panel-paso">
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <div class="g-card h-100">
+                    <h2 class="g-card-titulo">Pago inicial <span class="g-badge g-badge-gris">Opcional</span></h2>
+                    <div class="g-campo">
+                        <label for="{{ form_pago.monto_clp.id_for_label }}">Monto pagado (CLP)</label>
+                        {{ form_pago.monto_clp }}
+                        <div class="g-ayuda">Déjalo vacío si todavía no paga.</div>
+                    </div>
+                    <div class="g-campo">
+                        <label for="{{ form_pago.metodo.id_for_label }}">Método de pago</label>
+                        {{ form_pago.metodo }}
+                    </div>
+                    <div class="g-campo">
+                        <label for="{{ form_pago.numero_comprobante.id_for_label }}">N° de comprobante</label>
+                        {{ form_pago.numero_comprobante }}
+                    </div>
+                    <div class="g-campo mb-0">
+                        <label for="{{ form_pago.nota_interna.id_for_label }}">Observaciones internas</label>
+                        {{ form_pago.nota_interna }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="g-card h-100">
+                    <h2 class="g-card-titulo">Resumen</h2>
+                    <div data-resumen></div>
+                    <div class="g-banner g-banner-info mt-3 mb-0">
+                        <i class="bi bi-info-circle"></i>
+                        <div>Revisa que todo esté correcto antes de confirmar.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ============ BOTONES ============ -->
+    <div class="d-flex flex-wrap gap-2 justify-content-end mt-3">
+        {% if editando %}
+            <a href="{% url 'gestion:alumno_detalle' alumno.pk %}" class="g-btn g-btn-neutro">Cancelar</a>
+            <button type="submit" class="g-btn g-btn-primario">
+                <i class="bi bi-check-lg"></i> Guardar cambios
+            </button>
+        {% else %}
+            <button type="button" class="g-btn g-btn-neutro" data-paso-atras hidden>
+                <i class="bi bi-arrow-left"></i> Atrás
+            </button>
+            <button type="button" class="g-btn g-btn-primario" data-paso-siguiente>
+                Siguiente <i class="bi bi-arrow-right"></i>
+            </button>
+            <button type="submit" class="g-btn g-btn-primario" data-paso-enviar hidden>
+                <i class="bi bi-check-lg"></i> Confirmar y registrar
+            </button>
+        {% endif %}
+    </div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ duraciones_planes|json_script:"duracionesPlanes" }}
+<script>
+// El resumen del paso 4 lee estos campos: se marcan aquí para no
+// ensuciar el formulario con atributos repetidos.
+(function () {
+    var mapa = {
+        'nombre_completo': 'Nombre',
+        'rut': 'RUT',
+        'fecha_nacimiento': 'Nacimiento',
+        'genero': 'Género',
+        'estado': 'Estado',
+        'telefono': 'Teléfono',
+        'email': 'Email',
+        'direccion': 'Dirección',
+        'contacto_emergencia': 'Emergencia',
+        'telefono_emergencia': 'Tel. emergencia',
+        'relacion_emergencia': 'Relación',
+        'fecha_inicio': 'Inicio del plan',
+        'monto_matricula': 'Matrícula'
+    };
+    Object.keys(mapa).forEach(function (nombre) {
+        var campo = document.querySelector('[name="' + nombre + '"]');
+        if (campo) { campo.setAttribute('data-resumen-campo', mapa[nombre]); }
+    });
+
+    // Etiquetas legibles para clases y plan en el resumen.
+    document.querySelectorAll('input[name="clases"], input[name="plan"]').forEach(function (c) {
+        var etiqueta = c.closest('.g-opcion');
+        if (etiqueta) { c.setAttribute('data-nombre', etiqueta.textContent.trim()); }
+    });
+
+    // Duración del plan para calcular el vencimiento en vivo.
+    var nodo = document.getElementById('duracionesPlanes');
+    var duraciones = nodo ? JSON.parse(nodo.textContent) : {};
+    document.querySelectorAll('input[name="plan"]').forEach(function (radio) {
+        if (duraciones[radio.value]) {
+            radio.setAttribute('data-duracion', duraciones[radio.value]);
+        }
+    });
+})();
+</script>
+{% endblock %}

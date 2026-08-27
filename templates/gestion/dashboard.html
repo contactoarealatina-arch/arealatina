@@ -1,116 +1,379 @@
-{% extends 'base.html' %}
+{% extends 'gestion/base_gestion.html' %}
 {% load formato %}
 
-{% block titulo %}Panel de gestión | Área Latina Estudio{% endblock %}
+{% block titulo %}Dashboard{% endblock %}
+{% block encabezado %}Dashboard{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo">{{ nombre_mes|capfirst }} · quedan {{ dias_cierre }} día{{ dias_cierre|pluralize }} para cerrar el mes</div>
+{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:alumno_nuevo' %}" class="g-btn g-btn-primario g-btn-sm">
+        <i class="bi bi-person-plus"></i> Nuevo alumno
+    </a>
+{% endblock %}
 
 {% block contenido %}
-<section class="seccion" style="padding-top: calc(var(--navbar-alto) + 48px);">
-    <div class="container">
 
-        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-            <div>
-                <span class="etiqueta">Panel interno</span>
-                <h1 class="mb-0">Hola, {{ user.nombre_corto }}</h1>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="/admin/" class="btn btn-acento-outline btn-sm">
-                    <i class="bi bi-gear me-1"></i>Administración
-                </a>
-                <a href="{% url 'asistencia:mis_clases' %}" class="btn btn-acento-outline btn-sm">
-                    <i class="bi bi-clipboard-check me-1"></i>Asistencia
-                </a>
-                <form method="post" action="{% url 'usuarios:logout' %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-acento btn-sm">Salir</button>
-                </form>
-            </div>
+<!-- ==================== MÉTRICAS ==================== -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-4 col-xl-2">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-people"></i> Alumnos activos</div>
+            <div class="g-metrica-valor">{{ total_activos }}</div>
+            {% if variacion_alumnos is not None %}
+                <div class="g-metrica-pie {% if variacion_alumnos > 0 %}sube{% elif variacion_alumnos < 0 %}baja{% endif %}">
+                    {% if variacion_alumnos > 0 %}<i class="bi bi-arrow-up"></i>
+                    {% elif variacion_alumnos < 0 %}<i class="bi bi-arrow-down"></i>
+                    {% else %}<i class="bi bi-dash"></i>{% endif %}
+                    {{ variacion_alumnos }}% vs mes anterior
+                </div>
+            {% else %}
+                <div class="g-metrica-pie">{{ nuevos_del_mes }} nuevo{{ nuevos_del_mes|pluralize }} este mes</div>
+            {% endif %}
         </div>
-
-        <!-- Estadisticas -->
-        <div class="row g-3 mb-5">
-            <div class="col-6 col-lg-3">
-                <div class="stat-card">
-                    <div class="valor texto-acento">{{ alumnos_activos }}</div>
-                    <div class="etiqueta-stat">Alumnos activos</div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="stat-card">
-                    <div class="valor">{{ clases_activas }}</div>
-                    <div class="etiqueta-stat">Clases activas</div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="stat-card">
-                    <div class="valor">${{ ingresos_mes|clp }}</div>
-                    <div class="etiqueta-stat">Ingresos del mes</div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="stat-card">
-                    <div class="valor">{{ pagos_pendientes }}</div>
-                    <div class="etiqueta-stat">Pagos por cobrar</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <!-- Suscripciones por vencer -->
-            <div class="col-lg-6">
-                <div class="card-al h-100">
-                    <h2 class="h5 mb-3">Suscripciones que vencen esta semana</h2>
-                    {% if por_vencer %}
-                        <div class="table-responsive">
-                            <table class="table tabla-al align-middle mb-0">
-                                <thead>
-                                    <tr><th>Alumno</th><th>Plan</th><th>Vence</th></tr>
-                                </thead>
-                                <tbody>
-                                {% for s in por_vencer %}
-                                    <tr>
-                                        <td>{{ s.alumno.nombre_completo }}</td>
-                                        <td class="texto-suave">{{ s.plan.nombre }}</td>
-                                        <td class="texto-acento">{{ s.fecha_vencimiento|date:"d/m/Y" }}</td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="mb-0">No hay suscripciones por vencer en los próximos 7 días.</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Ultimos pagos -->
-            <div class="col-lg-6">
-                <div class="card-al h-100">
-                    <h2 class="h5 mb-3">Últimos pagos</h2>
-                    {% if ultimos_pagos %}
-                        <div class="table-responsive">
-                            <table class="table tabla-al align-middle mb-0">
-                                <thead>
-                                    <tr><th>Fecha</th><th>Alumno</th><th>Monto</th><th>Estado</th></tr>
-                                </thead>
-                                <tbody>
-                                {% for p in ultimos_pagos %}
-                                    <tr>
-                                        <td class="texto-suave">{{ p.fecha_pago|date:"d/m" }}</td>
-                                        <td>{{ p.alumno.nombre_completo }}</td>
-                                        <td>${{ p.monto_clp|clp }}</td>
-                                        <td><span class="badge-nivel">{{ p.get_estado_display }}</span></td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="mb-0">Todavía no hay pagos registrados.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
     </div>
-</section>
+
+    <div class="col-6 col-lg-4 col-xl-2">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-cash-coin"></i> Ingresos del mes</div>
+            <div class="g-metrica-valor">${{ ingresos_mes|clp }}</div>
+            {% if variacion_ingresos is not None %}
+                <div class="g-metrica-pie {% if variacion_ingresos > 0 %}sube{% elif variacion_ingresos < 0 %}baja{% endif %}">
+                    {% if variacion_ingresos > 0 %}<i class="bi bi-arrow-up"></i>
+                    {% elif variacion_ingresos < 0 %}<i class="bi bi-arrow-down"></i>
+                    {% else %}<i class="bi bi-dash"></i>{% endif %}
+                    {{ variacion_ingresos }}% vs mes anterior
+                </div>
+            {% else %}
+                <div class="g-metrica-pie">Sin datos del mes anterior</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-4 col-xl-2">
+        <div class="g-metrica peligro">
+            <div class="g-metrica-etiqueta"><i class="bi bi-x-octagon"></i> Plan vencido</div>
+            <div class="g-metrica-valor">{{ total_vencidos }}</div>
+            <div class="g-metrica-pie">
+                <a href="{% url 'gestion:alumnos' %}?pago=vencido">Ver alumnos</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-4 col-xl-2">
+        <div class="g-metrica aviso">
+            <div class="g-metrica-etiqueta"><i class="bi bi-hourglass-split"></i> Por vencer</div>
+            <div class="g-metrica-valor">{{ total_por_vencer }}</div>
+            <div class="g-metrica-pie">En {{ dias_aviso }} días o menos</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-4 col-xl-2">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-music-note-beamed"></i> Clases activas</div>
+            <div class="g-metrica-valor">{{ clases_activas }}</div>
+            <div class="g-metrica-pie">
+                <a href="{% url 'gestion:clases' %}">Ver horarios</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-4 col-xl-2">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-clipboard-check"></i> Asistencia</div>
+            <div class="g-metrica-valor">
+                {% if promedio_asistencia is not None %}{{ promedio_asistencia }}%{% else %}—{% endif %}
+            </div>
+            <div class="g-metrica-pie">
+                {% if promedio_asistencia is None %}Sin registros este mes{% else %}Promedio del mes{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== ACCESOS RÁPIDOS ==================== -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <a href="{% url 'gestion:alumno_nuevo' %}" class="g-acceso">
+            <div class="g-acceso-icono"><i class="bi bi-person-plus"></i></div>
+            <div><strong>Registrar alumno</strong><span>Alta completa en 4 pasos</span></div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'gestion:pago_nuevo' %}" class="g-acceso">
+            <div class="g-acceso-icono"><i class="bi bi-cash-stack"></i></div>
+            <div><strong>Registrar pago</strong><span>Mensualidad, matrícula u otro</span></div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'gestion:clase_nueva' %}" class="g-acceso">
+            <div class="g-acceso-icono"><i class="bi bi-calendar-plus"></i></div>
+            <div><strong>Nueva clase</strong><span>Horario, sala y profesora</span></div>
+        </a>
+    </div>
+</div>
+
+<!-- ==================== GRÁFICOS ==================== -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">Ingresos de los últimos 6 meses</h2>
+            <div class="g-grafico"><canvas id="graficoIngresos"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">Alumnos por estilo</h2>
+            {% if hay_distribucion %}
+                <div class="g-grafico"><canvas id="graficoDistribucion"></canvas></div>
+            {% else %}
+                <div class="g-vacio">
+                    <i class="bi bi-pie-chart"></i>
+                    <p class="mb-0">Todavía no hay alumnos inscritos en clases.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ==================== TABLAS ==================== -->
+<div class="row g-3">
+    <!-- Por vencer -->
+    <div class="col-xl-4">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">
+                Planes por vencer
+                <a href="{% url 'gestion:alumnos' %}?pago=por_vencer" class="g-btn g-btn-neutro g-btn-sm">Ver todos</a>
+            </h2>
+            {% if top_por_vencer %}
+                <div class="g-scroll-x">
+                <table class="g-tabla">
+                    <thead><tr><th>Alumno</th><th>Plan</th><th class="num">Quedan</th><th></th></tr></thead>
+                    <tbody>
+                    {% for sus in top_por_vencer %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'gestion:alumno_detalle' sus.alumno.pk %}">
+                                    {{ sus.alumno.nombre_completo }}
+                                </a>
+                            </td>
+                            <td class="g-muted">{{ sus.plan.nombre }}</td>
+                            <td class="num">
+                                <span class="g-badge {% if sus.dias_restantes <= 2 %}g-badge-rojo{% else %}g-badge-amarillo{% endif %}">
+                                    {{ sus.dias_restantes }} día{{ sus.dias_restantes|pluralize }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'gestion:alumno_detalle' sus.alumno.pk %}#renovar"
+                                   class="g-btn g-btn-outline g-btn-sm">Renovar</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            {% else %}
+                <div class="g-vacio">
+                    <i class="bi bi-check2-circle"></i>
+                    <p class="mb-0">Ningún plan vence en los próximos {{ dias_aviso }} días.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Últimos pagos -->
+    <div class="col-xl-4">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">
+                Últimos pagos
+                <a href="{% url 'gestion:pagos' %}" class="g-btn g-btn-neutro g-btn-sm">Ver todos</a>
+            </h2>
+            {% if ultimos_pagos %}
+                <div class="g-scroll-x">
+                <table class="g-tabla">
+                    <thead><tr><th>Alumno</th><th class="num">Monto</th><th>Fecha</th><th>Estado</th></tr></thead>
+                    <tbody>
+                    {% for pago in ultimos_pagos %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'gestion:alumno_detalle' pago.alumno.pk %}">
+                                    {{ pago.alumno.nombre_completo }}
+                                </a>
+                                <div class="g-muted" style="font-size:.76rem">{{ pago.get_metodo_display }}</div>
+                            </td>
+                            <td class="num">${{ pago.monto_clp|clp }}</td>
+                            <td class="g-muted g-nowrap">{{ pago.fecha_pago|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="g-badge {% if pago.estado == 'PAGADO' %}g-badge-verde{% elif pago.estado == 'PENDIENTE' %}g-badge-amarillo{% else %}g-badge-rojo{% endif %}">
+                                    {{ pago.get_estado_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            {% else %}
+                <div class="g-vacio">
+                    <i class="bi bi-receipt"></i>
+                    <p class="mb-0">Todavía no hay pagos registrados.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Últimos alumnos -->
+    <div class="col-xl-4">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">
+                Últimos ingresos
+                <a href="{% url 'gestion:alumnos' %}" class="g-btn g-btn-neutro g-btn-sm">Ver todos</a>
+            </h2>
+            {% if ultimos_alumnos %}
+                <div class="g-scroll-x">
+                <table class="g-tabla">
+                    <thead><tr><th>Alumno</th><th>Ingresó</th><th>Estado</th></tr></thead>
+                    <tbody>
+                    {% for alumno in ultimos_alumnos %}
+                        <tr>
+                            <td>
+                                <div class="g-celda-alumno">
+                                    {% if alumno.foto %}
+                                        <img src="{{ alumno.foto.url }}" alt="" class="g-avatar-mini">
+                                    {% else %}
+                                        <span class="g-avatar-mini">{{ alumno.iniciales }}</span>
+                                    {% endif %}
+                                    <a href="{% url 'gestion:alumno_detalle' alumno.pk %}">
+                                        <strong>{{ alumno.nombre_completo }}</strong>
+                                    </a>
+                                </div>
+                            </td>
+                            <td class="g-muted g-nowrap">{{ alumno.fecha_ingreso|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="g-badge {% if alumno.estado == 'ACTIVO' %}g-badge-verde{% elif alumno.estado == 'SUSPENDIDO' %}g-badge-rojo{% else %}g-badge-gris{% endif %}">
+                                    {{ alumno.get_estado_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            {% else %}
+                <div class="g-vacio">
+                    <i class="bi bi-person-plus"></i>
+                    <h3>Sin alumnos todavía</h3>
+                    <p>Registra el primero para empezar a ver datos aquí.</p>
+                    <a href="{% url 'gestion:alumno_nuevo' %}" class="g-btn g-btn-primario">Registrar alumno</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{{ grafico_ingresos|json_script:"datosIngresos" }}
+{{ grafico_distribucion|json_script:"datosDistribucion" }}
+<script>
+(function () {
+    if (!window.Chart) { return; }
+
+    function leer(id) {
+        var el = document.getElementById(id);
+        if (!el) { return null; }
+        try { return JSON.parse(el.textContent); }
+        catch (e) { return null; }
+    }
+
+    var NARANJA = '#FF5722';
+    var GRID = '#2A2A2A';
+
+    Chart.defaults.color = '#B0B0B0';
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+
+    var tooltip = {
+        backgroundColor: '#222222',
+        titleColor: '#FFFFFF',
+        bodyColor: '#FFFFFF',
+        borderColor: GRID,
+        borderWidth: 1,
+        padding: 10
+    };
+
+    function pesos(valor) {
+        return '$' + valor.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    var ingresos = leer('datosIngresos');
+    var lienzoIngresos = document.getElementById('graficoIngresos');
+    if (ingresos && lienzoIngresos) {
+        new Chart(lienzoIngresos, {
+            type: 'bar',
+            data: {
+                labels: ingresos.etiquetas,
+                datasets: [{
+                    label: 'Ingresos',
+                    data: ingresos.datos,
+                    backgroundColor: NARANJA,
+                    hoverBackgroundColor: '#FF8A65',
+                    borderRadius: 6,
+                    maxBarThickness: 46
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: Object.assign({}, tooltip, {
+                        callbacks: {
+                            label: function (ctx) { return pesos(ctx.parsed.y); }
+                        }
+                    })
+                },
+                scales: {
+                    x: { grid: { display: false }, border: { color: GRID } },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: GRID },
+                        border: { display: false },
+                        ticks: { callback: function (v) { return pesos(v); } }
+                    }
+                }
+            }
+        });
+    }
+
+    var dist = leer('datosDistribucion');
+    var lienzoDist = document.getElementById('graficoDistribucion');
+    if (dist && lienzoDist && dist.datos.length) {
+        new Chart(lienzoDist, {
+            type: 'doughnut',
+            data: {
+                labels: dist.etiquetas,
+                datasets: [{
+                    data: dist.datos,
+                    backgroundColor: ['#FF5722', '#FF8A65', '#E64A19', '#FFAB91',
+                                      '#BF360C', '#FFCCBC'],
+                    borderColor: '#222222',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 14, boxWidth: 12 } },
+                    tooltip: tooltip
+                }
+            }
+        });
+    }
+})();
+</script>
 {% endblock %}

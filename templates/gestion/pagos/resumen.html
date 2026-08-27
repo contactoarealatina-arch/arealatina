@@ -1,0 +1,246 @@
+{% extends 'gestion/base_gestion.html' %}
+{% load formato %}
+
+{% block titulo %}Resumen financiero{% endblock %}
+{% block encabezado %}Resumen financiero{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo">{{ nombre_mes|capfirst }}</div>
+{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:reporte_descargar' 'ingresos' %}" class="g-btn g-btn-neutro g-btn-sm">
+        <i class="bi bi-file-earmark-excel"></i> <span class="d-none d-sm-inline">Excel</span>
+    </a>
+    <a href="{% url 'gestion:pago_nuevo' %}" class="g-btn g-btn-primario g-btn-sm">
+        <i class="bi bi-plus-lg"></i> Registrar pago
+    </a>
+{% endblock %}
+
+{% block contenido %}
+
+<!-- Comparativa -->
+<div class="row g-3 mb-3">
+    <div class="col-sm-6 col-xl-3">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-cash-coin"></i> Este mes</div>
+            <div class="g-metrica-valor">${{ ingresos_mes|clp }}</div>
+            {% if variacion is not None %}
+                <div class="g-metrica-pie {% if variacion > 0 %}sube{% elif variacion < 0 %}baja{% endif %}">
+                    {% if variacion > 0 %}<i class="bi bi-arrow-up"></i>{% elif variacion < 0 %}<i class="bi bi-arrow-down"></i>{% else %}<i class="bi bi-dash"></i>{% endif %}
+                    {{ variacion }}% vs {{ nombre_mes_anterior }}
+                </div>
+            {% else %}
+                <div class="g-metrica-pie">Sin datos del mes anterior</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-calendar-minus"></i> Mes anterior</div>
+            <div class="g-metrica-valor">${{ ingresos_anterior|clp }}</div>
+            <div class="g-metrica-pie">{{ nombre_mes_anterior|capfirst }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="g-metrica aviso">
+            <div class="g-metrica-etiqueta"><i class="bi bi-people"></i> Sin pagar</div>
+            <div class="g-metrica-valor">{{ total_sin_pagar }}</div>
+            <div class="g-metrica-pie">Alumnos activos sin pago este mes</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-graph-up"></i> Proyección</div>
+            <div class="g-metrica-valor">${{ proyeccion|clp }}</div>
+            <div class="g-metrica-pie">Si todos los pendientes pagaran</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-7">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">Ingresos de los últimos 6 meses</h2>
+            <div class="g-grafico"><canvas id="graficoResumen"></canvas></div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">Por método de pago</h2>
+            {% if por_metodo %}
+                <table class="g-tabla">
+                    <thead><tr><th>Método</th><th class="num">Pagos</th><th class="num">Total</th></tr></thead>
+                    <tbody>
+                    {% for fila in por_metodo %}
+                        <tr>
+                            <td>{{ fila.etiqueta }}</td>
+                            <td class="num g-muted">{{ fila.cantidad }}</td>
+                            <td class="num">${{ fila.total|clp }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="g-muted mb-0">Sin pagos este mes.</p>
+            {% endif %}
+        </div>
+
+        <div class="g-card">
+            <h2 class="g-card-titulo">Por concepto</h2>
+            {% if por_concepto %}
+                <table class="g-tabla">
+                    <thead><tr><th>Concepto</th><th class="num">Pagos</th><th class="num">Total</th></tr></thead>
+                    <tbody>
+                    {% for fila in por_concepto %}
+                        <tr>
+                            <td>{{ fila.etiqueta }}</td>
+                            <td class="num g-muted">{{ fila.cantidad }}</td>
+                            <td class="num">${{ fila.total|clp }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="g-muted mb-0">Sin pagos este mes.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">Por tipo de plan</h2>
+            {% if por_plan %}
+                <table class="g-tabla">
+                    <thead><tr><th>Plan</th><th class="num">Total</th></tr></thead>
+                    <tbody>
+                    {% for fila in por_plan %}
+                        <tr>
+                            <td>{{ fila.etiqueta }}</td>
+                            <td class="num">${{ fila.total|clp }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="g-muted mb-0">Los pagos de este mes no están asociados a un plan.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">
+                Alumnos sin pago en {{ nombre_mes }}
+                <span class="g-badge g-badge-amarillo">Proyectado: ${{ pendiente_proyectado|clp }}</span>
+            </h2>
+            {% if sin_pagar %}
+                <div class="g-scroll-x">
+                <table class="g-tabla">
+                    <thead>
+                        <tr><th>Alumno</th><th>Teléfono</th><th>Plan</th><th>Estado</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    {% for alumno in sin_pagar %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'gestion:alumno_detalle' alumno.pk %}">
+                                    {{ alumno.nombre_completo }}
+                                </a>
+                            </td>
+                            <td class="g-muted g-nowrap">{{ alumno.telefono|default:"—" }}</td>
+                            <td class="g-muted">
+                                {% if alumno.suscripcion_vigente %}{{ alumno.suscripcion_vigente.plan.nombre }}{% else %}Sin plan{% endif %}
+                            </td>
+                            <td>
+                                {% if alumno.estado_pago == 'vencido' %}
+                                    <span class="g-badge g-badge-rojo">Vencido</span>
+                                {% elif alumno.estado_pago == 'por_vencer' %}
+                                    <span class="g-badge g-badge-amarillo">Por vencer</span>
+                                {% elif alumno.estado_pago == 'sin_plan' %}
+                                    <span class="g-badge g-badge-gris">Sin plan</span>
+                                {% else %}
+                                    <span class="g-badge g-badge-verde">Al día</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'gestion:pago_nuevo' %}?alumno={{ alumno.pk }}"
+                                   class="g-btn g-btn-outline g-btn-sm">Registrar pago</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            {% else %}
+                <div class="g-vacio">
+                    <i class="bi bi-check2-circle"></i>
+                    <p class="mb-0">Todos los alumnos activos pagaron este mes.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{{ grafico_ingresos|json_script:"datosResumen" }}
+<script>
+(function () {
+    if (!window.Chart) { return; }
+    var nodo = document.getElementById('datosResumen');
+    var lienzo = document.getElementById('graficoResumen');
+    if (!nodo || !lienzo) { return; }
+
+    var datos;
+    try { datos = JSON.parse(nodo.textContent); } catch (e) { return; }
+
+    Chart.defaults.color = '#B0B0B0';
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+
+    function pesos(v) { return '$' + v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+
+    new Chart(lienzo, {
+        type: 'bar',
+        data: {
+            labels: datos.etiquetas,
+            datasets: [{
+                label: 'Ingresos',
+                data: datos.datos,
+                backgroundColor: '#FF5722',
+                hoverBackgroundColor: '#FF8A65',
+                borderRadius: 6,
+                maxBarThickness: 46
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#222222',
+                    borderColor: '#2A2A2A',
+                    borderWidth: 1,
+                    padding: 10,
+                    callbacks: { label: function (ctx) { return pesos(ctx.parsed.y); } }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, border: { color: '#2A2A2A' } },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#2A2A2A' },
+                    border: { display: false },
+                    ticks: { callback: function (v) { return pesos(v); } }
+                }
+            }
+        }
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends 'gestion/base_gestion.html' %}
+
+{% block titulo %}{{ profesora.get_full_name|default:profesora.username }}{% endblock %}
+{% block encabezado %}{{ profesora.get_full_name|default:profesora.username }}{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo">{{ profesora.especialidad|default:"Profesor/a" }}</div>
+{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:profesora_editar' profesora.pk %}" class="g-btn g-btn-primario g-btn-sm">
+        <i class="bi bi-pencil"></i> Editar
+    </a>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="g-card mb-3">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="g-ficha-foto">{{ profesora.iniciales }}</div>
+                <div style="min-width:0">
+                    <h2 style="font-size:1.05rem;margin:0 0 .25rem">
+                        {{ profesora.get_full_name|default:profesora.username }}
+                    </h2>
+                    <span class="g-badge {% if profesora.is_active %}g-badge-verde{% else %}g-badge-gris{% endif %}">
+                        {% if profesora.is_active %}Activa{% else %}Inactiva{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="g-dato"><i class="bi bi-person-vcard"></i>
+                <span class="g-dato-etiqueta">RUT</span>
+                <span class="g-dato-valor">{{ profesora.rut|default:"—" }}</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-envelope"></i>
+                <span class="g-dato-etiqueta">Email</span>
+                <span class="g-dato-valor">{{ profesora.email|default:"—" }}</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-telephone"></i>
+                <span class="g-dato-etiqueta">Teléfono</span>
+                <span class="g-dato-valor">{{ profesora.telefono|default:"—" }}</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-stars"></i>
+                <span class="g-dato-etiqueta">Especialidad</span>
+                <span class="g-dato-valor">{{ profesora.especialidad|default:"—" }}</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-person-badge"></i>
+                <span class="g-dato-etiqueta">Usuario</span>
+                <span class="g-dato-valor">{{ profesora.username }}</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-clipboard-check"></i>
+                <span class="g-dato-etiqueta">Marcas</span>
+                <span class="g-dato-valor">{{ total_marcas }} asistencia{{ total_marcas|pluralize:"s" }} registrada{{ total_marcas|pluralize:"s" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">Clases asignadas</h2>
+            {% if clases %}
+                <div class="g-scroll-x">
+                <table class="g-tabla">
+                    <thead><tr><th>Clase</th><th>Días</th><th>Horario</th><th class="num">Alumnos</th><th>Estado</th></tr></thead>
+                    <tbody>
+                    {% for clase in clases %}
+                        <tr>
+                            <td>
+                                {{ clase.emoji }}
+                                <a href="{% url 'gestion:clase_detalle' clase.pk %}">
+                                    {{ clase.get_nombre_display }}
+                                </a>
+                            </td>
+                            <td class="g-muted">{{ clase.dias_display }}</td>
+                            <td class="g-muted g-nowrap">{{ clase.horario }}</td>
+                            <td class="num">{{ clase.inscritos }}/{{ clase.cupo_maximo }}</td>
+                            <td>
+                                {% if clase.activa %}
+                                    <span class="g-badge g-badge-verde">Activa</span>
+                                {% else %}
+                                    <span class="g-badge g-badge-gris">Inactiva</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            {% else %}
+                <div class="g-vacio">
+                    <i class="bi bi-music-note-beamed"></i>
+                    <p class="mb-0">Todavía no tiene clases asignadas.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="g-card">
+            <h2 class="g-card-titulo">Últimas veces que pasó lista</h2>
+            {% if sesiones %}
+                <div class="g-scroll-x">
+                <table class="g-tabla">
+                    <thead><tr><th>Fecha</th><th>Clase</th><th class="num">Alumnos marcados</th></tr></thead>
+                    <tbody>
+                    {% for sesion in sesiones %}
+                        <tr>
+                            <td class="g-nowrap">{{ sesion.fecha|date:"d/m/Y" }}</td>
+                            <td>{{ sesion.clase.get_nombre_display }}</td>
+                            <td class="num">{{ sesion.total }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            {% else %}
+                <p class="g-muted mb-0">Todavía no ha registrado asistencia.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

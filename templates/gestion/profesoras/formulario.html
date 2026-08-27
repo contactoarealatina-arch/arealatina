@@ -1,0 +1,74 @@
+{% extends 'gestion/base_gestion.html' %}
+
+{% block titulo %}{% if editando %}Editar profesora{% else %}Nueva profesora{% endif %}{% endblock %}
+{% block encabezado %}
+    {% if editando %}Editar {{ profesora.get_full_name|default:profesora.username }}{% else %}Nueva profesora{% endif %}
+{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:profesoras' %}" class="g-btn g-btn-neutro g-btn-sm">
+        <i class="bi bi-arrow-left"></i> Cancelar
+    </a>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <form method="post" class="g-form">
+            {% csrf_token %}
+
+            <div class="g-card mb-3">
+                <h2 class="g-card-titulo">Datos personales</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.first_name %}</div>
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.last_name %}</div>
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.rut %}</div>
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.telefono %}</div>
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.email %}</div>
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.especialidad %}</div>
+                </div>
+            </div>
+
+            <div class="g-card mb-3">
+                <h2 class="g-card-titulo">Acceso al sistema</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.username %}</div>
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.password1 %}</div>
+                </div>
+                {% include 'gestion/_campo.html' with campo=form.is_active %}
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end">
+                <a href="{% url 'gestion:profesoras' %}" class="g-btn g-btn-neutro">Cancelar</a>
+                <button type="submit" class="g-btn g-btn-primario">
+                    <i class="bi bi-check-lg"></i>
+                    {% if editando %}Guardar cambios{% else %}Registrar profesora{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="g-banner g-banner-info">
+            <i class="bi bi-shield-lock"></i>
+            <div>
+                Con este usuario la profesora entra al sistema y solo ve el módulo
+                de asistencia de <strong>sus propias clases</strong>. No accede a
+                alumnos, pagos ni reportes.
+            </div>
+        </div>
+
+        {% if editando %}
+        <div class="g-banner g-banner-aviso">
+            <i class="bi bi-key"></i>
+            <div>
+                Deja la contraseña en blanco para conservar la actual.
+                Escribe una nueva solo si quieres cambiarla.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

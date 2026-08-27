@@ -1,0 +1,142 @@
+{% extends 'gestion/base_gestion.html' %}
+
+{% block titulo %}Alertas{% endblock %}
+{% block encabezado %}Alertas{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo">{{ conteo.total }} pendiente{{ conteo.total|pluralize }} de gestionar</div>
+{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:alertas_configuracion' %}" class="g-btn g-btn-neutro g-btn-sm">
+        <i class="bi bi-gear"></i> <span class="d-none d-sm-inline">Configurar</span>
+    </a>
+    <form method="post" action="{% url 'gestion:alertas_regenerar' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="g-btn g-btn-primario g-btn-sm">
+            <i class="bi bi-arrow-clockwise"></i> Revisar ahora
+        </button>
+    </form>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-bell"></i> Total</div>
+            <div class="g-metrica-valor">{{ conteo.total }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica aviso">
+            <div class="g-metrica-etiqueta"><i class="bi bi-hourglass-split"></i> Por vencer</div>
+            <div class="g-metrica-valor">{{ conteo.por_vencer }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica peligro">
+            <div class="g-metrica-etiqueta"><i class="bi bi-x-octagon"></i> Vencidos</div>
+            <div class="g-metrica-valor">{{ conteo.vencidos }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-cash-coin"></i> Sin pagar</div>
+            <div class="g-metrica-valor">{{ conteo.pagos }}</div>
+        </div>
+    </div>
+</div>
+
+<form method="get" class="g-barra">
+    <select name="ver" class="g-filtro-select" data-filtro-auto>
+        <option value="pendientes" {% if ver == 'pendientes' %}selected{% endif %}>Pendientes</option>
+        <option value="gestionadas" {% if ver == 'gestionadas' %}selected{% endif %}>Gestionadas</option>
+        <option value="todas" {% if ver == 'todas' %}selected{% endif %}>Todas</option>
+    </select>
+    <select name="tipo" class="g-filtro-select" data-filtro-auto>
+        <option value="">Todos los tipos</option>
+        {% for valor, etiqueta in tipos %}
+            <option value="{{ valor }}" {% if tipo == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+    </select>
+    <noscript><button type="submit" class="g-btn g-btn-primario g-btn-sm">Filtrar</button></noscript>
+</form>
+
+{% if alertas %}
+<div class="g-tabla-envoltura g-scroll-x">
+    <table class="g-tabla">
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Alumno</th>
+                <th>Detalle</th>
+                <th>Generada</th>
+                <th class="g-nowrap">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for alerta in alertas %}
+            <tr>
+                <td>
+                    <span class="g-badge {% if alerta.tipo == 'PLAN_VENCIDO' %}g-badge-rojo{% elif alerta.tipo == 'VENCIMIENTO_PROXIMO' %}g-badge-amarillo{% else %}g-badge-naranja{% endif %}">
+                        {{ alerta.get_tipo_display }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{% url 'gestion:alumno_detalle' alerta.alumno.pk %}">
+                        {{ alerta.alumno.nombre_completo }}
+                    </a>
+                    <div class="g-muted" style="font-size:.76rem">{{ alerta.alumno.telefono|default:"Sin teléfono" }}</div>
+                </td>
+                <td class="g-muted">{{ alerta.mensaje }}</td>
+                <td class="g-muted g-nowrap">{{ alerta.created_at|date:"d/m/Y" }}</td>
+                <td class="g-nowrap">
+                    {% if alerta.tipo == 'PAGO_PENDIENTE' %}
+                        <a href="{% url 'gestion:pago_nuevo' %}?alumno={{ alerta.alumno.pk }}"
+                           class="g-btn g-btn-outline g-btn-sm">Registrar pago</a>
+                    {% else %}
+                        <a href="{% url 'gestion:alumno_detalle' alerta.alumno.pk %}#renovar"
+                           class="g-btn g-btn-outline g-btn-sm">Renovar plan</a>
+                    {% endif %}
+
+                    {% if not alerta.gestionada %}
+                        <form method="post" action="{% url 'gestion:alerta_gestionar' alerta.pk %}"
+                              class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="g-btn g-btn-neutro g-btn-icono"
+                                    title="Marcar como gestionada">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                        </form>
+                    {% else %}
+                        <span class="g-badge g-badge-gris">Gestionada</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="g-tabla-envoltura">
+    <div class="g-vacio">
+        <i class="bi bi-check2-circle"></i>
+        <h3>Nada que gestionar</h3>
+        <p>
+            {% if ver == 'pendientes' %}
+                No hay alertas pendientes. Todo al día.
+            {% else %}
+                No hay alertas que coincidan con este filtro.
+            {% endif %}
+        </p>
+        <form method="post" action="{% url 'gestion:alertas_regenerar' %}">
+            {% csrf_token %}
+            <button type="submit" class="g-btn g-btn-primario">
+                <i class="bi bi-arrow-clockwise"></i> Revisar la base ahora
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

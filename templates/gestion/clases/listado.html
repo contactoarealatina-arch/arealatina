@@ -1,0 +1,93 @@
+{% extends 'gestion/base_gestion.html' %}
+{% load formato %}
+
+{% block titulo %}Clases{% endblock %}
+{% block encabezado %}Clases{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo">{{ total_activas }} activa{{ total_activas|pluralize }} · {{ total_inactivas }} inactiva{{ total_inactivas|pluralize }}</div>
+{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:clase_nueva' %}" class="g-btn g-btn-primario g-btn-sm">
+        <i class="bi bi-plus-lg"></i> Nueva clase
+    </a>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="g-barra">
+    <a href="?mostrar=activas" class="g-btn {% if mostrar == 'activas' %}g-btn-primario{% else %}g-btn-neutro{% endif %} g-btn-sm">
+        Activas ({{ total_activas }})
+    </a>
+    <a href="?mostrar=inactivas" class="g-btn {% if mostrar == 'inactivas' %}g-btn-primario{% else %}g-btn-neutro{% endif %} g-btn-sm">
+        Inactivas ({{ total_inactivas }})
+    </a>
+    <a href="?mostrar=todas" class="g-btn {% if mostrar == 'todas' %}g-btn-primario{% else %}g-btn-neutro{% endif %} g-btn-sm">
+        Todas
+    </a>
+</div>
+
+<div class="row g-3">
+{% for clase in clases %}
+    <div class="col-md-6 col-xl-4">
+        <div class="g-clase-card {% if not clase.activa %}inactiva{% endif %}">
+            <div class="g-clase-encabezado">
+                <span class="g-clase-emoji">{{ clase.emoji }}</span>
+                <div style="flex:1;min-width:0">
+                    <h3>
+                        <a href="{% url 'gestion:clase_detalle' clase.pk %}">
+                            {{ clase.get_nombre_display }}
+                        </a>
+                    </h3>
+                    <span class="g-badge g-badge-naranja">{{ clase.get_nivel_display }}</span>
+                    {% if clase.activa %}
+                        <span class="g-badge g-badge-verde">Activa</span>
+                    {% else %}
+                        <span class="g-badge g-badge-gris">Inactiva</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="g-clase-dato"><i class="bi bi-calendar-week"></i>{{ clase.dias_display }}</div>
+            <div class="g-clase-dato"><i class="bi bi-clock"></i>{{ clase.horario }} hrs</div>
+            <div class="g-clase-dato"><i class="bi bi-door-open"></i>{{ clase.sala }}</div>
+            <div class="g-clase-dato"><i class="bi bi-person-badge"></i>
+                {% if clase.profesora %}
+                    {{ clase.profesora.get_full_name|default:clase.profesora.username }}
+                {% else %}Sin asignar{% endif %}
+            </div>
+
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="g-muted" style="font-size:.78rem">Cupo</span>
+                    <span class="g-muted" style="font-size:.78rem">{{ clase.inscritos }}/{{ clase.cupo_maximo }}</span>
+                </div>
+                <div class="g-progreso">
+                    <div class="g-progreso-relleno {% if clase.tasa_llenado >= 100 %}peligro{% elif clase.tasa_llenado >= 80 %}aviso{% endif %}"
+                         style="width: {{ clase.tasa_llenado }}%"></div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-auto pt-2">
+                <a href="{% url 'gestion:clase_detalle' clase.pk %}" class="g-btn g-btn-outline g-btn-sm">Ver</a>
+                <a href="{% url 'gestion:clase_editar' clase.pk %}" class="g-btn g-btn-neutro g-btn-sm">Editar</a>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <div class="col-12">
+        <div class="g-tabla-envoltura">
+            <div class="g-vacio">
+                <i class="bi bi-music-note-beamed"></i>
+                <h3>Sin clases {% if mostrar != 'todas' %}{{ mostrar }}{% endif %}</h3>
+                <p>Crea la primera clase con su horario, sala y profesora.</p>
+                <a href="{% url 'gestion:clase_nueva' %}" class="g-btn g-btn-primario">
+                    <i class="bi bi-plus-lg"></i> Nueva clase
+                </a>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+</div>
+
+{% endblock %}

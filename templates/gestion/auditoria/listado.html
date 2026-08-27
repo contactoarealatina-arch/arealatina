@@ -1,0 +1,91 @@
+{% extends 'gestion/base_gestion.html' %}
+
+{% block titulo %}Auditoría{% endblock %}
+{% block encabezado %}Auditoría{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo">{{ total }} acción{{ total|pluralize:"es" }} registrada{{ total|pluralize:"s" }}</div>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="g-banner g-banner-info">
+    <i class="bi bi-shield-check"></i>
+    <div>
+        Bitácora de todo lo que se hace en el sistema. No se puede editar ni
+        borrar, ni siquiera desde el administrador de Django.
+    </div>
+</div>
+
+<form method="get" class="g-barra">
+    <div class="g-buscador">
+        <i class="bi bi-search"></i>
+        <input type="search" name="q" value="{{ filtros.q }}" class="g-input"
+               placeholder="Buscar por descripción o usuario...">
+    </div>
+    <select name="accion" class="g-filtro-select" data-filtro-auto>
+        <option value="">Todas las acciones</option>
+        {% for valor, etiqueta in acciones %}
+            <option value="{{ valor }}" {% if filtros.accion == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+    </select>
+    {% if filtros.q or filtros.accion %}
+        <a href="{% url 'gestion:auditoria' %}" class="g-btn g-btn-neutro g-btn-sm">
+            <i class="bi bi-x-lg"></i> Limpiar
+        </a>
+    {% endif %}
+    <noscript><button type="submit" class="g-btn g-btn-primario g-btn-sm">Filtrar</button></noscript>
+</form>
+
+{% if pagina.object_list %}
+<div class="g-tabla-envoltura g-scroll-x">
+    <table class="g-tabla">
+        <thead>
+            <tr>
+                <th>Fecha y hora</th>
+                <th>Usuario</th>
+                <th>Acción</th>
+                <th>Descripción</th>
+                <th>Objeto</th>
+                <th>IP</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for registro in pagina.object_list %}
+            <tr>
+                <td class="g-nowrap g-muted">{{ registro.timestamp|date:"d/m/Y H:i" }}</td>
+                <td>{{ registro.usuario.get_full_name|default:registro.usuario.username|default:"Sistema" }}</td>
+                <td>
+                    <span class="g-badge {% if registro.accion == 'ELIMINAR' %}g-badge-rojo{% elif registro.accion == 'CREAR' %}g-badge-verde{% else %}g-badge-gris{% endif %}">
+                        {{ registro.get_accion_display }}
+                    </span>
+                </td>
+                <td>{{ registro.descripcion }}</td>
+                <td class="g-muted g-nowrap">
+                    {% if registro.modelo %}{{ registro.modelo }}{% if registro.objeto_id %} #{{ registro.objeto_id }}{% endif %}{% else %}—{% endif %}
+                </td>
+                <td class="g-muted g-nowrap">{{ registro.ip|default:"—" }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include 'gestion/_paginacion.html' %}
+
+{% else %}
+<div class="g-tabla-envoltura">
+    <div class="g-vacio">
+        <i class="bi bi-shield-check"></i>
+        <h3>Sin registros</h3>
+        <p>
+            {% if filtros.q or filtros.accion %}
+                Ninguna acción coincide con los filtros.
+            {% else %}
+                Todavía no se ha registrado ninguna acción en el sistema.
+            {% endif %}
+        </p>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

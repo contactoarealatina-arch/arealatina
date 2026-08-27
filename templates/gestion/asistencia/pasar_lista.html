@@ -1,0 +1,167 @@
+{% extends 'gestion/base_gestion.html' %}
+
+{% block titulo %}Asistencia{% endblock %}
+{% block encabezado %}Pasar lista{% endblock %}
+{% block subtitulo %}
+    {% if clase %}
+        <div class="g-subtitulo">{{ clase.get_nombre_display }} · {{ fecha|date:"l d \d\e F" }}</div>
+    {% endif %}
+{% endblock %}
+
+{% block contenido %}
+
+<!-- Selección de clase y fecha -->
+<form method="get" class="g-card mb-3 g-form">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+            <label for="selectorClase">Clase</label>
+            <select name="clase" id="selectorClase" class="g-input" data-filtro-auto>
+                <option value="">Elige una clase...</option>
+                {% for c in clases %}
+                    <option value="{{ c.pk }}" {% if clase and clase.pk == c.pk %}selected{% endif %}>
+                        {{ c.get_nombre_display }} · {{ c.get_nivel_display }} · {{ c.dias_corto }} {{ c.horario }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="selectorFecha">Fecha</label>
+            <input type="date" name="fecha" id="selectorFecha" class="g-input"
+                   value="{{ fecha|date:'Y-m-d' }}" max="{{ hoy|date:'Y-m-d' }}" data-filtro-auto>
+        </div>
+        <div class="col-md-3">
+            <noscript><button type="submit" class="g-btn g-btn-primario w-100">Cargar</button></noscript>
+        </div>
+    </div>
+</form>
+
+{% if not clases %}
+    <div class="g-tabla-envoltura">
+        <div class="g-vacio">
+            <i class="bi bi-music-note-beamed"></i>
+            <h3>No tienes clases asignadas</h3>
+            <p>Sin clases activas no hay lista que pasar.</p>
+        </div>
+    </div>
+
+{% elif not clase %}
+    <div class="g-tabla-envoltura">
+        <div class="g-vacio">
+            <i class="bi bi-clipboard-check"></i>
+            <h3>Elige una clase</h3>
+            <p>Selecciona la clase y la fecha para marcar la asistencia.</p>
+        </div>
+    </div>
+
+{% elif not filas %}
+    <div class="g-tabla-envoltura">
+        <div class="g-vacio">
+            <i class="bi bi-people"></i>
+            <h3>Esta clase no tiene alumnos inscritos</h3>
+            <p>Inscribe alumnos en la clase para poder pasar lista.</p>
+            <a href="{% url 'gestion:clase_detalle' clase.pk %}" class="g-btn g-btn-neutro">Ver la clase</a>
+        </div>
+    </div>
+
+{% else %}
+    {% if ya_registrada %}
+        <div class="g-banner g-banner-info">
+            <i class="bi bi-info-circle"></i>
+            <div>Ya se pasó lista este día. Puedes corregir lo que necesites y volver a guardar.</div>
+        </div>
+    {% endif %}
+
+    <form method="post" class="g-form">
+        {% csrf_token %}
+        <input type="hidden" name="clase" value="{{ clase.pk }}">
+        <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+
+        <div class="g-tabla-envoltura g-scroll-x">
+            <table class="g-tabla">
+                <thead>
+                    <tr>
+                        <th>Alumno</th>
+                        <th class="num">Asistencia del mes</th>
+                        <th style="min-width:280px">Estado</th>
+                        <th style="min-width:200px">Observación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for fila in filas %}
+                    <tr>
+                        <td>
+                            <div class="g-celda-alumno">
+                                {% if fila.alumno.foto %}
+                                    <img src="{{ fila.alumno.foto.url }}" alt="" class="g-avatar-mini">
+                                {% else %}
+                                    <span class="g-avatar-mini">{{ fila.alumno.iniciales }}</span>
+                                {% endif %}
+                                <a href="{% url 'gestion:alumno_detalle' fila.alumno.pk %}">
+                                    <strong>{{ fila.alumno.nombre_completo }}</strong>
+                                </a>
+                            </div>
+                        </td>
+                        <td class="num">
+                            {% if fila.porcentaje_mes is not None %}
+                                <span class="g-badge {% if fila.porcentaje_mes >= 75 %}g-badge-verde{% elif fila.porcentaje_mes >= 50 %}g-badge-amarillo{% else %}g-badge-rojo{% endif %}">
+                                    {{ fila.porcentaje_mes }}%
+                                </span>
+                            {% else %}
+                                <span class="g-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1" data-opciones>
+                                {% for valor, etiqueta in estados %}
+                                    <label class="g-opcion" style="padding:.35rem .65rem">
+                                        <input type="radio" name="estado_{{ fila.alumno.pk }}" value="{{ valor }}"
+                                               {% if fila.registro and fila.registro.estado == valor %}checked{% elif not fila.registro and valor == 'PRESENTE' %}checked{% endif %}>
+                                        <span class="g-opcion-texto"><strong>{{ etiqueta }}</strong></span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" name="obs_{{ fila.alumno.pk }}" class="g-input"
+                                   maxlength="200" placeholder="Opcional"
+                                   value="{{ fila.registro.observacion|default:'' }}">
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mt-3">
+            <div class="d-flex gap-2">
+                <button type="button" class="g-btn g-btn-neutro g-btn-sm" data-marcar="PRESENTE">
+                    Marcar todos presentes
+                </button>
+                <button type="button" class="g-btn g-btn-neutro g-btn-sm" data-marcar="AUSENTE">
+                    Marcar todos ausentes
+                </button>
+            </div>
+            <button type="submit" class="g-btn g-btn-primario">
+                <i class="bi bi-check-lg"></i> Guardar asistencia
+            </button>
+        </div>
+    </form>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Marcar toda la lista de una vez: en una clase de 20 ahorra 20 clics.
+document.querySelectorAll('[data-marcar]').forEach(function (boton) {
+    boton.addEventListener('click', function () {
+        var estado = boton.getAttribute('data-marcar');
+        document.querySelectorAll('input[type="radio"][value="' + estado + '"]')
+            .forEach(function (radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+    });
+});
+</script>
+{% endblock %}

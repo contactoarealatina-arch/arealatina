@@ -72,6 +72,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
                 'apps.web.context_processors.academia',
+                'apps.gestion.context_processors.panel',
             ],
         },
     },
@@ -143,15 +144,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Email
 # ---------------------------------------------------------------------------
 EMAIL_BACKEND = (
-    'django.core.mail.backends.console.EmailBackend' if DEBUG
+    # En desarrollo el correo sale por consola. Se usa un backend propio
+    # porque el de Django escribe en cp1252 en Windows y falla con UTF-8.
+    'apps.gestion.email_backends.EmailBackend' if DEBUG
     else 'django.core.mail.backends.smtp.EmailBackend'
 )
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
+# Brevo (ex Sendinblue) como relay SMTP. Todo viene del .env para no
+# dejar credenciales en el repositorio.
+EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='arealatina310@gmail.com')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = env(
+    'DEFAULT_FROM_EMAIL',
+    default='Area Latina Estudio <arealatina310@gmail.com>',
+)
 
 # ---------------------------------------------------------------------------
 # APScheduler

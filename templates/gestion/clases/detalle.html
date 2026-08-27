@@ -1,0 +1,167 @@
+{% extends 'gestion/base_gestion.html' %}
+{% load formato %}
+
+{% block titulo %}{{ clase.get_nombre_display }}{% endblock %}
+{% block encabezado %}{{ clase.emoji }} {{ clase.get_nombre_display }}{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo">{{ clase.get_nivel_display }} · {{ clase.dias_display }} · {{ clase.horario }} hrs</div>
+{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:asistencia' %}?clase={{ clase.pk }}" class="g-btn g-btn-neutro g-btn-sm">
+        <i class="bi bi-clipboard-check"></i> <span class="d-none d-sm-inline">Pasar lista</span>
+    </a>
+    <a href="{% url 'gestion:clase_editar' clase.pk %}" class="g-btn g-btn-primario g-btn-sm">
+        <i class="bi bi-pencil"></i> Editar
+    </a>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-people"></i> Inscritos</div>
+            <div class="g-metrica-valor">{{ clase.inscritos }}</div>
+            <div class="g-metrica-pie">de {{ clase.cupo_maximo }} cupos</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-pie-chart"></i> Llenado</div>
+            <div class="g-metrica-valor">{{ clase.tasa_llenado }}%</div>
+            <div class="g-metrica-pie">{{ clase.cupos_disponibles }} cupo{{ clase.cupos_disponibles|pluralize }} libre{{ clase.cupos_disponibles|pluralize }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-clipboard-check"></i> Asistencia</div>
+            <div class="g-metrica-valor">
+                {% if promedio_asistencia is not None %}{{ promedio_asistencia }}%{% else %}—{% endif %}
+            </div>
+            <div class="g-metrica-pie">{{ nombre_mes|capfirst }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-person-badge"></i> Profesora</div>
+            <div class="g-metrica-valor" style="font-size:1.05rem;padding-top:.4rem">
+                {% if clase.profesora %}
+                    <a href="{% url 'gestion:profesora_detalle' clase.profesora.pk %}">
+                        {{ clase.profesora.get_full_name|default:clase.profesora.username }}
+                    </a>
+                {% else %}Sin asignar{% endif %}
+            </div>
+            <div class="g-metrica-pie">{{ clase.sala }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">Alumnos inscritos</h2>
+            {% if inscripciones %}
+                <div class="g-scroll-x">
+                <table class="g-tabla" data-ordenable>
+                    <thead>
+                        <tr>
+                            <th class="ordenable" data-tipo="texto">Alumno</th>
+                            <th>RUT</th>
+                            <th>Pago</th>
+                            <th>Desde</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for inscripcion in inscripciones %}
+                        <tr>
+                            <td>
+                                <div class="g-celda-alumno">
+                                    {% if inscripcion.alumno.foto %}
+                                        <img src="{{ inscripcion.alumno.foto.url }}" alt="" class="g-avatar-mini">
+                                    {% else %}
+                                        <span class="g-avatar-mini">{{ inscripcion.alumno.iniciales }}</span>
+                                    {% endif %}
+                                    <a href="{% url 'gestion:alumno_detalle' inscripcion.alumno.pk %}">
+                                        <strong>{{ inscripcion.alumno.nombre_completo }}</strong>
+                                    </a>
+                                </div>
+                            </td>
+                            <td class="g-muted g-nowrap">{{ inscripcion.alumno.rut }}</td>
+                            <td>
+                                {% if inscripcion.alumno.estado_pago == 'al_dia' %}
+                                    <span class="g-badge g-badge-verde">Al día</span>
+                                {% elif inscripcion.alumno.estado_pago == 'por_vencer' %}
+                                    <span class="g-badge g-badge-amarillo">Por vencer</span>
+                                {% elif inscripcion.alumno.estado_pago == 'vencido' %}
+                                    <span class="g-badge g-badge-rojo">Vencido</span>
+                                {% else %}
+                                    <span class="g-badge g-badge-gris">Sin plan</span>
+                                {% endif %}
+                            </td>
+                            <td class="g-muted g-nowrap">{{ inscripcion.fecha_inscripcion|date:"d/m/Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            {% else %}
+                <div class="g-vacio">
+                    <i class="bi bi-people"></i>
+                    <p class="mb-0">Todavía no hay alumnos inscritos en esta clase.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">Datos de la clase</h2>
+            <div class="g-dato"><i class="bi bi-calendar-week"></i>
+                <span class="g-dato-etiqueta">Días</span>
+                <span class="g-dato-valor">{{ clase.dias_display }}</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-clock"></i>
+                <span class="g-dato-etiqueta">Horario</span>
+                <span class="g-dato-valor">{{ clase.horario }} hrs</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-door-open"></i>
+                <span class="g-dato-etiqueta">Sala</span>
+                <span class="g-dato-valor">{{ clase.sala }}</span>
+            </div>
+            {% if clase.precio_clase_suelta %}
+            <div class="g-dato"><i class="bi bi-cash"></i>
+                <span class="g-dato-etiqueta">Clase suelta</span>
+                <span class="g-dato-valor">${{ clase.precio_clase_suelta|clp }}</span>
+            </div>
+            {% endif %}
+            {% if clase.descripcion %}
+            <div class="g-dato"><i class="bi bi-card-text"></i>
+                <span class="g-dato-etiqueta">Descripción</span>
+                <span class="g-dato-valor">{{ clase.descripcion }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="g-card">
+            <h2 class="g-card-titulo">Últimas sesiones</h2>
+            {% if historial %}
+                <table class="g-tabla">
+                    <thead><tr><th>Fecha</th><th class="num">Asistieron</th></tr></thead>
+                    <tbody>
+                    {% for dia in historial %}
+                        <tr>
+                            <td class="g-nowrap">{{ dia.fecha|date:"d/m/Y" }}</td>
+                            <td class="num">{{ dia.presentes }} de {{ dia.total }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="g-muted mb-0">Aún no se ha pasado lista en esta clase.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'gestion/base_gestion.html' %}
+
+{% block titulo %}{% if editando %}Editar clase{% else %}Nueva clase{% endif %}{% endblock %}
+{% block encabezado %}{% if editando %}Editar {{ clase.get_nombre_display }}{% else %}Nueva clase{% endif %}{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:clases' %}" class="g-btn g-btn-neutro g-btn-sm">
+        <i class="bi bi-arrow-left"></i> Cancelar
+    </a>
+{% endblock %}
+
+{% block contenido %}
+
+<form method="post" class="g-form">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="g-banner g-banner-peligro">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div>{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
+        </div>
+    {% endif %}
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="g-card mb-3">
+                <h2 class="g-card-titulo">Identificación</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.nombre %}</div>
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.nivel %}</div>
+                    <div class="col-12">{% include 'gestion/_campo.html' with campo=form.descripcion %}</div>
+                </div>
+            </div>
+
+            <div class="g-card mb-3">
+                <h2 class="g-card-titulo">Horario</h2>
+
+                <div class="g-campo">
+                    <label>Días de la semana *</label>
+                    <div class="g-dias" data-opciones>
+                        {% for opcion in form.dias %}
+                            <label class="g-dia" title="{{ opcion.choice_label }}">
+                                {{ opcion.tag }}
+                                {{ opcion.choice_label|slice:":1" }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                    {% for e in form.dias.errors %}<div class="g-error">{{ e }}</div>{% endfor %}
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.hora_inicio %}</div>
+                    <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.hora_fin %}</div>
+                    <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.sala %}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="g-card mb-3">
+                <h2 class="g-card-titulo">Capacidad y equipo</h2>
+                {% include 'gestion/_campo.html' with campo=form.cupo_maximo %}
+                {% include 'gestion/_campo.html' with campo=form.profesora %}
+                {% include 'gestion/_campo.html' with campo=form.precio_clase_suelta %}
+                {% include 'gestion/_campo.html' with campo=form.activa %}
+            </div>
+
+            <div class="g-banner g-banner-info">
+                <i class="bi bi-info-circle"></i>
+                <div>
+                    Una clase inactiva deja de aparecer en el sitio web y en el
+                    formulario de inscripción, pero conserva su historial.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 justify-content-end mt-3">
+        <a href="{% url 'gestion:clases' %}" class="g-btn g-btn-neutro">Cancelar</a>
+        <button type="submit" class="g-btn g-btn-primario">
+            <i class="bi bi-check-lg"></i> {% if editando %}Guardar cambios{% else %}Crear clase{% endif %}
+        </button>
+    </div>
+</form>
+
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'gestion/base_gestion.html' %}
+
+{% block titulo %}Reportes{% endblock %}
+{% block encabezado %}Reportes{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo">Todos se descargan como planilla Excel</div>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="row g-3">
+{% for reporte in reportes %}
+    <div class="col-md-6 col-xl-4">
+        <div class="g-card h-100 d-flex flex-column">
+            <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="g-acceso-icono"><i class="bi {{ reporte.icono }}"></i></div>
+                <div>
+                    <h3 style="font-size:.98rem;margin:0 0 .3rem">{{ reporte.titulo }}</h3>
+                    <p class="g-muted mb-0" style="font-size:.83rem">{{ reporte.texto }}</p>
+                </div>
+            </div>
+
+            <form method="get" action="{% url 'gestion:reporte_descargar' reporte.slug %}"
+                  class="g-form mt-auto">
+                {% if reporte.pide_fechas %}
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label for="desde_{{ reporte.slug }}" style="font-size:.76rem">Desde</label>
+                            <input type="date" name="desde" id="desde_{{ reporte.slug }}"
+                                   class="g-input" value="{{ desde_defecto }}">
+                        </div>
+                        <div class="col-6">
+                            <label for="hasta_{{ reporte.slug }}" style="font-size:.76rem">Hasta</label>
+                            <input type="date" name="hasta" id="hasta_{{ reporte.slug }}"
+                                   class="g-input" value="{{ hasta_defecto }}">
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if reporte.pide_clase %}
+                    <div class="mb-2">
+                        <label for="clase_{{ reporte.slug }}" style="font-size:.76rem">Clase</label>
+                        <select name="clase" id="clase_{{ reporte.slug }}" class="g-input">
+                            <option value="">Todas las clases</option>
+                            {% for clase in clases %}
+                                <option value="{{ clase.pk }}">
+                                    {{ clase.get_nombre_display }} · {{ clase.get_nivel_display }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+
+                <button type="submit" class="g-btn g-btn-primario w-100">
+                    <i class="bi bi-download"></i> Descargar Excel
+                </button>
+            </form>
+        </div>
+    </div>
+{% endfor %}
+</div>
+
+<div class="g-banner g-banner-info mt-3">
+    <i class="bi bi-info-circle"></i>
+    <div>
+        El reporte de ingresos incluye un gráfico de barras dentro de la propia
+        planilla. Los demás son tablas con encabezado fijo, listas para filtrar
+        en Excel.
+    </div>
+</div>
+
+{% endblock %}

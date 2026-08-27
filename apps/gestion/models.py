@@ -1,11 +1,24 @@
-"""Modelos de gestion academica: clases, planes, alumnos, suscripciones y pagos."""
+"""Modelos de gestión académica: clases, planes, alumnos, suscripciones y pagos."""
 from datetime import timedelta
 
 from django.conf import settings
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 
 from apps.usuarios.models import TimeStampedModel
+
+
+class DiaSemana(models.TextChoices):
+    """Los días se guardan como códigos separados por coma: 'LU,MI'."""
+
+    LU = 'LU', 'Lunes'
+    MA = 'MA', 'Martes'
+    MI = 'MI', 'Miércoles'
+    JU = 'JU', 'Jueves'
+    VI = 'VI', 'Viernes'
+    SA = 'SA', 'Sábado'
+    DO = 'DO', 'Domingo'
 
 
 class Clase(TimeStampedModel):
@@ -20,13 +33,22 @@ class Clase(TimeStampedModel):
         KIDS = 'KIDS', 'Kids Dance'
 
     class Nivel(models.TextChoices):
-        INICIAL = 'INICIAL', 'Inicial'
+        TODOS = 'TODOS', 'Todos los niveles'
+        INICIAL = 'INICIAL', 'Principiante'
         INTERMEDIO = 'INTERMEDIO', 'Intermedio'
         AVANZADO = 'AVANZADO', 'Avanzado'
-        TODOS = 'TODOS', 'Todos los niveles'
+
+    EMOJIS = {
+        'SALSA': '\U0001F483',
+        'BACHATA': '\U0001F339',
+        'REGGAETON': '\U0001F525',
+        'URBANO': '\U0001F3A4',
+        'TANGO': '\U0001F3B6',
+        'KIDS': '\U0001F476',
+    }
 
     nombre = models.CharField('Estilo', max_length=15, choices=Estilo.choices)
-    descripcion = models.TextField('Descripcion', blank=True)
+    descripcion = models.TextField('Descripción', blank=True)
     nivel = models.CharField(
         'Nivel',
         max_length=12,
@@ -34,14 +56,20 @@ class Clase(TimeStampedModel):
         default=Nivel.TODOS,
     )
     dias_semana = models.CharField(
-        'Dias de la semana',
-        max_length=120,
-        help_text='Ej: Lunes y Miercoles',
+        'Días de la semana',
+        max_length=30,
+        help_text='Códigos separados por coma. Ej: LU,MI',
     )
     hora_inicio = models.TimeField('Hora de inicio')
-    hora_fin = models.TimeField('Hora de termino')
+    hora_fin = models.TimeField('Hora de término')
     sala = models.CharField('Sala', max_length=50, default='Sala 1')
-    cupo_maximo = models.PositiveSmallIntegerField('Cupo maximo', default=20)
+    cupo_maximo = models.PositiveSmallIntegerField('Cupo máximo', default=20)
+    precio_clase_suelta = models.PositiveIntegerField(
+        'Precio clase suelta (CLP)',
+        null=True,
+        blank=True,
+        help_text='Opcional. Para cobrar esta clase por separado.',
+    )
     activa = models.BooleanField('Activa', default=True)
 
     profesora = models.ForeignKey(
@@ -60,26 +88,60 @@ class Clase(TimeStampedModel):
         ordering = ['nombre', 'hora_inicio']
 
     def __str__(self):
-        return f'{self.get_nombre_display()} - {self.get_nivel_display()} ({self.dias_semana})'
+        return f'{self.get_nombre_display()} · {self.get_nivel_display()} ({self.dias_display})'
+
+    def get_absolute_url(self):
+        return reverse('gestion:clase_detalle', args=[self.pk])
+
+    # ------------------------------------------------------------------
+    # Días
+    # ------------------------------------------------------------------
+    @property
+    def dias_lista(self):
+        """Códigos de día, en el orden de la semana."""
+        guardados = {d for d in self.dias_semana.split(',') if d}
+        return [c for c, _ in DiaSemana.choices if c in guardados]
 
     @property
+    def dias_display(self):
+        """'Lunes y Miércoles' / 'Lunes, Miércoles y Viernes'."""
+        etiquetas = dict(DiaSemana.choices)
+        nombres = [etiquetas[c] for c in self.dias_lista]
+        if not nombres:
+            return 'Sin días asignados'
+        if len(nombres) == 1:
+            return nombres[0]
+        return ', '.join(nombres[:-1]) + ' y ' + nombres[-1]
+
+    @property
+    def dias_corto(self):
+        """'L · M · V' para las tarjetas compactas."""
+        return ' · '.join(c[0] for c in self.dias_lista)
+
+    # ------------------------------------------------------------------
+    # Horario y cupo
+    # ------------------------------------------------------------------
+    @property
     def horario(self):
-        return f'{self.dias_semana} | {self.hora_inicio:%H:%M} - {self.hora_fin:%H:%M}'
+        return f'{self.hora_inicio:%H:%M} - {self.hora_fin:%H:%M}'
+
+    @property
+    def inscritos(self):
+        return self.inscripciones.filter(alumno__eliminado=False).count()
 
     @property
     def cupos_disponibles(self):
-        return max(self.cupo_maximo - self.inscripciones.count(), 0)
+        return max(self.cupo_maximo - self.inscritos, 0)
+
+    @property
+    def tasa_llenado(self):
+        if not self.cupo_maximo:
+            return 0
+        return round(self.inscritos / self.cupo_maximo * 100)
 
     @property
     def emoji(self):
-        return {
-            self.Estilo.SALSA: '\U0001F483',
-            self.Estilo.BACHATA: '\U0001F339',
-            self.Estilo.REGGAETON: '\U0001F525',
-            self.Estilo.URBANO: '\U0001F3A4',
-            self.Estilo.TANGO: '\U0001F3B6',
-            self.Estilo.KIDS: '\U0001F476',
-        }.get(self.nombre, '\U0001F3B5')
+        return self.EMOJIS.get(self.nombre, '\U0001F3B5')
 
 
 class Plan(TimeStampedModel):
@@ -87,8 +149,8 @@ class Plan(TimeStampedModel):
 
     nombre = models.CharField('Nombre', max_length=80, unique=True)
     precio_clp = models.PositiveIntegerField('Precio (CLP)')
-    duracion_dias = models.PositiveSmallIntegerField('Duracion (dias)', default=30)
-    descripcion = models.TextField('Descripcion', blank=True)
+    duracion_dias = models.PositiveSmallIntegerField('Duración (días)', default=30)
+    descripcion = models.TextField('Descripción', blank=True)
     activo = models.BooleanField('Activo', default=True)
 
     class Meta:
@@ -97,7 +159,33 @@ class Plan(TimeStampedModel):
         ordering = ['precio_clp']
 
     def __str__(self):
-        return f'{self.nombre} - ${self.precio_clp:,.0f} CLP'.replace(',', '.')
+        return f'{self.nombre} · ${self.precio_clp:,.0f}'.replace(',', '.')
+
+    @property
+    def suscripciones_vigentes(self):
+        return self.suscripciones.filter(
+            estado=Suscripcion.Estado.ACTIVA,
+            alumno__eliminado=False,
+        ).count()
+
+
+class AlumnoQuerySet(models.QuerySet):
+    def activos(self):
+        return self.filter(estado=Alumno.Estado.ACTIVO)
+
+    def vigentes(self):
+        """Con suscripción activa y no vencida."""
+        return self.filter(
+            suscripciones__estado=Suscripcion.Estado.ACTIVA,
+            suscripciones__fecha_vencimiento__gte=timezone.localdate(),
+        ).distinct()
+
+
+class AlumnoManager(models.Manager.from_queryset(AlumnoQuerySet)):
+    """Manager por defecto: oculta los alumnos borrados (borrado lógico)."""
+
+    def get_queryset(self):
+        return super().get_queryset().filter(eliminado=False)
 
 
 class Alumno(TimeStampedModel):
@@ -109,27 +197,39 @@ class Alumno(TimeStampedModel):
         SUSPENDIDO = 'SUSPENDIDO', 'Suspendido'
 
     class Genero(models.TextChoices):
-        FEMENINO = 'F', 'Femenino'
         MASCULINO = 'M', 'Masculino'
-        OTRO = 'O', 'Otro'
-        NO_INFORMA = 'N', 'Prefiere no informar'
+        FEMENINO = 'F', 'Femenino'
+        NO_INFORMA = 'N', 'Prefiero no indicar'
+
+    class Relacion(models.TextChoices):
+        MADRE = 'MADRE', 'Madre'
+        PADRE = 'PADRE', 'Padre'
+        PAREJA = 'PAREJA', 'Pareja'
+        AMIGO = 'AMIGO', 'Amigo/a'
+        OTRO = 'OTRO', 'Otro'
 
     nombre_completo = models.CharField('Nombre completo', max_length=150)
-    rut = models.CharField('RUT', max_length=12, unique=True, help_text='Formato 12345678-9')
+    rut = models.CharField('RUT', max_length=12, unique=True, help_text='Formato 12.345.678-9')
     fecha_nacimiento = models.DateField('Fecha de nacimiento', null=True, blank=True)
     genero = models.CharField(
-        'Genero',
+        'Género',
         max_length=1,
         choices=Genero.choices,
         default=Genero.NO_INFORMA,
     )
 
-    telefono = models.CharField('Telefono', max_length=20, blank=True)
+    telefono = models.CharField('Teléfono', max_length=20, blank=True)
     email = models.EmailField('Email', blank=True)
-    direccion = models.CharField('Direccion', max_length=200, blank=True)
+    direccion = models.CharField('Dirección', max_length=200, blank=True)
 
-    contacto_emergencia = models.CharField('Contacto de emergencia', max_length=150, blank=True)
-    telefono_emergencia = models.CharField('Telefono de emergencia', max_length=20, blank=True)
+    contacto_emergencia = models.CharField('Contacto de emergencia', max_length=150)
+    telefono_emergencia = models.CharField('Teléfono de emergencia', max_length=20)
+    relacion_emergencia = models.CharField(
+        'Relación',
+        max_length=10,
+        choices=Relacion.choices,
+        default=Relacion.OTRO,
+    )
 
     fecha_ingreso = models.DateField('Fecha de ingreso', default=timezone.localdate)
     foto = models.ImageField('Foto', upload_to='alumnos/', null=True, blank=True)
@@ -150,6 +250,29 @@ class Alumno(TimeStampedModel):
         verbose_name='Usuario asociado',
     )
 
+    # Borrado lógico
+    eliminado = models.BooleanField('Eliminado', default=False)
+    eliminado_en = models.DateTimeField('Eliminado el', null=True, blank=True)
+
+    # Trazabilidad
+    creado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='alumnos_creados',
+        verbose_name='Creado por',
+    )
+    actualizado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='alumnos_actualizados',
+        verbose_name='Actualizado por',
+    )
+
+    objects = AlumnoManager()
+    todos = models.Manager()
+
     class Meta:
         verbose_name = 'Alumno'
         verbose_name_plural = 'Alumnos'
@@ -158,6 +281,20 @@ class Alumno(TimeStampedModel):
     def __str__(self):
         return f'{self.nombre_completo} ({self.rut})'
 
+    def get_absolute_url(self):
+        return reverse('gestion:alumno_detalle', args=[self.pk])
+
+    def eliminar_logico(self, usuario=None):
+        """No borra la fila: la marca. Así el historial de pagos sobrevive."""
+        self.eliminado = True
+        self.eliminado_en = timezone.now()
+        if usuario:
+            self.actualizado_por = usuario
+        self.save(update_fields=['eliminado', 'eliminado_en', 'actualizado_por', 'updated_at'])
+
+    # ------------------------------------------------------------------
+    # Datos derivados
+    # ------------------------------------------------------------------
     @property
     def edad(self):
         if not self.fecha_nacimiento:
@@ -168,15 +305,57 @@ class Alumno(TimeStampedModel):
         )
 
     @property
+    def iniciales(self):
+        partes = self.nombre_completo.split()
+        if not partes:
+            return '?'
+        return (partes[0][0] + (partes[-1][0] if len(partes) > 1 else '')).upper()
+
+    @property
     def suscripcion_vigente(self):
-        return self.suscripciones.filter(
-            activa=True,
-            fecha_vencimiento__gte=timezone.localdate(),
-        ).order_by('-fecha_vencimiento').first()
+        return (
+            self.suscripciones
+            .filter(estado=Suscripcion.Estado.ACTIVA)
+            .order_by('-fecha_vencimiento')
+            .first()
+        )
+
+    @property
+    def dias_para_vencer(self):
+        sus = self.suscripcion_vigente
+        if not sus:
+            return None
+        return (sus.fecha_vencimiento - timezone.localdate()).days
+
+    @property
+    def estado_pago(self):
+        """'al_dia' | 'por_vencer' | 'vencido' | 'sin_plan'"""
+        dias = self.dias_para_vencer
+        if dias is None:
+            return 'sin_plan'
+        if dias < 0:
+            return 'vencido'
+        if dias <= ConfiguracionAlertas.dias_anticipacion_actual():
+            return 'por_vencer'
+        return 'al_dia'
+
+    @property
+    def estado_pago_display(self):
+        return {
+            'al_dia': 'Al día',
+            'por_vencer': 'Por vencer',
+            'vencido': 'Vencido',
+            'sin_plan': 'Sin plan',
+        }[self.estado_pago]
 
     @property
     def al_dia(self):
-        return self.suscripcion_vigente is not None
+        return self.estado_pago in ('al_dia', 'por_vencer')
+
+    @property
+    def total_pagado(self):
+        return self.pagos.filter(estado=Pago.Estado.PAGADO).aggregate(
+            t=models.Sum('monto_clp'))['t'] or 0
 
 
 class Inscripcion(TimeStampedModel):
@@ -194,10 +373,10 @@ class Inscripcion(TimeStampedModel):
         related_name='inscripciones',
         verbose_name='Clase',
     )
-    fecha_inscripcion = models.DateField('Fecha de inscripcion', default=timezone.localdate)
+    fecha_inscripcion = models.DateField('Fecha de inscripción', default=timezone.localdate)
 
     class Meta:
-        verbose_name = 'Inscripcion'
+        verbose_name = 'Inscripción'
         verbose_name_plural = 'Inscripciones'
         ordering = ['-fecha_inscripcion']
         constraints = [
@@ -213,6 +392,11 @@ class Inscripcion(TimeStampedModel):
 
 class Suscripcion(TimeStampedModel):
     """Plan contratado por un alumno durante un periodo determinado."""
+
+    class Estado(models.TextChoices):
+        ACTIVA = 'ACTIVA', 'Activa'
+        VENCIDA = 'VENCIDA', 'Vencida'
+        CANCELADA = 'CANCELADA', 'Cancelada'
 
     alumno = models.ForeignKey(
         Alumno,
@@ -230,22 +414,31 @@ class Suscripcion(TimeStampedModel):
     fecha_vencimiento = models.DateField(
         'Fecha de vencimiento',
         blank=True,
-        help_text='Se calcula automaticamente segun la duracion del plan.',
+        help_text='Se calcula automáticamente según la duración del plan.',
     )
-    activa = models.BooleanField('Activa', default=True)
+    estado = models.CharField(
+        'Estado',
+        max_length=10,
+        choices=Estado.choices,
+        default=Estado.ACTIVA,
+    )
 
     class Meta:
-        verbose_name = 'Suscripcion'
+        verbose_name = 'Suscripción'
         verbose_name_plural = 'Suscripciones'
         ordering = ['-fecha_inicio']
 
     def __str__(self):
-        return f'{self.alumno.nombre_completo} - {self.plan.nombre} (vence {self.fecha_vencimiento})'
+        return f'{self.alumno.nombre_completo} · {self.plan.nombre} (vence {self.fecha_vencimiento})'
 
     def save(self, *args, **kwargs):
         if not self.fecha_vencimiento and self.fecha_inicio and self.plan_id:
             self.fecha_vencimiento = self.fecha_inicio + timedelta(days=self.plan.duracion_dias)
         super().save(*args, **kwargs)
+
+    @property
+    def activa(self):
+        return self.estado == self.Estado.ACTIVA
 
     @property
     def vigente(self):
@@ -255,9 +448,24 @@ class Suscripcion(TimeStampedModel):
     def dias_restantes(self):
         return (self.fecha_vencimiento - timezone.localdate()).days
 
+    @property
+    def porcentaje_consumido(self):
+        """Para la barra de progreso de la ficha del alumno."""
+        total = (self.fecha_vencimiento - self.fecha_inicio).days
+        if total <= 0:
+            return 100
+        transcurrido = (timezone.localdate() - self.fecha_inicio).days
+        return max(0, min(round(transcurrido / total * 100), 100))
+
 
 class Pago(TimeStampedModel):
-    """Pago realizado por un alumno (mensualidad, matricula, clase suelta, etc.)."""
+    """Pago realizado por un alumno (mensualidad, matrícula, clase suelta, etc.)."""
+
+    class Concepto(models.TextChoices):
+        MENSUALIDAD = 'MENSUALIDAD', 'Mensualidad'
+        MATRICULA = 'MATRICULA', 'Matrícula'
+        CLASE_SUELTA = 'CLASE_SUELTA', 'Clase suelta'
+        OTRO = 'OTRO', 'Otro'
 
     class Metodo(models.TextChoices):
         EFECTIVO = 'EFECTIVO', 'Efectivo'
@@ -280,23 +488,44 @@ class Pago(TimeStampedModel):
         null=True,
         blank=True,
         related_name='pagos',
-        verbose_name='Suscripcion',
+        verbose_name='Suscripción',
     )
-    concepto = models.CharField('Concepto', max_length=150)
+    concepto = models.CharField(
+        'Concepto',
+        max_length=15,
+        choices=Concepto.choices,
+        default=Concepto.MENSUALIDAD,
+    )
+    detalle = models.CharField(
+        'Detalle',
+        max_length=150,
+        blank=True,
+        help_text='Obligatorio cuando el concepto es "Otro".',
+    )
     monto_clp = models.PositiveIntegerField('Monto (CLP)')
     metodo = models.CharField(
-        'Metodo de pago',
+        'Método de pago',
         max_length=15,
         choices=Metodo.choices,
         default=Metodo.EFECTIVO,
     )
-    pago_matricula = models.BooleanField('Es pago de matricula', default=False)
+    numero_comprobante = models.CharField('N° de comprobante', max_length=50, blank=True)
+    pago_matricula = models.BooleanField('Es pago de matrícula', default=False)
     fecha_pago = models.DateField('Fecha de pago', default=timezone.localdate)
     estado = models.CharField(
         'Estado',
         max_length=10,
         choices=Estado.choices,
         default=Estado.PAGADO,
+    )
+    nota_interna = models.TextField('Nota interna', blank=True)
+
+    registrado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='pagos_registrados',
+        verbose_name='Registrado por',
     )
 
     class Meta:
@@ -306,4 +535,191 @@ class Pago(TimeStampedModel):
 
     def __str__(self):
         monto = f'{self.monto_clp:,.0f}'.replace(',', '.')
-        return f'{self.alumno.nombre_completo} - ${monto} ({self.get_estado_display()})'
+        return f'{self.alumno.nombre_completo} · ${monto} ({self.get_estado_display()})'
+
+    def save(self, *args, **kwargs):
+        # Mantiene coherente la casilla de matrícula con el concepto elegido.
+        self.pago_matricula = self.concepto == self.Concepto.MATRICULA
+        super().save(*args, **kwargs)
+
+    @property
+    def concepto_display(self):
+        if self.concepto == self.Concepto.OTRO and self.detalle:
+            return self.detalle
+        return self.get_concepto_display()
+
+
+class NotaInterna(TimeStampedModel):
+    """Comentario del equipo sobre un alumno. No lo ve el alumno."""
+
+    alumno = models.ForeignKey(
+        Alumno,
+        on_delete=models.CASCADE,
+        related_name='notas',
+        verbose_name='Alumno',
+    )
+    autor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='notas_escritas',
+        verbose_name='Autor',
+    )
+    texto = models.TextField('Nota')
+
+    class Meta:
+        verbose_name = 'Nota interna'
+        verbose_name_plural = 'Notas internas'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Nota sobre {self.alumno.nombre_completo} ({self.created_at:%d/%m/%Y})'
+
+
+class Alerta(TimeStampedModel):
+    """Aviso generado automáticamente por el cron diario."""
+
+    class Tipo(models.TextChoices):
+        VENCIMIENTO_PROXIMO = 'VENCIMIENTO_PROXIMO', 'Plan por vencer'
+        PLAN_VENCIDO = 'PLAN_VENCIDO', 'Plan vencido'
+        PAGO_PENDIENTE = 'PAGO_PENDIENTE', 'Pago pendiente'
+
+    tipo = models.CharField('Tipo', max_length=20, choices=Tipo.choices)
+    alumno = models.ForeignKey(
+        Alumno,
+        on_delete=models.CASCADE,
+        related_name='alertas',
+        verbose_name='Alumno',
+    )
+    suscripcion = models.ForeignKey(
+        Suscripcion,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='alertas',
+        verbose_name='Suscripción',
+    )
+    mensaje = models.CharField('Mensaje', max_length=250)
+    gestionada = models.BooleanField('Gestionada', default=False)
+    gestionada_en = models.DateTimeField('Gestionada el', null=True, blank=True)
+    gestionada_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='alertas_gestionadas',
+        verbose_name='Gestionada por',
+    )
+
+    class Meta:
+        verbose_name = 'Alerta'
+        verbose_name_plural = 'Alertas'
+        ordering = ['gestionada', '-created_at']
+        constraints = [
+            # Una alerta viva por tipo y alumno: el cron no duplica.
+            models.UniqueConstraint(
+                fields=['tipo', 'alumno'],
+                condition=models.Q(gestionada=False),
+                name='alerta_unica_activa_por_tipo_alumno',
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.get_tipo_display()} · {self.alumno.nombre_completo}'
+
+    def marcar_gestionada(self, usuario=None):
+        self.gestionada = True
+        self.gestionada_en = timezone.now()
+        self.gestionada_por = usuario
+        self.save(update_fields=['gestionada', 'gestionada_en', 'gestionada_por', 'updated_at'])
+
+    @property
+    def severidad(self):
+        return {
+            self.Tipo.VENCIMIENTO_PROXIMO: 'warning',
+            self.Tipo.PLAN_VENCIDO: 'danger',
+            self.Tipo.PAGO_PENDIENTE: 'orange',
+        }[self.tipo]
+
+
+class ConfiguracionAlertas(TimeStampedModel):
+    """Ajustes del cron de alertas. Fila única (pk=1)."""
+
+    dias_anticipacion = models.PositiveSmallIntegerField(
+        'Días de anticipación',
+        default=7,
+        help_text='Con cuántos días de anticipación avisar un vencimiento.',
+    )
+    emails_destino = models.TextField(
+        'Emails que reciben el resumen',
+        default='arealatina310@gmail.com',
+        help_text='Separados por coma.',
+    )
+    hora_envio = models.TimeField('Hora de envío', default='09:00')
+    envio_activo = models.BooleanField('Enviar resumen por email', default=True)
+
+    class Meta:
+        verbose_name = 'Configuración de alertas'
+        verbose_name_plural = 'Configuración de alertas'
+
+    def __str__(self):
+        return f'Alertas: {self.dias_anticipacion} días de anticipación'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1  # Siempre la misma fila.
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def obtener(cls):
+        config, _ = cls.objects.get_or_create(pk=1)
+        return config
+
+    @classmethod
+    def dias_anticipacion_actual(cls):
+        """Sin tocar la BD si ya existe: se usa mucho en propiedades."""
+        try:
+            return cls.objects.values_list('dias_anticipacion', flat=True).first() or 7
+        except Exception:
+            return 7
+
+    @property
+    def lista_emails(self):
+        return [e.strip() for e in self.emails_destino.split(',') if e.strip()]
+
+
+class AuditLog(models.Model):
+    """Registro de acciones importantes. Solo lo consulta el superadmin."""
+
+    class Accion(models.TextChoices):
+        CREAR = 'CREAR', 'Creó'
+        EDITAR = 'EDITAR', 'Editó'
+        ELIMINAR = 'ELIMINAR', 'Eliminó'
+        PAGO = 'PAGO', 'Registró pago'
+        RENOVAR = 'RENOVAR', 'Renovó plan'
+        ASISTENCIA = 'ASISTENCIA', 'Registró asistencia'
+        LOGIN = 'LOGIN', 'Inició sesión'
+
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='acciones',
+        verbose_name='Usuario',
+    )
+    accion = models.CharField('Acción', max_length=12, choices=Accion.choices)
+    modelo = models.CharField('Modelo', max_length=50, blank=True)
+    objeto_id = models.PositiveIntegerField('ID del objeto', null=True, blank=True)
+    descripcion = models.CharField('Descripción', max_length=250, blank=True)
+    ip = models.GenericIPAddressField('IP', null=True, blank=True)
+    timestamp = models.DateTimeField('Fecha y hora', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Registro de auditoría'
+        verbose_name_plural = 'Registros de auditoría'
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['-timestamp']),
+            models.Index(fields=['modelo', 'objeto_id']),
+        ]
+
+    def __str__(self):
+        quien = self.usuario.get_full_name() if self.usuario else 'Sistema'
+        return f'{quien} {self.get_accion_display().lower()} {self.modelo} #{self.objeto_id}'

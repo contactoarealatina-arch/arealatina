@@ -1,0 +1,95 @@
+{% extends 'gestion/base_gestion.html' %}
+
+{% block titulo %}Registrar pago{% endblock %}
+{% block encabezado %}Registrar pago{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:pagos' %}" class="g-btn g-btn-neutro g-btn-sm">
+        <i class="bi bi-arrow-left"></i> Cancelar
+    </a>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="row">
+    <div class="col-lg-8 col-xl-7">
+        <form method="post" class="g-form">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="g-banner g-banner-peligro">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <div>{% for e in form.non_field_errors %}{{ e }}{% endfor %}</div>
+                </div>
+            {% endif %}
+
+            <div class="g-card mb-3">
+                <h2 class="g-card-titulo">Alumno</h2>
+                <div class="g-campo">
+                    <label for="{{ form.alumno.id_for_label }}">Buscar alumno *</label>
+                    <input type="text" class="g-input" list="listaAlumnos" id="buscadorAlumno"
+                           placeholder="Escribe el nombre o el RUT..." autocomplete="off">
+                    <datalist id="listaAlumnos">
+                        {% for alumno in alumnos %}
+                            <option value="{{ alumno.nombre_completo }} — {{ alumno.rut }}"
+                                    data-id="{{ alumno.pk }}"></option>
+                        {% endfor %}
+                    </datalist>
+                    <div class="g-ayuda">También puedes elegirlo directamente en la lista de abajo.</div>
+                </div>
+                {% include 'gestion/_campo.html' with campo=form.alumno %}
+            </div>
+
+            <div class="g-card mb-3">
+                <h2 class="g-card-titulo">Detalle del pago</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.concepto %}</div>
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.monto_clp %}</div>
+                    <div class="col-12">{% include 'gestion/_campo.html' with campo=form.detalle %}</div>
+                    <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.metodo %}</div>
+                    <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.numero_comprobante %}</div>
+                    <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.fecha_pago %}</div>
+                    <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.estado %}</div>
+                    <div class="col-12">{% include 'gestion/_campo.html' with campo=form.nota_interna %}</div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end">
+                <a href="{% url 'gestion:pagos' %}" class="g-btn g-btn-neutro">Cancelar</a>
+                <button type="submit" class="g-btn g-btn-primario">
+                    <i class="bi bi-check-lg"></i> Registrar pago
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// El campo de búsqueda solo ayuda a encontrar al alumno; el valor real
+// sigue viajando en el select del formulario.
+(function () {
+    var buscador = document.getElementById('buscadorAlumno');
+    var select = document.getElementById('{{ form.alumno.id_for_label }}');
+    if (!buscador || !select) { return; }
+
+    buscador.addEventListener('input', function () {
+        var texto = buscador.value.trim().toLowerCase();
+        if (!texto) { return; }
+        for (var i = 0; i < select.options.length; i++) {
+            if (select.options[i].text.toLowerCase().indexOf(texto.split(' — ')[0]) !== -1) {
+                select.selectedIndex = i;
+                break;
+            }
+        }
+    });
+
+    // Si el pago viene precargado desde la ficha, se refleja en el buscador.
+    if (select.selectedIndex > 0) {
+        buscador.value = select.options[select.selectedIndex].text;
+    }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,260 @@
+{% extends 'gestion/base_gestion.html' %}
+{% load formato %}
+
+{% block titulo %}Alumnos{% endblock %}
+{% block encabezado %}Alumnos{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo"><span id="contadorVisibles">{{ pagina|length }}</span> en pantalla · {{ total }} en total</div>
+{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:alumnos_exportar' %}?{{ querystring }}" class="g-btn g-btn-neutro g-btn-sm">
+        <i class="bi bi-file-earmark-excel"></i> <span class="d-none d-sm-inline">Exportar</span>
+    </a>
+    <a href="{% url 'gestion:alumno_nuevo' %}" class="g-btn g-btn-primario g-btn-sm">
+        <i class="bi bi-person-plus"></i> Nuevo alumno
+    </a>
+{% endblock %}
+
+{% block contenido %}
+
+<!-- ==================== FILTROS ==================== -->
+<form method="get" class="g-barra">
+    <div class="g-buscador">
+        <i class="bi bi-search"></i>
+        <input type="search" name="q" value="{{ filtros.q }}"
+               class="g-input" placeholder="Buscar por nombre, RUT, email..."
+               data-buscar="#tablaAlumnos" data-contador="#contadorVisibles">
+    </div>
+
+    <select name="estado" class="g-filtro-select" data-filtro-auto>
+        <option value="">Todos los estados</option>
+        {% for valor, etiqueta in estados %}
+            <option value="{{ valor }}" {% if filtros.estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="clase" class="g-filtro-select" data-filtro-auto>
+        <option value="">Todas las clases</option>
+        {% for clase in clases %}
+            <option value="{{ clase.pk }}" {% if filtros.clase == clase.pk|stringformat:"s" %}selected{% endif %}>
+                {{ clase.get_nombre_display }} · {{ clase.get_nivel_display }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <select name="plan" class="g-filtro-select" data-filtro-auto>
+        <option value="">Todos los planes</option>
+        {% for plan in planes %}
+            <option value="{{ plan.pk }}" {% if filtros.plan == plan.pk|stringformat:"s" %}selected{% endif %}>{{ plan.nombre }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="pago" class="g-filtro-select" data-filtro-auto>
+        <option value="">Cualquier estado de pago</option>
+        <option value="al_dia" {% if filtros.pago == 'al_dia' %}selected{% endif %}>Al día</option>
+        <option value="por_vencer" {% if filtros.pago == 'por_vencer' %}selected{% endif %}>Por vencer</option>
+        <option value="vencido" {% if filtros.pago == 'vencido' %}selected{% endif %}>Vencido</option>
+        <option value="sin_plan" {% if filtros.pago == 'sin_plan' %}selected{% endif %}>Sin plan</option>
+    </select>
+
+    <input type="hidden" name="vista" value="{{ filtros.vista }}" id="campoVista">
+
+    <div class="btn-group" role="group" aria-label="Cambiar vista">
+        <button type="button" class="g-btn g-btn-neutro g-btn-sm {% if filtros.vista != 'cards' %}g-btn-outline{% endif %}"
+                data-vista="tabla" title="Ver como tabla"><i class="bi bi-list-ul"></i></button>
+        <button type="button" class="g-btn g-btn-neutro g-btn-sm {% if filtros.vista == 'cards' %}g-btn-outline{% endif %}"
+                data-vista="cards" title="Ver como tarjetas"><i class="bi bi-grid-3x3-gap"></i></button>
+    </div>
+
+    {% if filtros.q or filtros.estado or filtros.clase or filtros.plan or filtros.pago %}
+        <a href="{% url 'gestion:alumnos' %}" class="g-btn g-btn-neutro g-btn-sm">
+            <i class="bi bi-x-lg"></i> Limpiar
+        </a>
+    {% endif %}
+
+    <noscript><button type="submit" class="g-btn g-btn-primario g-btn-sm">Filtrar</button></noscript>
+</form>
+
+{% if pagina.object_list %}
+
+<!-- ==================== TABLA ==================== -->
+<div id="vistaTabla" {% if filtros.vista == 'cards' %}hidden{% endif %}>
+    <div class="g-tabla-envoltura g-scroll-x">
+        <table class="g-tabla" id="tablaAlumnos" data-ordenable>
+            <thead>
+                <tr>
+                    <th class="ordenable" data-tipo="texto">Alumno</th>
+                    <th class="ordenable" data-tipo="texto">RUT</th>
+                    <th>Clases</th>
+                    <th class="ordenable" data-tipo="texto">Plan</th>
+                    <th class="ordenable" data-tipo="texto">Vence</th>
+                    <th>Pago</th>
+                    <th>Estado</th>
+                    <th class="g-nowrap">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for alumno in pagina.object_list %}
+                <tr data-buscable="{{ alumno.nombre_completo }} {{ alumno.rut }} {{ alumno.email }} {{ alumno.telefono }}">
+                    <td>
+                        <div class="g-celda-alumno">
+                            {% if alumno.foto %}
+                                <img src="{{ alumno.foto.url }}" alt="" class="g-avatar-mini">
+                            {% else %}
+                                <span class="g-avatar-mini">{{ alumno.iniciales }}</span>
+                            {% endif %}
+                            <a href="{% url 'gestion:alumno_detalle' alumno.pk %}">
+                                <strong>{{ alumno.nombre_completo }}</strong>
+                            </a>
+                        </div>
+                    </td>
+                    <td class="g-muted g-nowrap">{{ alumno.rut }}</td>
+                    <td class="g-muted">
+                        {% for inscripcion in alumno.inscripciones.all %}
+                            <span class="g-badge g-badge-gris">{{ inscripcion.clase.get_nombre_display }}</span>
+                        {% empty %}—{% endfor %}
+                    </td>
+                    <td class="g-muted">
+                        {% if alumno.suscripcion_vigente %}{{ alumno.suscripcion_vigente.plan.nombre }}{% else %}—{% endif %}
+                    </td>
+                    <td class="g-nowrap"
+                        data-orden="{% if alumno.suscripcion_vigente %}{{ alumno.suscripcion_vigente.fecha_vencimiento|date:'Y-m-d' }}{% else %}9999{% endif %}">
+                        {% if alumno.suscripcion_vigente %}
+                            {{ alumno.suscripcion_vigente.fecha_vencimiento|date:"d/m/Y" }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if alumno.estado_pago == 'al_dia' %}
+                            <span class="g-badge g-badge-verde">Al día</span>
+                        {% elif alumno.estado_pago == 'por_vencer' %}
+                            <span class="g-badge g-badge-amarillo">Por vencer</span>
+                        {% elif alumno.estado_pago == 'vencido' %}
+                            <span class="g-badge g-badge-rojo">Vencido</span>
+                        {% else %}
+                            <span class="g-badge g-badge-gris">Sin plan</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="g-badge {% if alumno.estado == 'ACTIVO' %}g-badge-verde{% elif alumno.estado == 'SUSPENDIDO' %}g-badge-rojo{% else %}g-badge-gris{% endif %}">
+                            {{ alumno.get_estado_display }}
+                        </span>
+                    </td>
+                    <td class="g-nowrap">
+                        <a href="{% url 'gestion:alumno_detalle' alumno.pk %}"
+                           class="g-btn g-btn-neutro g-btn-icono" title="Ver ficha"><i class="bi bi-eye"></i></a>
+                        <a href="{% url 'gestion:alumno_editar' alumno.pk %}"
+                           class="g-btn g-btn-neutro g-btn-icono" title="Editar"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'gestion:pago_nuevo' %}?alumno={{ alumno.pk }}"
+                           class="g-btn g-btn-neutro g-btn-icono" title="Registrar pago"><i class="bi bi-cash"></i></a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="g-vacio" data-sin-resultados hidden>
+        <i class="bi bi-search"></i>
+        <p class="mb-0">Ningún alumno de esta página coincide con la búsqueda.</p>
+    </div>
+</div>
+
+<!-- ==================== TARJETAS ==================== -->
+<div id="vistaCards" class="row g-3" {% if filtros.vista != 'cards' %}hidden{% endif %}>
+    {% for alumno in pagina.object_list %}
+    <div class="col-sm-6 col-lg-4 col-xxl-3">
+        <div class="g-card h-100">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                {% if alumno.foto %}
+                    <img src="{{ alumno.foto.url }}" alt="" class="g-avatar-mini" style="width:46px;height:46px">
+                {% else %}
+                    <span class="g-avatar-mini" style="width:46px;height:46px;font-size:.9rem">{{ alumno.iniciales }}</span>
+                {% endif %}
+                <div style="min-width:0">
+                    <a href="{% url 'gestion:alumno_detalle' alumno.pk %}">
+                        <strong>{{ alumno.nombre_completo }}</strong>
+                    </a>
+                    <div class="g-muted" style="font-size:.78rem">{{ alumno.rut }}</div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-1 mb-3">
+                <span class="g-badge {% if alumno.estado == 'ACTIVO' %}g-badge-verde{% elif alumno.estado == 'SUSPENDIDO' %}g-badge-rojo{% else %}g-badge-gris{% endif %}">
+                    {{ alumno.get_estado_display }}
+                </span>
+                {% if alumno.estado_pago == 'al_dia' %}
+                    <span class="g-badge g-badge-verde">Al día</span>
+                {% elif alumno.estado_pago == 'por_vencer' %}
+                    <span class="g-badge g-badge-amarillo">Por vencer</span>
+                {% elif alumno.estado_pago == 'vencido' %}
+                    <span class="g-badge g-badge-rojo">Vencido</span>
+                {% else %}
+                    <span class="g-badge g-badge-gris">Sin plan</span>
+                {% endif %}
+            </div>
+
+            <div class="g-clase-dato mb-1"><i class="bi bi-card-checklist"></i>
+                {% if alumno.suscripcion_vigente %}{{ alumno.suscripcion_vigente.plan.nombre }}{% else %}Sin plan activo{% endif %}
+            </div>
+            <div class="g-clase-dato mb-1"><i class="bi bi-telephone"></i>
+                {{ alumno.telefono|default:"Sin teléfono" }}
+            </div>
+            <div class="g-clase-dato"><i class="bi bi-calendar-check"></i>
+                Ingresó el {{ alumno.fecha_ingreso|date:"d/m/Y" }}
+            </div>
+
+            <a href="{% url 'gestion:alumno_detalle' alumno.pk %}"
+               class="g-btn g-btn-outline g-btn-sm mt-3">Ver ficha</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% include 'gestion/_paginacion.html' %}
+
+{% else %}
+<div class="g-tabla-envoltura">
+    <div class="g-vacio">
+        <i class="bi bi-people"></i>
+        {% if filtros.q or filtros.estado or filtros.clase or filtros.plan or filtros.pago %}
+            <h3>Sin resultados</h3>
+            <p>Ningún alumno cumple con los filtros aplicados.</p>
+            <a href="{% url 'gestion:alumnos' %}" class="g-btn g-btn-neutro">Limpiar filtros</a>
+        {% else %}
+            <h3>Todavía no hay alumnos</h3>
+            <p>Registra el primero para empezar a llevar el control de la academia.</p>
+            <a href="{% url 'gestion:alumno_nuevo' %}" class="g-btn g-btn-primario">
+                <i class="bi bi-person-plus"></i> Registrar alumno
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Cambio entre tabla y tarjetas. Se guarda en la URL para que sobreviva
+// al filtrar o al cambiar de página.
+(function () {
+    var campo = document.getElementById('campoVista');
+    document.querySelectorAll('[data-vista]').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            var vista = boton.getAttribute('data-vista');
+            document.getElementById('vistaTabla').hidden = vista === 'cards';
+            document.getElementById('vistaCards').hidden = vista !== 'cards';
+            if (campo) { campo.value = vista; }
+
+            document.querySelectorAll('[data-vista]').forEach(function (b) {
+                b.classList.toggle('g-btn-outline', b === boton);
+            });
+
+            var url = new URL(window.location);
+            url.searchParams.set('vista', vista);
+            window.history.replaceState({}, '', url);
+        });
+    });
+})();
+</script>
+{% endblock %}

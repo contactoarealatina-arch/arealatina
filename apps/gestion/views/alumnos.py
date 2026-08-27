@@ -1,0 +1,412 @@
+"""Módulo 2 — Gestión de alumnos (CRUD completo)."""
+from datetime import timedelta
+
+from django.contrib import messages
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Q
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+
+from ..auditoria import registrar
+from ..forms import (
+    AlumnoForm,
+    InscripcionPlanForm,
+    NotaInternaForm,
+    PagoInicialForm,
+    RenovarPlanForm,
+)
+from ..models import (
+    Alumno,
+    AuditLog,
+    Clase,
+    ConfiguracionAlertas,
+    Inscripcion,
+    Pago,
+    Plan,
+    Suscripcion,
+)
+from ..permisos import gestion_requerida
+from .. import servicios
+
+POR_PAGINA = 20
+
+
+# ---------------------------------------------------------------------------
+# 2.1 Listado
+# ---------------------------------------------------------------------------
+def _filtrar_por_estado_pago(qs, filtro, hoy, dias_aviso):
+    """Traduce el estado de pago a filtros de base de datos.
+
+    Se hace por consulta y no en Python porque el listado se pagina: filtrar
+    después de paginar daría páginas con distinta cantidad de filas.
+    """
+    con_plan_vigente = Q(
+        suscripciones__estado=Suscripcion.Estado.ACTIVA,
+        suscripciones__fecha_vencimiento__gte=hoy,
+    )
+
+    if filtro == 'al_dia':
+        return qs.filter(
+            suscripciones__estado=Suscripcion.Estado.ACTIVA,
+            suscripciones__fecha_vencimiento__gt=hoy + timedelta(days=dias_aviso),
+        ).distinct()
+
+    if filtro == 'por_vencer':
+        return qs.filter(
+            suscripciones__estado=Suscripcion.Estado.ACTIVA,
+            suscripciones__fecha_vencimiento__gte=hoy,
+            suscripciones__fecha_vencimiento__lte=hoy + timedelta(days=dias_aviso),
+        ).distinct()
+
+    if filtro == 'vencido':
+        return qs.filter(suscripciones__isnull=False).exclude(con_plan_vigente).distinct()
+
+    if filtro == 'sin_plan':
+        return qs.filter(suscripciones__isnull=True)
+
+    return qs
+
+
+def _alumnos_filtrados(request):
+    """Queryset compartido por el listado y la exportación a Excel."""
+    hoy = timezone.localdate()
+    dias_aviso = ConfiguracionAlertas.obtener().dias_anticipacion
+
+    qs = Alumno.objects.select_related().prefetch_related(
+        'inscripciones__clase', 'suscripciones__plan'
+    )
+
+    buscar = request.GET.get('q', '').strip()
+    if buscar:
+        qs = qs.filter(
+            Q(nombre_completo__icontains=buscar)
+            | Q(rut__icontains=buscar)
+            | Q(email__icontains=buscar)
+            | Q(telefono__icontains=buscar)
+        )
+
+    estado = request.GET.get('estado', '')
+    if estado:
+        qs = qs.filter(estado=estado)
+
+    clase = request.GET.get('clase', '')
+    if clase:
+        qs = qs.filter(inscripciones__clase_id=clase).distinct()
+
+    plan = request.GET.get('plan', '')
+    if plan:
+        qs = qs.filter(
+            suscripciones__plan_id=plan,
+            suscripciones__estado=Suscripcion.Estado.ACTIVA,
+        ).distinct()
+
+    pago = request.GET.get('pago', '')
+    if pago:
+        qs = _filtrar_por_estado_pago(qs, pago, hoy, dias_aviso)
+
+    return qs
+
+
+@gestion_requerida
+def alumnos(request):
+    servicios.vencer_suscripciones_pasadas()
+    qs = _alumnos_filtrados(request)
+
+    paginador = Paginator(qs, POR_PAGINA)
+    pagina = paginador.get_page(request.GET.get('page'))
+
+    # Se conservan los filtros al cambiar de página.
+    parametros = request.GET.copy()
+    parametros.pop('page', None)
+
+    return render(request, 'gestion/alumnos/listado.html', {
+        'activo': 'alumnos',
+        'pagina': pagina,
+        'total': paginador.count,
+        'clases': Clase.objects.filter(activa=True),
+        'planes': Plan.objects.filter(activo=True),
+        'estados': Alumno.Estado.choices,
+        'filtros': {
+            'q': request.GET.get('q', ''),
+            'estado': request.GET.get('estado', ''),
+            'clase': request.GET.get('clase', ''),
+            'plan': request.GET.get('plan', ''),
+            'pago': request.GET.get('pago', ''),
+            'vista': request.GET.get('vista', 'tabla'),
+        },
+        'querystring': parametros.urlencode(),
+    })
+
+
+# ---------------------------------------------------------------------------
+# 2.2 Alta en pasos
+# ---------------------------------------------------------------------------
+@gestion_requerida
+def alumno_nuevo(request):
+    if request.method == 'POST':
+        form = AlumnoForm(request.POST, request.FILES)
+        form_plan = InscripcionPlanForm(request.POST)
+        form_pago = PagoInicialForm(request.POST)
+
+        if form.is_valid() and form_plan.is_valid() and form_pago.is_valid():
+            with transaction.atomic():
+                alumno = form.save(commit=False)
+                alumno.creado_por = request.user
+                alumno.actualizado_por = request.user
+                alumno.save()
+
+                _guardar_inscripcion_y_plan(request, alumno, form_plan, form_pago)
+
+            registrar(request, AuditLog.Accion.CREAR, alumno,
+                      f'Creó al alumno {alumno.nombre_completo}')
+            messages.success(request, f'{alumno.nombre_completo} quedó registrado.')
+            return redirect('gestion:alumno_detalle', pk=alumno.pk)
+
+        messages.error(request, 'Revisa los datos: hay campos con errores.')
+    else:
+        form = AlumnoForm()
+        form_plan = InscripcionPlanForm()
+        form_pago = PagoInicialForm()
+
+    return render(request, 'gestion/alumnos/formulario.html', {
+        'activo': 'alumnos',
+        'form': form,
+        'form_plan': form_plan,
+        'form_pago': form_pago,
+        'editando': False,
+        # {id_del_plan: dias} para calcular el vencimiento sin recargar.
+        'duraciones_planes': {
+            str(p.pk): p.duracion_dias for p in Plan.objects.filter(activo=True)
+        },
+    })
+
+
+def _guardar_inscripcion_y_plan(request, alumno, form_plan, form_pago):
+    """Crea inscripciones, suscripción y pagos del alta. Todo es opcional."""
+    datos = form_plan.cleaned_data
+
+    for clase in datos.get('clases') or []:
+        Inscripcion.objects.get_or_create(alumno=alumno, clase=clase)
+
+    suscripcion = None
+    plan = datos.get('plan')
+    if plan:
+        suscripcion = Suscripcion.objects.create(
+            alumno=alumno,
+            plan=plan,
+            fecha_inicio=datos.get('fecha_inicio') or timezone.localdate(),
+        )
+
+    # Matrícula: es un pago aparte del plan.
+    if datos.get('pago_matricula') and datos.get('monto_matricula'):
+        Pago.objects.create(
+            alumno=alumno,
+            concepto=Pago.Concepto.MATRICULA,
+            monto_clp=datos['monto_matricula'],
+            metodo=form_pago.cleaned_data.get('metodo') or Pago.Metodo.EFECTIVO,
+            estado=Pago.Estado.PAGADO,
+            registrado_por=request.user,
+        )
+
+    pago_datos = form_pago.cleaned_data
+    if pago_datos.get('monto_clp'):
+        Pago.objects.create(
+            alumno=alumno,
+            suscripcion=suscripcion,
+            concepto=Pago.Concepto.MENSUALIDAD if plan else Pago.Concepto.OTRO,
+            detalle='' if plan else 'Pago inicial',
+            monto_clp=pago_datos['monto_clp'],
+            metodo=pago_datos.get('metodo') or Pago.Metodo.EFECTIVO,
+            numero_comprobante=pago_datos.get('numero_comprobante', ''),
+            nota_interna=pago_datos.get('nota_interna', ''),
+            estado=Pago.Estado.PAGADO,
+            registrado_por=request.user,
+        )
+
+
+# ---------------------------------------------------------------------------
+# 2.3 Ficha
+# ---------------------------------------------------------------------------
+@gestion_requerida
+def alumno_detalle(request, pk):
+    alumno = get_object_or_404(
+        Alumno.objects.prefetch_related('inscripciones__clase', 'suscripciones__plan'),
+        pk=pk,
+    )
+    servicios.vencer_suscripciones_pasadas()
+
+    asistencias = (
+        alumno.asistencias.select_related('clase').order_by('-fecha')[:40]
+    )
+
+    return render(request, 'gestion/alumnos/detalle.html', {
+        'activo': 'alumnos',
+        'alumno': alumno,
+        'suscripcion': alumno.suscripcion_vigente,
+        'suscripciones': alumno.suscripciones.select_related('plan'),
+        'pagos': alumno.pagos.select_related('suscripcion__plan'),
+        'asistencias': asistencias,
+        'notas': alumno.notas.select_related('autor'),
+        'form_nota': NotaInternaForm(),
+        'form_renovar': RenovarPlanForm(),
+        'pagos_pendientes': alumno.pagos.exclude(estado=Pago.Estado.PAGADO).count(),
+        'dias_aviso': ConfiguracionAlertas.obtener().dias_anticipacion,
+    })
+
+
+# ---------------------------------------------------------------------------
+# 2.4 Edición
+# ---------------------------------------------------------------------------
+@gestion_requerida
+def alumno_editar(request, pk):
+    alumno = get_object_or_404(Alumno, pk=pk)
+
+    if request.method == 'POST':
+        form = AlumnoForm(request.POST, request.FILES, instance=alumno)
+        if form.is_valid():
+            alumno = form.save(commit=False)
+            alumno.actualizado_por = request.user
+            alumno.save()
+
+            cambios = ', '.join(form.changed_data) or 'sin cambios de campo'
+            registrar(request, AuditLog.Accion.EDITAR, alumno,
+                      f'Editó a {alumno.nombre_completo} ({cambios})')
+            messages.success(request, 'Datos actualizados.')
+            return redirect('gestion:alumno_detalle', pk=alumno.pk)
+        messages.error(request, 'Revisa los datos: hay campos con errores.')
+    else:
+        form = AlumnoForm(instance=alumno)
+
+    return render(request, 'gestion/alumnos/formulario.html', {
+        'activo': 'alumnos',
+        'form': form,
+        'alumno': alumno,
+        'editando': True,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Acciones sobre la ficha
+# ---------------------------------------------------------------------------
+@gestion_requerida
+def alumno_estado(request, pk):
+    """Suspender / reactivar."""
+    if request.method != 'POST':
+        return redirect('gestion:alumno_detalle', pk=pk)
+
+    alumno = get_object_or_404(Alumno, pk=pk)
+    nuevo = request.POST.get('estado')
+    if nuevo not in dict(Alumno.Estado.choices):
+        messages.error(request, 'Estado no válido.')
+        return redirect('gestion:alumno_detalle', pk=pk)
+
+    alumno.estado = nuevo
+    alumno.actualizado_por = request.user
+    alumno.save(update_fields=['estado', 'actualizado_por', 'updated_at'])
+
+    registrar(request, AuditLog.Accion.EDITAR, alumno,
+              f'Cambió el estado de {alumno.nombre_completo} a {alumno.get_estado_display()}')
+    messages.success(request, f'{alumno.nombre_completo} ahora está {alumno.get_estado_display().lower()}.')
+    return redirect('gestion:alumno_detalle', pk=pk)
+
+
+@gestion_requerida
+def alumno_eliminar(request, pk):
+    """Borrado lógico: la ficha desaparece del listado pero no se pierde nada."""
+    if request.method != 'POST':
+        return redirect('gestion:alumno_detalle', pk=pk)
+
+    alumno = get_object_or_404(Alumno, pk=pk)
+    nombre = alumno.nombre_completo
+    alumno.eliminar_logico(request.user)
+
+    registrar(request, AuditLog.Accion.ELIMINAR, alumno, f'Eliminó a {nombre}')
+    messages.success(request, f'{nombre} fue eliminado. Su historial se conserva.')
+    return redirect('gestion:alumnos')
+
+
+@gestion_requerida
+def alumno_renovar(request, pk):
+    if request.method != 'POST':
+        return redirect('gestion:alumno_detalle', pk=pk)
+
+    alumno = get_object_or_404(Alumno, pk=pk)
+    form = RenovarPlanForm(request.POST)
+
+    if not form.is_valid():
+        messages.error(request, 'No se pudo renovar: revisa el plan y la fecha.')
+        return redirect('gestion:alumno_detalle', pk=pk)
+
+    datos = form.cleaned_data
+    with transaction.atomic():
+        # La suscripción anterior se cierra para no dejar dos activas.
+        alumno.suscripciones.filter(estado=Suscripcion.Estado.ACTIVA).update(
+            estado=Suscripcion.Estado.VENCIDA
+        )
+        suscripcion = Suscripcion.objects.create(
+            alumno=alumno,
+            plan=datos['plan'],
+            fecha_inicio=datos['fecha_inicio'],
+        )
+        if datos.get('registrar_pago'):
+            Pago.objects.create(
+                alumno=alumno,
+                suscripcion=suscripcion,
+                concepto=Pago.Concepto.MENSUALIDAD,
+                monto_clp=datos['plan'].precio_clp,
+                metodo=datos.get('metodo') or Pago.Metodo.EFECTIVO,
+                estado=Pago.Estado.PAGADO,
+                registrado_por=request.user,
+            )
+
+        # Renovar resuelve las alertas de vencimiento del alumno.
+        alumno.alertas.filter(gestionada=False).exclude(
+            tipo='PAGO_PENDIENTE'
+        ).update(gestionada=True, gestionada_en=timezone.now(), gestionada_por=request.user)
+
+    registrar(request, AuditLog.Accion.RENOVAR, alumno,
+              f'Renovó el plan de {alumno.nombre_completo}: {suscripcion.plan.nombre}')
+    messages.success(
+        request,
+        f'Plan renovado hasta el {suscripcion.fecha_vencimiento:%d/%m/%Y}.'
+    )
+    return redirect('gestion:alumno_detalle', pk=pk)
+
+
+@gestion_requerida
+def alumno_nota(request, pk):
+    if request.method != 'POST':
+        return redirect('gestion:alumno_detalle', pk=pk)
+
+    alumno = get_object_or_404(Alumno, pk=pk)
+    form = NotaInternaForm(request.POST)
+    if form.is_valid():
+        nota = form.save(commit=False)
+        nota.alumno = alumno
+        nota.autor = request.user
+        nota.save()
+        messages.success(request, 'Nota guardada.')
+    else:
+        messages.error(request, 'La nota no puede ir vacía.')
+    return redirect('gestion:alumno_detalle', pk=pk)
+
+
+# ---------------------------------------------------------------------------
+# Exportación
+# ---------------------------------------------------------------------------
+@gestion_requerida
+def alumnos_exportar(request):
+    from ..excel import exportar_alumnos
+
+    qs = _alumnos_filtrados(request)
+    contenido = exportar_alumnos(qs)
+
+    respuesta = HttpResponse(
+        contenido,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    nombre = f'alumnos_{timezone.localdate():%Y-%m-%d}.xlsx'
+    respuesta['Content-Disposition'] = f'attachment; filename="{nombre}"'
+    return respuesta

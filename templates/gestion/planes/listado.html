@@ -1,0 +1,120 @@
+{% extends 'gestion/base_gestion.html' %}
+{% load formato %}
+
+{% block titulo %}Planes{% endblock %}
+{% block encabezado %}Planes y suscripciones{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:plan_nuevo' %}" class="g-btn g-btn-primario g-btn-sm">
+        <i class="bi bi-plus-lg"></i> Nuevo plan
+    </a>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="row g-3">
+    <div class="col-xl-7">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">Planes configurados</h2>
+            {% if planes %}
+                <div class="g-scroll-x">
+                <table class="g-tabla" data-ordenable>
+                    <thead>
+                        <tr>
+                            <th class="ordenable" data-tipo="texto">Plan</th>
+                            <th class="num ordenable" data-tipo="numero">Precio</th>
+                            <th class="num">Duración</th>
+                            <th class="num">Alumnos</th>
+                            <th>Estado</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for plan in planes %}
+                        <tr>
+                            <td>
+                                <strong>{{ plan.nombre }}</strong>
+                                {% if plan.descripcion %}
+                                    <div class="g-muted" style="font-size:.78rem">{{ plan.descripcion }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="num" data-orden="{{ plan.precio_clp }}">${{ plan.precio_clp|clp }}</td>
+                            <td class="num g-muted g-nowrap">
+                                {% if plan.duracion_dias == 1 %}1 clase{% else %}{{ plan.duracion_dias }} días{% endif %}
+                            </td>
+                            <td class="num">{{ plan.suscripciones_vigentes }}</td>
+                            <td>
+                                {% if plan.activo %}
+                                    <span class="g-badge g-badge-verde">Activo</span>
+                                {% else %}
+                                    <span class="g-badge g-badge-gris">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td class="g-nowrap">
+                                <a href="{% url 'gestion:plan_editar' plan.pk %}"
+                                   class="g-btn g-btn-neutro g-btn-icono" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="post" action="{% url 'gestion:plan_alternar' plan.pk %}"
+                                      class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="g-btn g-btn-neutro g-btn-icono"
+                                            title="{% if plan.activo %}Desactivar{% else %}Activar{% endif %}">
+                                        <i class="bi {% if plan.activo %}bi-toggle-on{% else %}bi-toggle-off{% endif %}"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            {% else %}
+                <div class="g-vacio">
+                    <i class="bi bi-card-checklist"></i>
+                    <h3>Sin planes todavía</h3>
+                    <p>Los planes definen cuánto paga cada alumno y por cuántos días.</p>
+                    <a href="{% url 'gestion:plan_nuevo' %}" class="g-btn g-btn-primario">Crear el primer plan</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-xl-5">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">Suscripciones recientes</h2>
+            {% if suscripciones_recientes %}
+                <div class="g-scroll-x">
+                <table class="g-tabla">
+                    <thead><tr><th>Alumno</th><th>Plan</th><th>Vence</th><th>Estado</th></tr></thead>
+                    <tbody>
+                    {% for sus in suscripciones_recientes %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'gestion:alumno_detalle' sus.alumno.pk %}">
+                                    {{ sus.alumno.nombre_completo }}
+                                </a>
+                            </td>
+                            <td class="g-muted">{{ sus.plan.nombre }}</td>
+                            <td class="g-muted g-nowrap">{{ sus.fecha_vencimiento|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="g-badge {% if sus.estado == 'ACTIVA' %}g-badge-verde{% elif sus.estado == 'VENCIDA' %}g-badge-gris{% else %}g-badge-rojo{% endif %}">
+                                    {{ sus.get_estado_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            {% else %}
+                <div class="g-vacio">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <p class="mb-0">Todavía no hay suscripciones.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

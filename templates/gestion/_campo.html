@@ -1,0 +1,22 @@
+{% comment %}
+Renderiza un campo de formulario con su etiqueta, ayuda y errores.
+Uso: {% include 'gestion/_campo.html' with campo=form.nombre %}
+{% endcomment %}
+<div class="g-campo">
+    {% if campo.field.widget.input_type == 'checkbox' %}
+        <label class="g-opcion">
+            {{ campo }}
+            <span class="g-opcion-texto">
+                <strong>{{ campo.label }}</strong>
+                {% if campo.help_text %}<span>{{ campo.help_text }}</span>{% endif %}
+            </span>
+        </label>
+    {% else %}
+        <label for="{{ campo.id_for_label }}">
+            {{ campo.label }}{% if campo.field.required %} *{% endif %}
+        </label>
+        {{ campo }}
+        {% if campo.help_text %}<div class="g-ayuda">{{ campo.help_text }}</div>{% endif %}
+    {% endif %}
+    {% for error in campo.errors %}<div class="g-error">{{ error }}</div>{% endfor %}
+</div>

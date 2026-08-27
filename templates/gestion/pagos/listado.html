@@ -1,0 +1,150 @@
+{% extends 'gestion/base_gestion.html' %}
+{% load formato %}
+
+{% block titulo %}Pagos{% endblock %}
+{% block encabezado %}Pagos{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo">{{ total }} pago{{ total|pluralize }} según los filtros aplicados</div>
+{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:pagos_exportar' %}?{{ querystring }}" class="g-btn g-btn-neutro g-btn-sm">
+        <i class="bi bi-file-earmark-excel"></i> <span class="d-none d-sm-inline">Exportar</span>
+    </a>
+    <a href="{% url 'gestion:pago_nuevo' %}" class="g-btn g-btn-primario g-btn-sm">
+        <i class="bi bi-plus-lg"></i> Registrar pago
+    </a>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="row g-3 mb-3">
+    <div class="col-sm-6 col-lg-3">
+        <div class="g-metrica exito">
+            <div class="g-metrica-etiqueta"><i class="bi bi-check-circle"></i> Cobrado</div>
+            <div class="g-metrica-valor">${{ total_cobrado|clp }}</div>
+            <div class="g-metrica-pie">Según los filtros actuales</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="g-metrica aviso">
+            <div class="g-metrica-etiqueta"><i class="bi bi-hourglass"></i> Pendiente</div>
+            <div class="g-metrica-valor">${{ total_pendiente|clp }}</div>
+            <div class="g-metrica-pie">Sin saldar</div>
+        </div>
+    </div>
+</div>
+
+<form method="get" class="g-barra">
+    <div class="g-buscador">
+        <i class="bi bi-search"></i>
+        <input type="search" name="q" value="{{ filtros.q }}" class="g-input"
+               placeholder="Buscar por alumno, RUT o comprobante...">
+    </div>
+
+    <select name="mes" class="g-filtro-select" data-filtro-auto>
+        <option value="">Todos los meses</option>
+        {% for mes in meses %}
+            <option value="{{ mes.valor }}" {% if filtros.mes == mes.valor %}selected{% endif %}>{{ mes.etiqueta }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="concepto" class="g-filtro-select" data-filtro-auto>
+        <option value="">Todos los conceptos</option>
+        {% for valor, etiqueta in conceptos %}
+            <option value="{{ valor }}" {% if filtros.concepto == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="metodo" class="g-filtro-select" data-filtro-auto>
+        <option value="">Todos los métodos</option>
+        {% for valor, etiqueta in metodos %}
+            <option value="{{ valor }}" {% if filtros.metodo == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="estado" class="g-filtro-select" data-filtro-auto>
+        <option value="">Todos los estados</option>
+        {% for valor, etiqueta in estados %}
+            <option value="{{ valor }}" {% if filtros.estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+    </select>
+
+    {% if filtros.q or filtros.mes or filtros.metodo or filtros.estado or filtros.concepto %}
+        <a href="{% url 'gestion:pagos' %}" class="g-btn g-btn-neutro g-btn-sm">
+            <i class="bi bi-x-lg"></i> Limpiar
+        </a>
+    {% endif %}
+    <noscript><button type="submit" class="g-btn g-btn-primario g-btn-sm">Filtrar</button></noscript>
+</form>
+
+{% if pagina.object_list %}
+<div class="g-tabla-envoltura g-scroll-x">
+    <table class="g-tabla" data-ordenable>
+        <thead>
+            <tr>
+                <th class="ordenable" data-tipo="texto">Fecha</th>
+                <th class="ordenable" data-tipo="texto">Alumno</th>
+                <th>Concepto</th>
+                <th class="num ordenable" data-tipo="numero">Monto</th>
+                <th>Método</th>
+                <th>Comprobante</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for pago in pagina.object_list %}
+            <tr>
+                <td class="g-nowrap" data-orden="{{ pago.fecha_pago|date:'Y-m-d' }}">
+                    {{ pago.fecha_pago|date:"d/m/Y" }}
+                </td>
+                <td>
+                    <a href="{% url 'gestion:alumno_detalle' pago.alumno.pk %}">
+                        {{ pago.alumno.nombre_completo }}
+                    </a>
+                    <div class="g-muted" style="font-size:.76rem">{{ pago.alumno.rut }}</div>
+                </td>
+                <td>{{ pago.concepto_display }}</td>
+                <td class="num" data-orden="{{ pago.monto_clp }}">${{ pago.monto_clp|clp }}</td>
+                <td class="g-muted">{{ pago.get_metodo_display }}</td>
+                <td class="g-muted">{{ pago.numero_comprobante|default:"—" }}</td>
+                <td>
+                    <span class="g-badge {% if pago.estado == 'PAGADO' %}g-badge-verde{% elif pago.estado == 'PENDIENTE' %}g-badge-amarillo{% else %}g-badge-rojo{% endif %}">
+                        {{ pago.get_estado_display }}
+                    </span>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">Total en esta selección</td>
+                <td class="num">${{ total_cobrado|clp }}</td>
+                <td colspan="3" class="g-muted">Pendiente: ${{ total_pendiente|clp }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+{% include 'gestion/_paginacion.html' %}
+
+{% else %}
+<div class="g-tabla-envoltura">
+    <div class="g-vacio">
+        <i class="bi bi-receipt"></i>
+        {% if filtros.q or filtros.mes or filtros.metodo or filtros.estado or filtros.concepto %}
+            <h3>Sin resultados</h3>
+            <p>Ningún pago cumple con los filtros aplicados.</p>
+            <a href="{% url 'gestion:pagos' %}" class="g-btn g-btn-neutro">Limpiar filtros</a>
+        {% else %}
+            <h3>Todavía no hay pagos</h3>
+            <p>Registra el primer pago para empezar a llevar el control financiero.</p>
+            <a href="{% url 'gestion:pago_nuevo' %}" class="g-btn g-btn-primario">
+                <i class="bi bi-plus-lg"></i> Registrar pago
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

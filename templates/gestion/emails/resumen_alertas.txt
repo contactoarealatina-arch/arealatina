@@ -1,0 +1,20 @@
+AREA LATINA ESTUDIO - Resumen de alertas del {{ fecha|date:"d/m/Y" }}
+============================================================
+{% if por_vencer %}
+PLANES POR VENCER ({{ por_vencer|length }})
+------------------------------------------------------------
+{% for item in por_vencer %}- {{ item.alumno.nombre_completo }} | {{ item.plan }} | vence {{ item.vence|date:"d/m/Y" }} ({{ item.dias }} dia{{ item.dias|pluralize }}) | {{ item.alumno.telefono|default:"sin telefono" }}
+{% endfor %}{% endif %}
+{% if vencidos %}
+PLANES YA VENCIDOS ({{ vencidos|length }})
+------------------------------------------------------------
+{% for item in vencidos %}- {{ item.alumno.nombre_completo }} | {{ item.plan }} | vencio hace {{ item.dias }} dia{{ item.dias|pluralize }} | {{ item.alumno.telefono|default:"sin telefono" }}
+{% endfor %}{% endif %}
+{% if sin_pago %}
+SIN PAGO REGISTRADO EN {{ mes|upper }} ({{ sin_pago|length }})
+------------------------------------------------------------
+{% for item in sin_pago %}- {{ item.alumno.nombre_completo }} | {{ item.alumno.rut }} | {{ item.alumno.telefono|default:"sin telefono" }}
+{% endfor %}{% endif %}
+============================================================
+Entra al panel de gestion para renovar planes o registrar pagos.
+Area Latina Estudio - {{ academia.email }}

@@ -1,0 +1,120 @@
+{% load formato %}<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Resumen de alertas</title></head>
+<body style="margin:0;padding:0;background:#F4F4F4;font-family:Arial,Helvetica,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F4F4;padding:24px 12px;">
+<tr><td align="center">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="max-width:640px;background:#FFFFFF;border-radius:12px;overflow:hidden;">
+
+    <!-- Encabezado -->
+    <tr>
+        <td style="background:#0D0D0D;padding:24px;text-align:center;">
+            <div style="color:#FF5722;font-size:22px;font-weight:bold;letter-spacing:.5px;">
+                ★ ÁREA LATINA ESTUDIO
+            </div>
+            <div style="color:#B0B0B0;font-size:13px;margin-top:6px;">
+                Resumen de alertas · {{ fecha|date:"d/m/Y" }}
+            </div>
+        </td>
+    </tr>
+
+    <!-- Planes por vencer -->
+    {% if por_vencer %}
+    <tr><td style="padding:24px 24px 0;">
+        <div style="font-size:15px;font-weight:bold;color:#E65100;border-left:4px solid #FFC107;padding-left:10px;">
+            Planes por vencer ({{ por_vencer|length }})
+        </div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;font-size:14px;">
+            <tr style="background:#FAFAFA;">
+                <th align="left" style="padding:8px;color:#666;font-size:12px;">Alumno</th>
+                <th align="left" style="padding:8px;color:#666;font-size:12px;">Plan</th>
+                <th align="left" style="padding:8px;color:#666;font-size:12px;">Vence</th>
+                <th align="left" style="padding:8px;color:#666;font-size:12px;">Teléfono</th>
+            </tr>
+            {% for item in por_vencer %}
+            <tr style="border-bottom:1px solid #EEE;">
+                <td style="padding:8px;">{{ item.alumno.nombre_completo }}</td>
+                <td style="padding:8px;color:#666;">{{ item.plan }}</td>
+                <td style="padding:8px;color:#E65100;">
+                    {{ item.vence|date:"d/m" }} ({{ item.dias }} día{{ item.dias|pluralize }})
+                </td>
+                <td style="padding:8px;color:#666;">{{ item.alumno.telefono|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </td></tr>
+    {% endif %}
+
+    <!-- Planes vencidos -->
+    {% if vencidos %}
+    <tr><td style="padding:24px 24px 0;">
+        <div style="font-size:15px;font-weight:bold;color:#C62828;border-left:4px solid #F44336;padding-left:10px;">
+            Planes ya vencidos ({{ vencidos|length }})
+        </div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;font-size:14px;">
+            <tr style="background:#FAFAFA;">
+                <th align="left" style="padding:8px;color:#666;font-size:12px;">Alumno</th>
+                <th align="left" style="padding:8px;color:#666;font-size:12px;">Plan</th>
+                <th align="left" style="padding:8px;color:#666;font-size:12px;">Venció</th>
+                <th align="left" style="padding:8px;color:#666;font-size:12px;">Teléfono</th>
+            </tr>
+            {% for item in vencidos %}
+            <tr style="border-bottom:1px solid #EEE;">
+                <td style="padding:8px;">{{ item.alumno.nombre_completo }}</td>
+                <td style="padding:8px;color:#666;">{{ item.plan }}</td>
+                <td style="padding:8px;color:#C62828;">
+                    hace {{ item.dias }} día{{ item.dias|pluralize }}
+                </td>
+                <td style="padding:8px;color:#666;">{{ item.alumno.telefono|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </td></tr>
+    {% endif %}
+
+    <!-- Sin pago del mes -->
+    {% if sin_pago %}
+    <tr><td style="padding:24px 24px 0;">
+        <div style="font-size:15px;font-weight:bold;color:#E65100;border-left:4px solid #FF5722;padding-left:10px;">
+            Sin pago registrado en {{ mes }} ({{ sin_pago|length }})
+        </div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;font-size:14px;">
+            <tr style="background:#FAFAFA;">
+                <th align="left" style="padding:8px;color:#666;font-size:12px;">Alumno</th>
+                <th align="left" style="padding:8px;color:#666;font-size:12px;">RUT</th>
+                <th align="left" style="padding:8px;color:#666;font-size:12px;">Teléfono</th>
+            </tr>
+            {% for item in sin_pago %}
+            <tr style="border-bottom:1px solid #EEE;">
+                <td style="padding:8px;">{{ item.alumno.nombre_completo }}</td>
+                <td style="padding:8px;color:#666;">{{ item.alumno.rut }}</td>
+                <td style="padding:8px;color:#666;">{{ item.alumno.telefono|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </td></tr>
+    {% endif %}
+
+    <!-- Pie -->
+    <tr>
+        <td style="padding:28px 24px;">
+            <div style="background:#FFF3E0;border-radius:8px;padding:14px;font-size:13px;color:#6D4C41;">
+                Este resumen se genera automáticamente todos los días.
+                Entra al panel de gestión para renovar planes o registrar pagos.
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td style="background:#1A1A1A;padding:16px 24px;text-align:center;color:#888;font-size:12px;">
+            Área Latina Estudio · {{ academia.direccion_completa }}<br>
+            {{ academia.email }}
+        </td>
+    </tr>
+</table>
+
+</td></tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,405 @@
+{% extends 'gestion/base_gestion.html' %}
+{% load formato %}
+
+{% block titulo %}{{ alumno.nombre_completo }}{% endblock %}
+{% block encabezado %}{{ alumno.nombre_completo }}{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo">{{ alumno.rut }} · Ingresó el {{ alumno.fecha_ingreso|date:"d/m/Y" }}</div>
+{% endblock %}
+
+{% block acciones %}
+    <a href="{% url 'gestion:alumno_editar' alumno.pk %}" class="g-btn g-btn-neutro g-btn-sm">
+        <i class="bi bi-pencil"></i> <span class="d-none d-sm-inline">Editar</span>
+    </a>
+    <a href="{% url 'gestion:pago_nuevo' %}?alumno={{ alumno.pk }}" class="g-btn g-btn-primario g-btn-sm">
+        <i class="bi bi-cash"></i> Registrar pago
+    </a>
+{% endblock %}
+
+{% block contenido %}
+
+<!-- ==================== BANNERS ==================== -->
+{% if alumno.estado_pago == 'vencido' %}
+    <div class="g-banner g-banner-peligro">
+        <i class="bi bi-exclamation-octagon"></i>
+        <div>
+            <strong>El plan de este alumno está vencido.</strong>
+            Renuévalo para que vuelva a quedar al día.
+        </div>
+    </div>
+{% elif alumno.estado_pago == 'por_vencer' %}
+    <div class="g-banner g-banner-aviso">
+        <i class="bi bi-hourglass-split"></i>
+        <div>
+            <strong>El plan vence en {{ alumno.dias_para_vencer }} día{{ alumno.dias_para_vencer|pluralize }}.</strong>
+            Conviene avisarle antes de que se le pase.
+        </div>
+    </div>
+{% elif alumno.estado_pago == 'sin_plan' %}
+    <div class="g-banner g-banner-info">
+        <i class="bi bi-info-circle"></i>
+        <div>Este alumno no tiene ningún plan contratado.</div>
+    </div>
+{% endif %}
+
+{% if pagos_pendientes %}
+    <div class="g-banner g-banner-naranja">
+        <i class="bi bi-cash-coin"></i>
+        <div>Tiene {{ pagos_pendientes }} pago{{ pagos_pendientes|pluralize }} sin saldar.</div>
+    </div>
+{% endif %}
+
+{% if alumno.estado == 'SUSPENDIDO' %}
+    <div class="g-banner g-banner-peligro">
+        <i class="bi bi-pause-circle"></i>
+        <div><strong>Alumno suspendido.</strong> No aparece en los listados activos.</div>
+    </div>
+{% endif %}
+
+<div class="row g-3">
+
+    <!-- ==================== COLUMNA IZQUIERDA ==================== -->
+    <div class="col-lg-4">
+        <div class="g-card mb-3">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                {% if alumno.foto %}
+                    <img src="{{ alumno.foto.url }}" alt="{{ alumno.nombre_completo }}" class="g-ficha-foto">
+                {% else %}
+                    <div class="g-ficha-foto">{{ alumno.iniciales }}</div>
+                {% endif %}
+                <div style="min-width:0">
+                    <h2 style="font-size:1.1rem;margin:0 0 .25rem">{{ alumno.nombre_completo }}</h2>
+                    <div class="g-muted" style="font-size:.82rem">{{ alumno.rut }}</div>
+                    <div class="mt-2 d-flex flex-wrap gap-1">
+                        <span class="g-badge {% if alumno.estado == 'ACTIVO' %}g-badge-verde{% elif alumno.estado == 'SUSPENDIDO' %}g-badge-rojo{% else %}g-badge-gris{% endif %}">
+                            {{ alumno.get_estado_display }}
+                        </span>
+                        {% if alumno.edad %}
+                            <span class="g-badge g-badge-gris">{{ alumno.edad }} años</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="g-dato"><i class="bi bi-telephone"></i>
+                <span class="g-dato-etiqueta">Teléfono</span>
+                <span class="g-dato-valor">{{ alumno.telefono|default:"—" }}</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-envelope"></i>
+                <span class="g-dato-etiqueta">Email</span>
+                <span class="g-dato-valor">{{ alumno.email|default:"—" }}</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-geo-alt"></i>
+                <span class="g-dato-etiqueta">Dirección</span>
+                <span class="g-dato-valor">{{ alumno.direccion|default:"—" }}</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-calendar"></i>
+                <span class="g-dato-etiqueta">Nacimiento</span>
+                <span class="g-dato-valor">{{ alumno.fecha_nacimiento|date:"d/m/Y"|default:"—" }}</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-person"></i>
+                <span class="g-dato-etiqueta">Género</span>
+                <span class="g-dato-valor">{{ alumno.get_genero_display }}</span>
+            </div>
+        </div>
+
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">Clases inscritas</h2>
+            {% for inscripcion in alumno.inscripciones.all %}
+                <div class="g-dato">
+                    <i class="bi bi-music-note-beamed"></i>
+                    <span class="g-dato-valor">
+                        <a href="{% url 'gestion:clase_detalle' inscripcion.clase.pk %}">
+                            {{ inscripcion.clase.get_nombre_display }}
+                        </a>
+                        <div class="g-muted" style="font-size:.78rem">
+                            {{ inscripcion.clase.dias_display }} · {{ inscripcion.clase.horario }}
+                        </div>
+                    </span>
+                </div>
+            {% empty %}
+                <p class="g-muted mb-0">No está inscrito en ninguna clase.</p>
+            {% endfor %}
+        </div>
+
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">Contacto de emergencia</h2>
+            <div class="g-dato"><i class="bi bi-person-exclamation"></i>
+                <span class="g-dato-etiqueta">Nombre</span>
+                <span class="g-dato-valor">{{ alumno.contacto_emergencia|default:"—" }}</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-telephone-plus"></i>
+                <span class="g-dato-etiqueta">Teléfono</span>
+                <span class="g-dato-valor">{{ alumno.telefono_emergencia|default:"—" }}</span>
+            </div>
+            <div class="g-dato"><i class="bi bi-people"></i>
+                <span class="g-dato-etiqueta">Relación</span>
+                <span class="g-dato-valor">{{ alumno.get_relacion_emergencia_display }}</span>
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="g-card">
+            <h2 class="g-card-titulo">Acciones</h2>
+            <div class="d-grid gap-2">
+                <button type="button" class="g-btn g-btn-primario"
+                        data-bs-toggle="modal" data-bs-target="#modalRenovar">
+                    <i class="bi bi-arrow-clockwise"></i> Renovar plan
+                </button>
+
+                <form method="post" action="{% url 'gestion:alumno_estado' alumno.pk %}">
+                    {% csrf_token %}
+                    {% if alumno.estado == 'SUSPENDIDO' or alumno.estado == 'INACTIVO' %}
+                        <input type="hidden" name="estado" value="ACTIVO">
+                        <button type="submit" class="g-btn g-btn-outline w-100">
+                            <i class="bi bi-play-circle"></i> Reactivar alumno
+                        </button>
+                    {% else %}
+                        <input type="hidden" name="estado" value="SUSPENDIDO">
+                        <button type="submit" class="g-btn g-btn-neutro w-100">
+                            <i class="bi bi-pause-circle"></i> Suspender alumno
+                        </button>
+                    {% endif %}
+                </form>
+
+                <form method="post" action="{% url 'gestion:alumno_eliminar' alumno.pk %}"
+                      data-confirmar="¿Eliminar a {{ alumno.nombre_completo }}? Su historial de pagos y asistencia se conserva, pero deja de aparecer en los listados.">
+                    {% csrf_token %}
+                    <button type="submit" class="g-btn g-btn-peligro w-100">
+                        <i class="bi bi-trash"></i> Eliminar alumno
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== COLUMNA DERECHA ==================== -->
+    <div class="col-lg-8">
+
+        <!-- Plan actual -->
+        <div class="g-card mb-3" id="renovar">
+            <h2 class="g-card-titulo">
+                Plan actual
+                {% if alumno.estado_pago == 'al_dia' %}
+                    <span class="g-badge g-badge-verde">Al día</span>
+                {% elif alumno.estado_pago == 'por_vencer' %}
+                    <span class="g-badge g-badge-amarillo">Por vencer</span>
+                {% elif alumno.estado_pago == 'vencido' %}
+                    <span class="g-badge g-badge-rojo">Vencido</span>
+                {% else %}
+                    <span class="g-badge g-badge-gris">Sin plan</span>
+                {% endif %}
+            </h2>
+
+            {% if suscripcion %}
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-4">
+                        <div class="g-muted" style="font-size:.76rem;text-transform:uppercase">Plan</div>
+                        <strong>{{ suscripcion.plan.nombre }}</strong>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="g-muted" style="font-size:.76rem;text-transform:uppercase">Desde</div>
+                        <strong>{{ suscripcion.fecha_inicio|date:"d/m/Y" }}</strong>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="g-muted" style="font-size:.76rem;text-transform:uppercase">Vence</div>
+                        <strong>{{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}</strong>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="g-muted" style="font-size:.8rem">
+                        {% if suscripcion.dias_restantes >= 0 %}
+                            Quedan {{ suscripcion.dias_restantes }} día{{ suscripcion.dias_restantes|pluralize }}
+                        {% else %}
+                            Venció hace {{ suscripcion.dias_restantes|cut:"-" }} días
+                        {% endif %}
+                    </span>
+                    <span class="g-muted" style="font-size:.8rem">{{ suscripcion.porcentaje_consumido }}%</span>
+                </div>
+                <div class="g-progreso">
+                    <div class="g-progreso-relleno {% if suscripcion.dias_restantes < 0 %}peligro{% elif suscripcion.dias_restantes <= dias_aviso %}aviso{% endif %}"
+                         style="width: {{ suscripcion.porcentaje_consumido }}%"></div>
+                </div>
+            {% else %}
+                <div class="g-vacio" style="padding:1.5rem">
+                    <i class="bi bi-card-checklist"></i>
+                    <p class="mb-3">Este alumno no tiene un plan activo.</p>
+                    <button type="button" class="g-btn g-btn-primario"
+                            data-bs-toggle="modal" data-bs-target="#modalRenovar">
+                        Asignar un plan
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Historial de pagos -->
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">
+                Historial de pagos
+                <span class="g-muted" style="font-size:.8rem;font-weight:400">
+                    Total pagado: ${{ alumno.total_pagado|clp }}
+                </span>
+            </h2>
+            {% if pagos %}
+                <div class="g-scroll-x">
+                <table class="g-tabla" data-ordenable>
+                    <thead>
+                        <tr>
+                            <th class="ordenable" data-tipo="texto">Fecha</th>
+                            <th>Concepto</th>
+                            <th class="num ordenable" data-tipo="numero">Monto</th>
+                            <th>Método</th>
+                            <th>Comprobante</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for pago in pagos %}
+                        <tr>
+                            <td class="g-nowrap" data-orden="{{ pago.fecha_pago|date:'Y-m-d' }}">
+                                {{ pago.fecha_pago|date:"d/m/Y" }}
+                            </td>
+                            <td>{{ pago.concepto_display }}</td>
+                            <td class="num" data-orden="{{ pago.monto_clp }}">${{ pago.monto_clp|clp }}</td>
+                            <td class="g-muted">{{ pago.get_metodo_display }}</td>
+                            <td class="g-muted">{{ pago.numero_comprobante|default:"—" }}</td>
+                            <td>
+                                <span class="g-badge {% if pago.estado == 'PAGADO' %}g-badge-verde{% elif pago.estado == 'PENDIENTE' %}g-badge-amarillo{% else %}g-badge-rojo{% endif %}">
+                                    {{ pago.get_estado_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            {% else %}
+                <p class="g-muted mb-0">Todavía no hay pagos registrados.</p>
+            {% endif %}
+        </div>
+
+        <!-- Historial de planes -->
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">Planes anteriores</h2>
+            {% if suscripciones|length > 1 or suscripciones and not suscripcion %}
+                <div class="g-scroll-x">
+                <table class="g-tabla">
+                    <thead><tr><th>Plan</th><th>Desde</th><th>Hasta</th><th>Estado</th></tr></thead>
+                    <tbody>
+                    {% for sus in suscripciones %}
+                        <tr>
+                            <td>{{ sus.plan.nombre }}</td>
+                            <td class="g-muted g-nowrap">{{ sus.fecha_inicio|date:"d/m/Y" }}</td>
+                            <td class="g-muted g-nowrap">{{ sus.fecha_vencimiento|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="g-badge {% if sus.estado == 'ACTIVA' %}g-badge-verde{% elif sus.estado == 'VENCIDA' %}g-badge-gris{% else %}g-badge-rojo{% endif %}">
+                                    {{ sus.get_estado_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            {% else %}
+                <p class="g-muted mb-0">No hay planes anteriores.</p>
+            {% endif %}
+        </div>
+
+        <!-- Asistencia -->
+        <div class="g-card mb-3">
+            <h2 class="g-card-titulo">Historial de asistencia</h2>
+            {% if asistencias %}
+                <div class="g-scroll-x">
+                <table class="g-tabla">
+                    <thead><tr><th>Fecha</th><th>Clase</th><th>Estado</th><th>Observación</th></tr></thead>
+                    <tbody>
+                    {% for registro in asistencias %}
+                        <tr>
+                            <td class="g-nowrap">{{ registro.fecha|date:"d/m/Y" }}</td>
+                            <td>{{ registro.clase.get_nombre_display }}</td>
+                            <td>
+                                <span class="g-badge {% if registro.estado == 'PRESENTE' %}g-badge-verde{% elif registro.estado == 'JUSTIFICADO' %}g-badge-amarillo{% else %}g-badge-rojo{% endif %}">
+                                    {{ registro.get_estado_display }}
+                                </span>
+                            </td>
+                            <td class="g-muted">{{ registro.observacion|default:"—" }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+            {% else %}
+                <p class="g-muted mb-0">Todavía no hay asistencia registrada.</p>
+            {% endif %}
+        </div>
+
+        <!-- Notas internas -->
+        <div class="g-card">
+            <h2 class="g-card-titulo">Notas internas</h2>
+            <form method="post" action="{% url 'gestion:alumno_nota' alumno.pk %}" class="g-form mb-3">
+                {% csrf_token %}
+                {{ form_nota.texto }}
+                <button type="submit" class="g-btn g-btn-outline g-btn-sm mt-2">
+                    <i class="bi bi-plus-lg"></i> Agregar nota
+                </button>
+            </form>
+
+            {% for nota in notas %}
+                <div class="g-dato">
+                    <i class="bi bi-sticky"></i>
+                    <span class="g-dato-valor">
+                        {{ nota.texto|linebreaksbr }}
+                        <div class="g-muted" style="font-size:.75rem">
+                            {{ nota.autor.get_full_name|default:"Sistema" }} ·
+                            {{ nota.created_at|date:"d/m/Y H:i" }}
+                        </div>
+                    </span>
+                </div>
+            {% empty %}
+                <p class="g-muted mb-0">Sin notas todavía.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- ==================== MODAL RENOVAR ==================== -->
+<div class="modal fade" id="modalRenovar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" action="{% url 'gestion:alumno_renovar' alumno.pk %}" class="modal-content g-form">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title">Renovar plan de {{ alumno.nombre_completo }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="g-campo">
+                    <label for="{{ form_renovar.plan.id_for_label }}">Nuevo plan</label>
+                    {{ form_renovar.plan }}
+                </div>
+                <div class="g-campo">
+                    <label for="{{ form_renovar.fecha_inicio.id_for_label }}">Desde</label>
+                    {{ form_renovar.fecha_inicio }}
+                </div>
+                <label class="g-opcion">
+                    {{ form_renovar.registrar_pago }}
+                    <span class="g-opcion-texto">
+                        <strong>Registrar también el pago</strong>
+                        <span>Se crea un pago por el valor del plan</span>
+                    </span>
+                </label>
+                <div class="g-campo mt-3 mb-0">
+                    <label for="{{ form_renovar.metodo.id_for_label }}">Método de pago</label>
+                    {{ form_renovar.metodo }}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="g-btn g-btn-neutro" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="g-btn g-btn-primario">Renovar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,49 @@
+{% comment %}
+Paginación reutilizable. Espera `pagina` (objeto Page) y `querystring`
+(los filtros actuales sin el parámetro page).
+
+Ojo: previous_page_number y next_page_number LANZAN EmptyPage en los
+extremos, y el filtro |default no atrapa excepciones. Por eso cada enlace
+va dentro de su {% if %} y el estado deshabilitado es un <span>.
+{% endcomment %}
+{% if pagina.paginator.num_pages > 1 %}
+<div class="g-paginacion">
+    <div class="g-paginacion-info">
+        Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de
+        {{ pagina.paginator.count }} registro{{ pagina.paginator.count|pluralize }}
+    </div>
+    <div class="g-paginacion-links">
+        {% if pagina.has_previous %}
+            <a class="g-pagina" href="?{{ querystring }}&page={{ pagina.previous_page_number }}"
+               aria-label="Página anterior"><i class="bi bi-chevron-left"></i></a>
+        {% else %}
+            <span class="g-pagina deshabilitada" aria-hidden="true">
+                <i class="bi bi-chevron-left"></i>
+            </span>
+        {% endif %}
+
+        {% for numero in pagina.paginator.page_range %}
+            {% if numero == pagina.number %}
+                <span class="g-pagina activa" aria-current="page">{{ numero }}</span>
+            {% elif numero >= pagina.number|add:-2 and numero <= pagina.number|add:2 %}
+                <a class="g-pagina" href="?{{ querystring }}&page={{ numero }}">{{ numero }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if pagina.has_next %}
+            <a class="g-pagina" href="?{{ querystring }}&page={{ pagina.next_page_number }}"
+               aria-label="Página siguiente"><i class="bi bi-chevron-right"></i></a>
+        {% else %}
+            <span class="g-pagina deshabilitada" aria-hidden="true">
+                <i class="bi bi-chevron-right"></i>
+            </span>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="g-paginacion">
+    <div class="g-paginacion-info">
+        {{ pagina.paginator.count }} registro{{ pagina.paginator.count|pluralize }}
+    </div>
+</div>
+{% endif %}
