@@ -6,6 +6,7 @@ from .models import (
     AuditLog,
     Clase,
     ConfiguracionAlertas,
+    CorreoEnviado,
     Inscripcion,
     NotaInterna,
     Pago,
@@ -160,9 +161,26 @@ class AlertaAdmin(admin.ModelAdmin):
     readonly_fields = ('gestionada_en', 'gestionada_por')
 
 
+@admin.register(CorreoEnviado)
+class CorreoEnviadoAdmin(admin.ModelAdmin):
+    list_display = ('created_at', 'tipo', 'destinatario', 'asunto', 'enviado')
+    list_filter = ('tipo', 'enviado', 'created_at')
+    search_fields = ('destinatario', 'asunto', 'error')
+    date_hierarchy = 'created_at'
+    readonly_fields = ('tipo', 'destinatario', 'asunto', 'alumno',
+                       'referencia', 'enviado', 'error', 'created_at')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(ConfiguracionAlertas)
 class ConfiguracionAlertasAdmin(admin.ModelAdmin):
-    list_display = ('dias_anticipacion', 'hora_envio', 'envio_activo', 'emails_destino')
+    list_display = ('dias_anticipacion', 'hora_envio', 'envio_activo',
+                    'enviar_bienvenida', 'enviar_recibos', 'enviar_recordatorios')
 
     def has_add_permission(self, request):
         # Fila única: se edita, no se crea.

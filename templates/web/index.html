@@ -126,6 +126,7 @@
 </section>
 
 <!-- ==================== GALERIA ==================== -->
+{% if galeria %}
 <section class="seccion bg-seccion">
     <div class="container">
         <div class="text-center fade-in">
@@ -136,21 +137,15 @@
 
         <div class="galeria">
             {% for item in galeria %}
-            <figure class="galeria-item {% if item.alto %}galeria-alto{% endif %} fade-in"
-                    data-tilt="6">
-                {% if item.imagen %}
-                    <img src="{% static item.imagen %}" alt="{{ item.titulo }}" loading="lazy">
-                {% else %}
-                    <div class="galeria-vacia">
-                        <span class="galeria-emoji">{{ item.emoji }}</span>
-                    </div>
-                {% endif %}
+            <figure class="galeria-item fade-in" data-tilt="6">
+                <img src="{% static item.imagen %}" alt="{{ item.titulo }}" loading="lazy">
                 <figcaption>{{ item.titulo }}</figcaption>
             </figure>
             {% endfor %}
         </div>
     </div>
 </section>
+{% endif %}
 
 <!-- ==================== PLANES ==================== -->
 {% if planes %}

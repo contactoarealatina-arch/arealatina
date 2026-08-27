@@ -305,6 +305,12 @@ class Alumno(TimeStampedModel):
         )
 
     @property
+    def primer_nombre(self):
+        """Para saludar en los correos sin sonar a formulario."""
+        partes = self.nombre_completo.split()
+        return partes[0] if partes else self.nombre_completo
+
+    @property
     def iniciales(self):
         partes = self.nombre_completo.split()
         if not partes:
@@ -654,7 +660,18 @@ class ConfiguracionAlertas(TimeStampedModel):
         help_text='Separados por coma.',
     )
     hora_envio = models.TimeField('Hora de envío', default='09:00')
-    envio_activo = models.BooleanField('Enviar resumen por email', default=True)
+    envio_activo = models.BooleanField(
+        'Enviar resumen diario al equipo', default=True)
+
+    # Correos que le llegan al alumno. Se pueden apagar por separado:
+    # el plan gratuito de Brevo tiene tope diario y conviene poder cortar
+    # uno sin apagar todo.
+    enviar_bienvenida = models.BooleanField(
+        'Correo de bienvenida al inscribir', default=True)
+    enviar_recibos = models.BooleanField(
+        'Comprobante al registrar un pago', default=True)
+    enviar_recordatorios = models.BooleanField(
+        'Aviso al alumno antes de que venza su plan', default=True)
 
     class Meta:
         verbose_name = 'Configuración de alertas'
@@ -723,3 +740,51 @@ class AuditLog(models.Model):
     def __str__(self):
         quien = self.usuario.get_full_name() if self.usuario else 'Sistema'
         return f'{quien} {self.get_accion_display().lower()} {self.modelo} #{self.objeto_id}'
+
+
+class CorreoEnviado(models.Model):
+    """Bitácora de correos. Sirve para dos cosas concretas:
+
+    - No mandarle dos veces el mismo aviso al mismo alumno.
+    - Saber por qué no llegó un correo cuando alguien reclama.
+    """
+
+    class Tipo(models.TextChoices):
+        BIENVENIDA = 'BIENVENIDA', 'Bienvenida'
+        RECIBO = 'RECIBO', 'Comprobante de pago'
+        RECORDATORIO = 'RECORDATORIO', 'Aviso de vencimiento'
+        RESUMEN = 'RESUMEN', 'Resumen para el equipo'
+        CONTACTO = 'CONTACTO', 'Mensaje del formulario web'
+
+    tipo = models.CharField('Tipo', max_length=15, choices=Tipo.choices)
+    destinatario = models.EmailField('Destinatario')
+    asunto = models.CharField('Asunto', max_length=250)
+    alumno = models.ForeignKey(
+        Alumno,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='correos',
+        verbose_name='Alumno',
+    )
+    referencia = models.CharField(
+        'Referencia',
+        max_length=60,
+        blank=True,
+        help_text='Identifica el envío para no repetirlo. Ej: RECORDATORIO-12-2026-08-30',
+    )
+    enviado = models.BooleanField('Enviado', default=False)
+    error = models.TextField('Error', blank=True)
+    created_at = models.DateTimeField('Fecha', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Correo enviado'
+        verbose_name_plural = 'Correos enviados'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['tipo', 'referencia']),
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        estado = 'OK' if self.enviado else 'FALLÓ'
+        return f'[{estado}] {self.get_tipo_display()} → {self.destinatario}'

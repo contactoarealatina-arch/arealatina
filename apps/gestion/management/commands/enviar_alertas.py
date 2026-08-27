@@ -9,7 +9,7 @@ para probar o para ponerlo en el cron del hosting.
 """
 from django.core.management.base import BaseCommand
 
-from apps.gestion.correos import enviar_resumen
+from apps.gestion.correos import enviar_recordatorios_del_dia, enviar_resumen
 from apps.gestion.servicios import generar_alertas
 
 
@@ -37,8 +37,15 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING('Correo omitido (--sin-correo).'))
             return
 
+        # 1. Aviso a cada alumno con plan por vencer o vencido.
+        enviados, omitidos = enviar_recordatorios_del_dia(resumen)
+        self.stdout.write(self.style.SUCCESS(
+            f'Recordatorios a alumnos: {enviados} enviados, {omitidos} omitidos'
+        ))
+
+        # 2. Resumen para el equipo.
         enviado, motivo = enviar_resumen(resumen)
         if enviado:
             self.stdout.write(self.style.SUCCESS(motivo))
         else:
-            self.stdout.write(self.style.WARNING(f'Sin correo: {motivo}'))
+            self.stdout.write(self.style.WARNING(f'Sin resumen: {motivo}'))

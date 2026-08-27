@@ -1,0 +1,89 @@
+{% extends 'gestion/emails/_base.html' %}
+{% load formato %}
+
+{% block asunto %}Bienvenido/a a Área Latina Estudio{% endblock %}
+{% block preview %}Ya estás inscrito/a. Acá van tus horarios y todo lo que necesitas saber.{% endblock %}
+{% block bajada %}Donde el ritmo te transforma{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 16px;font-size:22px;color:#0D0D0D;">
+        ¡Bienvenido/a, {{ alumno.primer_nombre }}!
+    </h1>
+
+    <p style="margin:0 0 18px;">
+        Qué bueno tenerte en Área Latina. Ya quedaste inscrito/a y tu ficha
+        está lista. Acá va todo lo que necesitas saber para tu primera clase.
+    </p>
+
+    {% if clases %}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FFF6F2;border-left:4px solid #FF5722;border-radius:8px;margin-bottom:18px;">
+        <tr><td style="padding:16px 18px;">
+            <div style="font-size:12px;letter-spacing:1px;color:#E64A19;font-weight:bold;text-transform:uppercase;margin-bottom:10px;">
+                Tus clases
+            </div>
+            {% for clase in clases %}
+            <div style="margin-bottom:{% if not forloop.last %}12px{% else %}0{% endif %};">
+                <strong style="color:#0D0D0D;font-size:15px;">{{ clase.get_nombre_display }}</strong>
+                <span style="color:#888;font-size:13px;"> · {{ clase.get_nivel_display }}</span><br>
+                <span style="color:#555;font-size:13px;">
+                    {{ clase.dias_display }} · {{ clase.horario }} hrs · {{ clase.sala }}
+                </span>
+                {% if clase.profesora %}
+                <br><span style="color:#888;font-size:13px;">
+                    Con {{ clase.profesora.get_full_name|default:clase.profesora.username }}
+                </span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </td></tr>
+    </table>
+    {% endif %}
+
+    {% if suscripcion %}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FAFAFA;border-radius:8px;margin-bottom:18px;">
+        <tr><td style="padding:16px 18px;">
+            <div style="font-size:12px;letter-spacing:1px;color:#666;font-weight:bold;text-transform:uppercase;margin-bottom:10px;">
+                Tu plan
+            </div>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;">
+                <tr>
+                    <td style="padding:4px 0;color:#666;">Plan</td>
+                    <td style="padding:4px 0;text-align:right;color:#0D0D0D;font-weight:bold;">
+                        {{ suscripcion.plan.nombre }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:4px 0;color:#666;">Desde</td>
+                    <td style="padding:4px 0;text-align:right;color:#0D0D0D;">
+                        {{ suscripcion.fecha_inicio|date:"d/m/Y" }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:4px 0;color:#666;">Válido hasta</td>
+                    <td style="padding:4px 0;text-align:right;color:#E64A19;font-weight:bold;">
+                        {{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}
+                    </td>
+                </tr>
+            </table>
+        </td></tr>
+    </table>
+    {% endif %}
+
+    <div style="font-size:12px;letter-spacing:1px;color:#666;font-weight:bold;text-transform:uppercase;margin-bottom:10px;">
+        Para tu primera clase
+    </div>
+    <ul style="margin:0 0 18px;padding-left:20px;color:#555;font-size:14px;line-height:1.8;">
+        <li>Llega 10 minutos antes para acomodarte con calma.</li>
+        <li>Ropa cómoda y zapatillas limpias de suela lisa.</li>
+        <li>Trae agua.</li>
+        <li>No necesitas venir en pareja: en clase vamos rotando.</li>
+    </ul>
+
+    <p style="margin:0 0 8px;color:#555;font-size:14px;">
+        Cualquier duda, respóndenos este mismo correo o escríbenos a
+        <a href="mailto:{{ academia.email }}" style="color:#FF5722;">{{ academia.email }}</a>.
+    </p>
+    <p style="margin:0;color:#555;font-size:14px;">Nos vemos en la pista.</p>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'gestion/emails/_base.html' %}
+
+{% block asunto %}Nuevo mensaje desde la web{% endblock %}
+{% block preview %}{{ mensaje.nombre }} escribió desde el formulario de contacto.{% endblock %}
+{% block bajada %}Mensaje del formulario web{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 16px;font-size:20px;color:#0D0D0D;">
+        Nuevo mensaje de {{ mensaje.nombre }}
+    </h1>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FAFAFA;border-radius:8px;margin-bottom:18px;">
+        <tr><td style="padding:16px 18px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;">
+                <tr>
+                    <td style="padding:5px 0;color:#666;width:90px;">Nombre</td>
+                    <td style="padding:5px 0;color:#0D0D0D;">{{ mensaje.nombre }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Email</td>
+                    <td style="padding:5px 0;">
+                        <a href="mailto:{{ mensaje.email }}" style="color:#FF5722;">{{ mensaje.email }}</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Teléfono</td>
+                    <td style="padding:5px 0;color:#0D0D0D;">{{ mensaje.telefono|default:"No indicado" }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Recibido</td>
+                    <td style="padding:5px 0;color:#0D0D0D;">{{ mensaje.created_at|date:"d/m/Y H:i" }}</td>
+                </tr>
+            </table>
+        </td></tr>
+    </table>
+
+    <div style="font-size:12px;letter-spacing:1px;color:#666;font-weight:bold;text-transform:uppercase;margin-bottom:8px;">
+        Mensaje
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FFF6F2;border-left:4px solid #FF5722;border-radius:8px;">
+        <tr><td style="padding:16px 18px;color:#333;font-size:14px;line-height:1.7;">
+            {{ mensaje.mensaje|linebreaksbr }}
+        </td></tr>
+    </table>
+
+    <p style="margin:18px 0 0;color:#888;font-size:13px;">
+        Puedes responder directamente a este correo: la respuesta le llega a
+        {{ mensaje.email }}.
+    </p>
+{% endblock %}
+
+{% block nota_legal %}
+    Correo automático del formulario de contacto de arealatinaestudio.cl
+{% endblock %}

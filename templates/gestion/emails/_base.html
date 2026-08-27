@@ -1,0 +1,81 @@
+{% comment %}
+Base de todos los correos.
+
+Va con tablas y estilos en línea a propósito: Gmail, Outlook y los clientes
+de escritorio ignoran <style> y flexbox. Feo de escribir, pero es lo único
+que se ve igual en todas partes.
+{% endcomment %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block asunto %}Área Latina Estudio{% endblock %}</title>
+</head>
+<body style="margin:0;padding:0;background:#F4F4F4;font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;">
+
+{# Texto de vista previa: es lo que se lee en la bandeja antes de abrir. #}
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+    {% block preview %}Área Latina Estudio · Puerto Montt{% endblock %}
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background:#F4F4F4;padding:24px 12px;">
+<tr><td align="center">
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="max-width:620px;background:#FFFFFF;border-radius:14px;overflow:hidden;">
+
+        <!-- Encabezado -->
+        <tr>
+            <td style="background:#0D0D0D;padding:26px 24px;text-align:center;">
+                <div style="color:#FF5722;font-size:21px;font-weight:bold;letter-spacing:1px;">
+                    AREA LATINA ESTUDIO
+                </div>
+                <div style="color:#B0B0B0;font-size:12px;margin-top:5px;letter-spacing:.5px;">
+                    {% block bajada %}Academia de baile · Puerto Montt{% endblock %}
+                </div>
+            </td>
+        </tr>
+
+        <!-- Franja naranja -->
+        <tr><td style="height:4px;background:#FF5722;line-height:4px;font-size:0;">&nbsp;</td></tr>
+
+        <!-- Contenido -->
+        <tr>
+            <td style="padding:28px 24px;color:#333333;font-size:15px;line-height:1.6;">
+                {% block cuerpo %}{% endblock %}
+            </td>
+        </tr>
+
+        <!-- Pie -->
+        <tr>
+            <td style="background:#1A1A1A;padding:20px 24px;text-align:center;color:#888888;font-size:12px;line-height:1.6;">
+                <div style="color:#FF5722;font-weight:bold;margin-bottom:6px;">
+                    Área Latina Estudio
+                </div>
+                {{ academia.direccion_completa }}<br>
+                <a href="mailto:{{ academia.email }}" style="color:#B0B0B0;text-decoration:none;">
+                    {{ academia.email }}
+                </a>
+                {% if academia.instagram or academia.facebook %}
+                <div style="margin-top:10px;">
+                    {% if academia.instagram %}
+                        <a href="{{ academia.instagram }}" style="color:#FF8A65;text-decoration:none;margin:0 6px;">Instagram</a>
+                    {% endif %}
+                    {% if academia.facebook %}
+                        <a href="{{ academia.facebook }}" style="color:#FF8A65;text-decoration:none;margin:0 6px;">Facebook</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <div style="max-width:620px;margin:14px auto 0;color:#999999;font-size:11px;text-align:center;">
+        {% block nota_legal %}Recibes este correo porque estás inscrito/a en Área Latina Estudio.{% endblock %}
+    </div>
+
+</td></tr>
+</table>
+</body>
+</html>

@@ -3,9 +3,7 @@
 Los textos visibles van con tildes y enes correctas: son los que lee el
 visitante. Los comentarios y nombres de variables van sin tildes.
 """
-from django.conf import settings
 from django.contrib import messages
-from django.core.mail import send_mail
 from django.shortcuts import redirect, render
 
 from apps.gestion.models import Clase, Plan
@@ -126,16 +124,16 @@ TESTIMONIOS = [
     },
 ]
 
-# Galeria: cuando haya fotos reales, dejarlas en static/img/galeria/ y poner
-# aqui la ruta en 'imagen' (ej: 'img/galeria/clase-salsa.jpg'). Mientras
-# 'imagen' este vacio se muestra un mosaico de color con el emoji del estilo.
+# Galería: deja las fotos en static/img/galeria/ y agrégalas acá.
+# Mientras la lista esté vacía, la sección NO se muestra en el sitio.
+# Un mosaico de emojis gigantes se ve peor que no tener la sección.
 GALERIA = [
-    {'imagen': '', 'emoji': '\U0001F483', 'titulo': 'Clase de salsa', 'alto': True},
-    {'imagen': '', 'emoji': '\U0001F339', 'titulo': 'Bachata en pareja', 'alto': False},
-    {'imagen': '', 'emoji': '\U0001F525', 'titulo': 'Grupo de reggaetón', 'alto': False},
-    {'imagen': '', 'emoji': '\U0001F3A4', 'titulo': 'Taller urbano', 'alto': False},
-    {'imagen': '', 'emoji': '\U0001F476', 'titulo': 'Kids Dance', 'alto': False},
-    {'imagen': '', 'emoji': '\U0001F3B6', 'titulo': 'Muestra de fin de año', 'alto': True},
+    # {'imagen': 'img/galeria/clase-salsa.jpg',  'titulo': 'Clase de salsa'},
+    # {'imagen': 'img/galeria/bachata.jpg',      'titulo': 'Bachata en pareja'},
+    # {'imagen': 'img/galeria/reggaeton.jpg',    'titulo': 'Grupo de reggaetón'},
+    # {'imagen': 'img/galeria/urbano.jpg',       'titulo': 'Taller urbano'},
+    # {'imagen': 'img/galeria/kids.jpg',         'titulo': 'Kids Dance'},
+    # {'imagen': 'img/galeria/muestra.jpg',      'titulo': 'Muestra de fin de año'},
 ]
 
 PREGUNTAS = [
@@ -178,7 +176,7 @@ def index(request):
         'estilos': ESTILOS_HOME,
         'beneficios': BENEFICIOS,
         'estadisticas': ESTADISTICAS,
-        'galeria': GALERIA,
+        'galeria': [g for g in GALERIA if g.get('imagen')],
         'testimonios': TESTIMONIOS,
         'preguntas': PREGUNTAS,
         'planes': Plan.objects.filter(activo=True),
@@ -229,17 +227,10 @@ def contacto(request):
 
 
 def _notificar_por_email(mensaje):
-    """Envia el mensaje al correo de la academia. No interrumpe si el envio falla."""
-    cuerpo = (
-        f'Nombre: {mensaje.nombre}\n'
-        f'Email: {mensaje.email}\n'
-        f'Teléfono: {mensaje.telefono or "No indicado"}\n\n'
-        f'{mensaje.mensaje}'
-    )
-    send_mail(
-        subject=f'Nuevo mensaje web de {mensaje.nombre}',
-        message=cuerpo,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[settings.ACADEMIA['email']],
-        fail_silently=True,
-    )
+    """Avisa al equipo del mensaje nuevo. Si falla, el mensaje ya está guardado."""
+    from apps.gestion.correos import enviar_mensaje_contacto
+
+    try:
+        enviar_mensaje_contacto(mensaje)
+    except Exception:
+        pass

@@ -416,7 +416,8 @@ class ProfesoraForm(MixinWidgets, forms.ModelForm):
 class ConfiguracionAlertasForm(MixinWidgets, forms.ModelForm):
     class Meta:
         model = ConfiguracionAlertas
-        fields = ['dias_anticipacion', 'emails_destino', 'hora_envio', 'envio_activo']
+        fields = ['dias_anticipacion', 'emails_destino', 'hora_envio', 'envio_activo',
+                  'enviar_bienvenida', 'enviar_recibos', 'enviar_recordatorios']
         widgets = {
             'emails_destino': forms.Textarea(attrs={'rows': 2}),
             'hora_envio': forms.TimeInput(attrs={'type': 'time'}, format='%H:%M'),

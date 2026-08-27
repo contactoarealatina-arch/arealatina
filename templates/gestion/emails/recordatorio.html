@@ -1,0 +1,82 @@
+{% extends 'gestion/emails/_base.html' %}
+{% load formato %}
+
+{% block asunto %}{% if vencido %}Tu plan venció{% else %}Tu plan está por vencer{% endif %}{% endblock %}
+{% block preview %}
+    {% if vencido %}Tu plan venció el {{ suscripcion.fecha_vencimiento|date:"d/m" }}. Renuévalo y sigue bailando.
+    {% else %}Tu plan vence el {{ suscripcion.fecha_vencimiento|date:"d/m" }}. Te avisamos con tiempo.{% endif %}
+{% endblock %}
+{% block bajada %}{% if vencido %}Tu plan venció{% else %}Recordatorio de vencimiento{% endif %}{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 16px;font-size:22px;color:#0D0D0D;">
+        Hola {{ alumno.primer_nombre }}
+    </h1>
+
+    {% if vencido %}
+        <p style="margin:0 0 20px;">
+            Tu plan venció y queremos que sigas bailando con nosotros. Pásate por
+            el estudio o escríbenos para renovarlo.
+        </p>
+    {% elif dias == 0 %}
+        <p style="margin:0 0 20px;">
+            Tu plan vence <strong>hoy</strong>. Si quieres seguir, renuévalo
+            cuando pases por el estudio.
+        </p>
+    {% else %}
+        <p style="margin:0 0 20px;">
+            Te escribimos con tiempo: tu plan vence en
+            <strong>{{ dias }} día{{ dias|pluralize }}</strong>. Así no te
+            pilla de sorpresa.
+        </p>
+    {% endif %}
+
+    <!-- Estado del plan -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:{% if vencido %}#FFEBEE{% else %}#FFF8E1{% endif %};border-left:4px solid {% if vencido %}#F44336{% else %}#FFC107{% endif %};border-radius:8px;margin-bottom:20px;">
+        <tr><td style="padding:18px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;">
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Tu plan</td>
+                    <td style="padding:5px 0;text-align:right;color:#0D0D0D;font-weight:bold;">
+                        {{ suscripcion.plan.nombre }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">
+                        {% if vencido %}Venció el{% else %}Vence el{% endif %}
+                    </td>
+                    <td style="padding:5px 0;text-align:right;color:{% if vencido %}#C62828{% else %}#E65100{% endif %};font-weight:bold;">
+                        {{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Valor para renovar</td>
+                    <td style="padding:5px 0;text-align:right;color:#0D0D0D;font-weight:bold;">
+                        ${{ suscripcion.plan.precio_clp|clp }}
+                    </td>
+                </tr>
+            </table>
+        </td></tr>
+    </table>
+
+    <!-- Botón -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 20px;">
+        <tr><td style="background:#FF5722;border-radius:50px;">
+            <a href="mailto:{{ academia.email }}?subject=Quiero%20renovar%20mi%20plan"
+               style="display:inline-block;padding:13px 32px;color:#FFFFFF;font-size:15px;font-weight:bold;text-decoration:none;">
+                Quiero renovar
+            </a>
+        </td></tr>
+    </table>
+
+    <p style="margin:0;color:#555;font-size:14px;text-align:center;">
+        También puedes renovar en el estudio:<br>
+        <strong style="color:#0D0D0D;">{{ academia.direccion_completa }}</strong>
+    </p>
+{% endblock %}
+
+{% block nota_legal %}
+    Recibes este aviso porque tienes un plan activo en Área Latina Estudio.
+    Si ya renovaste, ignora este correo.
+{% endblock %}

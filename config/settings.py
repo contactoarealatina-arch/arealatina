@@ -138,6 +138,44 @@ STORAGES = {
     },
 }
 
+# ---------------------------------------------------------------------------
+# Cache
+# ---------------------------------------------------------------------------
+# En base de datos y no en memoria: el freno a los intentos de login tiene
+# que valer para todos los procesos del servidor, no solo para uno.
+# Requiere haber corrido: manage.py createcachetable
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'cache_arealatina',
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Seguridad
+# ---------------------------------------------------------------------------
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False   # el JS necesita leerla para las peticiones
+X_FRAME_OPTIONS = 'DENY'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SESSION_COOKIE_AGE = 60 * 60 * 8          # 8 horas de jornada
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+if not DEBUG:
+    # Con HTTPS en el hosting. Si el dominio aun no tiene certificado,
+    # deja SECURE_SSL_REDIRECT en False o el sitio queda inaccesible.
+    SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    CSRF_TRUSTED_ORIGINS = env.list(
+        'CSRF_TRUSTED_ORIGINS',
+        default=['https://arealatinaestudio.cl', 'https://www.arealatinaestudio.cl'],
+    )
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ---------------------------------------------------------------------------
@@ -154,11 +192,14 @@ EMAIL_BACKEND = (
 EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='arealatina310@gmail.com')
+# Usuario del relay de Brevo (b31a8d001@smtp-brevo.com), NO el correo
+# de la academia: son cosas distintas y confundirlas rebota el envío.
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+# Tiene que ser un remitente VERIFICADO en Brevo o el envío se rechaza.
 DEFAULT_FROM_EMAIL = env(
     'DEFAULT_FROM_EMAIL',
-    default='Area Latina Estudio <arealatina310@gmail.com>',
+    default='Area Latina Estudio <contacto.arealatina@gmail.com>',
 )
 
 # ---------------------------------------------------------------------------
@@ -172,7 +213,7 @@ APSCHEDULER_RUN_NOW_TIMEOUT = 25
 # ---------------------------------------------------------------------------
 ACADEMIA = {
     'nombre': 'Area Latina Estudio',
-    'email': 'arealatina310@gmail.com',
+    'email': env('CONTACTO_EMAIL', default='contacto.arealatina@gmail.com'),
     'telefono': '+56 9 0000 0000',
     'telefono_link': '+56900000000',
     'direccion': 'Guillermo Gallardo 310, Puerto Montt',

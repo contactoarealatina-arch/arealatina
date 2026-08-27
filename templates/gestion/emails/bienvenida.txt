@@ -1,0 +1,36 @@
+AREA LATINA ESTUDIO
+Donde el ritmo te transforma
+============================================================
+
+Bienvenido/a, {{ alumno.nombre_completo }}!
+
+Que bueno tenerte en Area Latina. Ya quedaste inscrito/a y tu ficha
+esta lista.
+{% if clases %}
+TUS CLASES
+------------------------------------------------------------
+{% for clase in clases %}- {{ clase.get_nombre_display }} ({{ clase.get_nivel_display }})
+  {{ clase.dias_display }} | {{ clase.horario }} hrs | {{ clase.sala }}{% if clase.profesora %}
+  Con {{ clase.profesora.get_full_name|default:clase.profesora.username }}{% endif %}
+{% endfor %}{% endif %}
+{% if suscripcion %}
+TU PLAN
+------------------------------------------------------------
+Plan:         {{ suscripcion.plan.nombre }}
+Desde:        {{ suscripcion.fecha_inicio|date:"d/m/Y" }}
+Valido hasta: {{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}
+{% endif %}
+PARA TU PRIMERA CLASE
+------------------------------------------------------------
+- Llega 10 minutos antes para acomodarte con calma.
+- Ropa comoda y zapatillas limpias de suela lisa.
+- Trae agua.
+- No necesitas venir en pareja: en clase vamos rotando.
+
+Cualquier duda, responde este correo o escribenos a {{ academia.email }}.
+Nos vemos en la pista.
+
+============================================================
+Area Latina Estudio
+{{ academia.direccion_completa }}
+{{ academia.email }}

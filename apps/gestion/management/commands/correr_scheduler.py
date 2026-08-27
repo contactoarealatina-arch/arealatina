@@ -15,7 +15,7 @@ from django.core.management.base import BaseCommand
 from django_apscheduler.jobstores import DjangoJobStore
 from django_apscheduler.models import DjangoJobExecution
 
-from apps.gestion.correos import enviar_resumen
+from apps.gestion.correos import enviar_recordatorios_del_dia, enviar_resumen
 from apps.gestion.models import ConfiguracionAlertas
 from apps.gestion.servicios import generar_alertas
 
@@ -26,6 +26,8 @@ def tarea_alertas():
     """Trabajo diario: generar alertas y avisar por correo."""
     resumen = generar_alertas()
     logger.info('Alertas generadas: %s', resumen['creadas'])
+    enviados, omitidos = enviar_recordatorios_del_dia(resumen)
+    logger.info('Recordatorios: %s enviados, %s omitidos', enviados, omitidos)
     enviado, motivo = enviar_resumen(resumen)
     logger.info('Resumen por correo: %s', motivo)
 

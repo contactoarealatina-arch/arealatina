@@ -1,0 +1,15 @@
+AREA LATINA ESTUDIO - Mensaje del formulario web
+============================================================
+
+Nombre:   {{ mensaje.nombre }}
+Email:    {{ mensaje.email }}
+Telefono: {{ mensaje.telefono|default:"No indicado" }}
+Recibido: {{ mensaje.created_at|date:"d/m/Y H:i" }}
+
+MENSAJE
+------------------------------------------------------------
+{{ mensaje.mensaje }}
+
+============================================================
+Puedes responder directamente a este correo: la respuesta le
+llega a {{ mensaje.email }}.

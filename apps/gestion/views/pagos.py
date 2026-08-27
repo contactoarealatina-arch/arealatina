@@ -8,6 +8,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from ..auditoria import registrar
+from ..correos import enviar_recibo
 from ..forms import PagoForm
 from ..models import Alumno, AuditLog, Pago, Plan, Suscripcion
 from ..permisos import gestion_requerida
@@ -114,7 +115,15 @@ def pago_nuevo(request):
 
             registrar(request, AuditLog.Accion.PAGO, pago,
                       f'Registró ${pago.monto_clp} de {pago.alumno.nombre_completo}')
-            messages.success(request, 'Pago registrado.')
+
+            aviso = 'Pago registrado.'
+            if pago.alumno.email:
+                enviado, motivo = enviar_recibo(pago)
+                aviso += (' Comprobante enviado por correo.' if enviado
+                          else f' No salió el comprobante ({motivo})')
+            else:
+                aviso += ' El alumno no tiene email, así que no se envió comprobante.'
+            messages.success(request, aviso)
 
             if request.POST.get('volver_a_ficha'):
                 return redirect('gestion:alumno_detalle', pk=pago.alumno_id)

@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from ..auditoria import registrar
+from ..correos import enviar_bienvenida, enviar_recibo
 from ..forms import (
     AlumnoForm,
     InscripcionPlanForm,
@@ -161,7 +162,15 @@ def alumno_nuevo(request):
 
             registrar(request, AuditLog.Accion.CREAR, alumno,
                       f'Creó al alumno {alumno.nombre_completo}')
-            messages.success(request, f'{alumno.nombre_completo} quedó registrado.')
+
+            # El correo va fuera de la transacción: si el SMTP falla, el
+            # alumno igual quedó guardado.
+            aviso = f'{alumno.nombre_completo} quedó registrado.'
+            if alumno.email:
+                enviado, motivo = enviar_bienvenida(alumno)
+                aviso += (' Le mandamos el correo de bienvenida.' if enviado
+                          else f' Ojo: no salió el correo de bienvenida ({motivo})')
+            messages.success(request, aviso)
             return redirect('gestion:alumno_detalle', pk=alumno.pk)
 
         messages.error(request, 'Revisa los datos: hay campos con errores.')
@@ -368,10 +377,13 @@ def alumno_renovar(request, pk):
 
     registrar(request, AuditLog.Accion.RENOVAR, alumno,
               f'Renovó el plan de {alumno.nombre_completo}: {suscripcion.plan.nombre}')
-    messages.success(
-        request,
-        f'Plan renovado hasta el {suscripcion.fecha_vencimiento:%d/%m/%Y}.'
-    )
+
+    aviso = f'Plan renovado hasta el {suscripcion.fecha_vencimiento:%d/%m/%Y}.'
+    if datos.get('registrar_pago') and alumno.email:
+        pago = suscripcion.pagos.order_by('-id').first()
+        if pago and enviar_recibo(pago)[0]:
+            aviso += ' Le enviamos el comprobante.'
+    messages.success(request, aviso)
     return redirect('gestion:alumno_detalle', pk=pk)
 
 

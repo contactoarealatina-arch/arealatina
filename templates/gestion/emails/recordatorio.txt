@@ -1,0 +1,29 @@
+{% load formato %}AREA LATINA ESTUDIO
+{% if vencido %}Tu plan vencio{% else %}Recordatorio de vencimiento{% endif %}
+============================================================
+
+Hola {{ alumno.primer_nombre }},
+{% if vencido %}
+Tu plan vencio y queremos que sigas bailando con nosotros.
+Pasate por el estudio o escribenos para renovarlo.
+{% elif dias == 0 %}
+Tu plan vence HOY. Si quieres seguir, renuevalo cuando pases
+por el estudio.
+{% else %}
+Te escribimos con tiempo: tu plan vence en {{ dias }} dia{{ dias|pluralize }}.
+Asi no te pilla de sorpresa.
+{% endif %}
+TU PLAN
+------------------------------------------------------------
+Plan:              {{ suscripcion.plan.nombre }}
+{% if vencido %}Vencio el:{% else %}Vence el:{% endif %}         {{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}
+Valor para renovar: ${{ suscripcion.plan.precio_clp|clp }}
+
+Para renovar escribenos a {{ academia.email }} o pasa por el estudio:
+{{ academia.direccion_completa }}
+
+============================================================
+Si ya renovaste, ignora este correo.
+
+Area Latina Estudio
+{{ academia.email }}

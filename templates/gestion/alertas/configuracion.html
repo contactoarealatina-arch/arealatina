@@ -22,6 +22,17 @@
                 {% include 'gestion/_campo.html' with campo=form.envio_activo %}
             </div>
 
+            <div class="g-card mt-3">
+                <h2 class="g-card-titulo">Correos al alumno</h2>
+                <p class="g-muted" style="font-size:.85rem;margin-top:-.5rem">
+                    Se pueden apagar por separado. El plan gratuito de Brevo
+                    tiene tope de 300 correos al día.
+                </p>
+                {% include 'gestion/_campo.html' with campo=form.enviar_bienvenida %}
+                {% include 'gestion/_campo.html' with campo=form.enviar_recibos %}
+                {% include 'gestion/_campo.html' with campo=form.enviar_recordatorios %}
+            </div>
+
             <div class="d-flex gap-2 justify-content-end mt-3">
                 <button type="submit" class="g-btn g-btn-primario">
                     <i class="bi bi-check-lg"></i> Guardar configuración

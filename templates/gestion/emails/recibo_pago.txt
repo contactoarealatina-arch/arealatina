@@ -1,0 +1,28 @@
+{% load formato %}AREA LATINA ESTUDIO - Comprobante de pago
+============================================================
+
+Recibimos tu pago, {{ alumno.primer_nombre }}.
+
+MONTO PAGADO: ${{ pago.monto_clp|clp }}
+Concepto:     {{ pago.concepto_display }}
+
+DETALLE
+------------------------------------------------------------
+Fecha:   {{ pago.fecha_pago|date:"d/m/Y" }}
+Metodo:  {{ pago.get_metodo_display }}{% if pago.numero_comprobante %}
+N. comprobante: {{ pago.numero_comprobante }}{% endif %}
+Alumno:  {{ alumno.nombre_completo }}
+RUT:     {{ alumno.rut }}
+{% if suscripcion %}
+Con este pago tu plan {{ suscripcion.plan.nombre }} queda al dia
+hasta el {{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}.
+{% endif %}
+Si ves algo que no cuadra, responde este correo y lo revisamos.
+
+============================================================
+Este comprobante es un respaldo interno de Area Latina Estudio
+y no constituye una boleta ni factura electronica del SII.
+
+Area Latina Estudio
+{{ academia.direccion_completa }}
+{{ academia.email }}
