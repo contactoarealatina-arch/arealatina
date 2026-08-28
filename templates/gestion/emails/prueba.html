@@ -1,0 +1,46 @@
+{% extends 'gestion/emails/_base.html' %}
+
+{% block asunto %}Prueba de correo{% endblock %}
+{% block preview %}Si ves esto, la conexión con Brevo está funcionando.{% endblock %}
+{% block bajada %}Prueba del sistema de correos{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 16px;font-size:22px;color:#0D0D0D;">
+        La conexión funciona
+    </h1>
+
+    <p style="margin:0 0 18px;">
+        Este correo salió del servidor de Área Latina Estudio a través del
+        relay SMTP de Brevo. Si te llegó, el sistema está listo para mandar
+        bienvenidas, comprobantes y avisos de vencimiento.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FAFAFA;border-radius:8px;margin-bottom:18px;">
+        <tr><td style="padding:16px 18px;font-size:14px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding:4px 0;color:#666;">Enviado</td>
+                    <td style="padding:4px 0;text-align:right;color:#0D0D0D;">
+                        {{ ahora|date:"d/m/Y H:i" }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:4px 0;color:#666;">Servidor</td>
+                    <td style="padding:4px 0;text-align:right;color:#0D0D0D;">
+                        smtp-relay.brevo.com
+                    </td>
+                </tr>
+            </table>
+        </td></tr>
+    </table>
+
+    <p style="margin:0;color:#555;font-size:14px;">
+        Revisa que el remitente, el logo y los colores se vean bien en tu
+        cliente de correo. Así se verán todos los correos del sistema.
+    </p>
+{% endblock %}
+
+{% block nota_legal %}
+    Correo de prueba generado a mano desde el servidor.
+{% endblock %}

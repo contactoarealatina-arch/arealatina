@@ -1435,3 +1435,318 @@ html[data-nivel="bajo"] [data-tilt] {
     .card-al { border: 1px solid #CCCCCC; }
     p, .texto-suave { color: #333333; }
 }
+
+/* ==========================================================================
+   ACCESO (login con las dos puertas)
+   ========================================================================== */
+
+.nav-entrar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-titulo);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text);
+    padding: 0.5rem 0.75rem;
+    border-radius: 50px;
+    border: 1px solid transparent;
+    transition: all var(--transicion);
+    white-space: nowrap;
+}
+
+.nav-entrar:hover {
+    color: var(--color-accent);
+    border-color: var(--color-border);
+    background-color: rgba(255, 87, 34, 0.06);
+}
+
+.nav-entrar i { font-size: 1.05rem; }
+
+.acceso {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(var(--navbar-alto) + 40px) 0 60px;
+    overflow: hidden;
+    background-color: var(--color-bg);
+}
+
+.acceso::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 50% 0%, rgba(255, 87, 34, 0.18), transparent 55%),
+        radial-gradient(circle at 15% 85%, rgba(230, 74, 25, 0.12), transparent 50%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.acceso-contenido {
+    position: relative;
+    z-index: 3;
+    max-width: 640px;
+    text-align: center;
+}
+
+.acceso-logo {
+    width: min(180px, 45vw);
+    height: auto;
+    border-radius: 20px;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+}
+
+.acceso-logo.pequeno {
+    width: min(110px, 30vw);
+    margin-bottom: 1.25rem;
+}
+
+.acceso-titulo {
+    font-size: clamp(1.7rem, 5vw, 2.6rem);
+    margin-bottom: 0.6rem;
+}
+
+.acceso-bajada {
+    color: var(--color-text-muted);
+    max-width: 460px;
+    margin: 0 auto 2.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Las dos puertas
+   -------------------------------------------------------------------------- */
+.puertas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.puerta {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 2rem 1.5rem 2.5rem;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radio);
+    color: var(--color-text);
+    font-family: var(--font-cuerpo);
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform var(--transicion), border-color var(--transicion),
+                box-shadow var(--transicion);
+}
+
+.puerta::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgba(255, 87, 34, 0.14), transparent 60%);
+    opacity: 0;
+    transition: opacity var(--transicion);
+}
+
+.puerta:hover,
+.puerta:focus-visible {
+    border-color: var(--color-accent);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    outline: none;
+}
+
+.puerta:hover::before,
+.puerta:focus-visible::before { opacity: 1; }
+
+.puerta > * { position: relative; }
+
+.puerta-icono {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7rem;
+    color: var(--color-accent);
+    background-color: rgba(255, 87, 34, 0.12);
+    border: 1px solid rgba(255, 87, 34, 0.35);
+    margin-bottom: 0.9rem;
+    transition: all var(--transicion);
+}
+
+.puerta:hover .puerta-icono {
+    background-color: var(--color-accent);
+    color: #FFFFFF;
+    transform: scale(1.06);
+}
+
+.puerta strong {
+    font-family: var(--font-titulo);
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.puerta span:not(.puerta-icono):not(.puerta-flecha) {
+    color: var(--color-text-muted);
+    font-size: 0.88rem;
+}
+
+.puerta-flecha {
+    position: absolute;
+    bottom: 0.9rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--color-accent);
+    opacity: 0;
+    transition: all var(--transicion);
+}
+
+.puerta:hover .puerta-flecha {
+    opacity: 1;
+    bottom: 1.1rem;
+}
+
+/* --------------------------------------------------------------------------
+   Formulario
+   -------------------------------------------------------------------------- */
+.acceso-volver {
+    position: absolute;
+    top: -8px;
+    left: 0;
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 0.88rem;
+    cursor: pointer;
+    padding: 0.4rem 0.2rem;
+    transition: color var(--transicion);
+}
+
+.acceso-volver:hover { color: var(--color-accent); }
+
+#panelFormulario { position: relative; }
+
+.acceso-form {
+    max-width: 380px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.acceso-campo { margin-bottom: 1.1rem; }
+
+.acceso-campo label {
+    display: block;
+    font-family: var(--font-titulo);
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+}
+
+.acceso-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.acceso-input > i {
+    position: absolute;
+    left: 0.9rem;
+    color: var(--color-text-muted);
+    pointer-events: none;
+}
+
+.acceso-input input {
+    width: 100%;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    color: var(--color-text);
+    font-family: var(--font-cuerpo);
+    font-size: 0.95rem;
+    padding: 0.85rem 2.6rem;
+    transition: border-color var(--transicion), box-shadow var(--transicion);
+}
+
+.acceso-input input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.18);
+}
+
+.acceso-input input::placeholder { color: #6A6A6A; }
+
+.acceso-ojo {
+    position: absolute;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    padding: 0.4rem 0.5rem;
+    cursor: pointer;
+    transition: color var(--transicion);
+}
+
+.acceso-ojo:hover { color: var(--color-accent); }
+
+.acceso-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    text-align: left;
+    max-width: 380px;
+    margin: 0 auto 1.25rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    border: 1px solid transparent;
+}
+
+.acceso-aviso i { font-size: 1.05rem; flex-shrink: 0; margin-top: 1px; }
+
+.acceso-aviso.peligro {
+    background: rgba(244, 67, 54, 0.10);
+    border-color: rgba(244, 67, 54, 0.4);
+    color: #FF8A80;
+}
+
+.acceso-aviso.aviso {
+    background: rgba(255, 193, 7, 0.10);
+    border-color: rgba(255, 193, 7, 0.4);
+    color: #FFD54F;
+}
+
+.acceso-pie {
+    margin-top: 1.75rem;
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+}
+
+/* Entrada suave del formulario */
+.entrando { animation: apareceAcceso 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+
+@keyframes apareceAcceso {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+html[data-nivel="bajo"] .entrando { animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    .entrando { animation: none; }
+    .puerta:hover { transform: none; }
+}
+
+@media (max-width: 575.98px) {
+    .acceso { padding-top: calc(var(--navbar-alto) + 24px); }
+    .puerta { padding: 1.5rem 1.25rem 2.2rem; }
+    .puerta-icono { width: 54px; height: 54px; font-size: 1.4rem; }
+    .nav-entrar { padding: 0.5rem 0.5rem; }
+}

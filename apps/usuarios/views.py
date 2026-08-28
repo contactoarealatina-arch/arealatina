@@ -96,10 +96,23 @@ class LoginSeguro(auth_views.LoginView):
 
     def get_success_url(self):
         """Cada rol aterriza donde le sirve."""
+        from django.urls import reverse
+
         usuario = self.request.user
+
         if usuario.puede_gestionar:
             return super().get_success_url()
+
         if usuario.es_profesor:
-            from django.urls import reverse
             return reverse('gestion:asistencia')
-        return super().get_success_url()
+
+        # El portal de alumnos todavía no existe (etapa siguiente). Antes de
+        # que exista, un alumno que entre no debe quedar en una pantalla en
+        # blanco ni caer en la gestión: se le dice claramente y se le manda
+        # al sitio público.
+        messages.info(
+            self.request,
+            'Tu portal de alumno está en construcción. Muy pronto vas a poder '
+            'ver tus clases, tu plan y tus pagos desde aquí.'
+        )
+        return reverse('web:index')
