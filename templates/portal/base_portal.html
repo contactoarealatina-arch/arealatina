@@ -1,0 +1,81 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0D0D0D">
+    <title>{% block titulo %}Mi portal{% endblock %} | Área Latina Estudio</title>
+
+    <link rel="icon" type="image/jpeg" href="{% static 'img/logo-naranja.jpg' %}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="{% static 'css/portales.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="p-body">
+
+<header class="p-barra">
+    <div class="p-barra-interior">
+        <a href="{% url 'portal:panel' %}" class="p-logo">
+            <span class="p-logo-estrella">★</span>
+            <span>Área Latina</span>
+        </a>
+
+        <nav class="p-nav">
+            <a href="{% url 'portal:panel' %}" class="{% if activo == 'panel' %}activo{% endif %}">
+                <i class="bi bi-house"></i><span>Inicio</span>
+            </a>
+            <a href="{% url 'portal:clases' %}" class="{% if activo == 'clases' %}activo{% endif %}">
+                <i class="bi bi-music-note-beamed"></i><span>Clases</span>
+            </a>
+            <a href="{% url 'portal:plan' %}" class="{% if activo == 'plan' %}activo{% endif %}">
+                <i class="bi bi-card-checklist"></i><span>Mi plan</span>
+            </a>
+            <a href="{% url 'portal:pagos' %}" class="{% if activo == 'pagos' %}activo{% endif %}">
+                <i class="bi bi-receipt"></i><span>Pagos</span>
+            </a>
+            <a href="{% url 'portal:perfil' %}" class="{% if activo == 'perfil' %}activo{% endif %}">
+                <i class="bi bi-person"></i><span>Perfil</span>
+            </a>
+        </nav>
+
+        <div class="p-usuario">
+            <span class="p-nombre">{{ request.alumno.primer_nombre|default:user.nombre_corto }}</span>
+            <form method="post" action="{% url 'usuarios:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="p-salir" title="Cerrar sesión" aria-label="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="p-contenido">
+    {% if messages %}
+        <div class="p-mensajes">
+            {% for message in messages %}
+                <div class="p-mensaje {{ message.tags }}">
+                    <i class="bi {% if message.tags == 'success' %}bi-check-circle{% elif message.tags == 'error' %}bi-exclamation-octagon{% else %}bi-info-circle{% endif %}"></i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% block contenido %}{% endblock %}
+</main>
+
+<footer class="p-pie">
+    Área Latina Estudio · {{ academia.direccion_completa }}
+</footer>
+
+<script src="{% static 'js/portales.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

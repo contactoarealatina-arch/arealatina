@@ -1,0 +1,67 @@
+{% extends 'gestion/emails/_base.html' %}
+
+{% block asunto %}Tus clases de hoy{% endblock %}
+{% block preview %}{{ cantidad }} clase{{ cantidad|pluralize }} hoy. Acá va el detalle con los confirmados.{% endblock %}
+{% block bajada %}{{ fecha|date:"l d \d\e F"|capfirst }}{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 16px;font-size:22px;color:#0D0D0D;">
+        Hola {{ profesora.nombre_corto }}
+    </h1>
+
+    <p style="margin:0 0 20px;">
+        Hoy tienes <strong>{{ cantidad }} clase{{ cantidad|pluralize }}</strong>.
+        Este es el detalle, con cuántos alumnos avisaron que vienen.
+    </p>
+
+    {% for item in clases %}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FFF6F2;border-left:4px solid #FF5722;border-radius:8px;margin-bottom:14px;">
+        <tr><td style="padding:16px 18px;">
+            <div style="font-size:17px;font-weight:bold;color:#0D0D0D;margin-bottom:4px;">
+                {{ item.clase.get_nombre_display }}
+                <span style="font-size:13px;font-weight:normal;color:#888;">
+                    · {{ item.clase.get_nivel_display }}
+                </span>
+            </div>
+            <div style="font-size:14px;color:#555;margin-bottom:12px;">
+                {{ item.clase.horario }} hrs · {{ item.clase.sala }}
+            </div>
+
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                    <td width="50%" style="padding-right:6px;">
+                        <div style="background:#FFFFFF;border-radius:6px;padding:10px;text-align:center;">
+                            <div style="font-size:22px;font-weight:bold;color:#0D0D0D;">{{ item.inscritos }}</div>
+                            <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;">Inscritos</div>
+                        </div>
+                    </td>
+                    <td width="50%" style="padding-left:6px;">
+                        <div style="background:#FFFFFF;border-radius:6px;padding:10px;text-align:center;">
+                            <div style="font-size:22px;font-weight:bold;color:#E64A19;">{{ item.confirmados }}</div>
+                            <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;">Confirmaron</div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </td></tr>
+    </table>
+    {% endfor %}
+
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:20px auto;">
+        <tr><td style="background:#FF5722;border-radius:8px;">
+            <a href="{{ url_portal }}"
+               style="display:inline-block;padding:14px 34px;color:#FFFFFF;font-size:15px;font-weight:bold;text-decoration:none;">
+                Ir a pasar lista
+            </a>
+        </td></tr>
+    </table>
+
+    <p style="margin:0;color:#555;font-size:14px;text-align:center;">
+        Recuerda registrar la asistencia antes de que termine la clase.
+    </p>
+{% endblock %}
+
+{% block nota_legal %}
+    Recibes este recordatorio los días que tienes clases asignadas.
+{% endblock %}

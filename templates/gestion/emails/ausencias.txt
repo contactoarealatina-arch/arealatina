@@ -1,0 +1,17 @@
+AREA LATINA ESTUDIO - Alerta de retencion
+{{ hoy|date:"d/m/Y" }}
+============================================================
+
+{{ cantidad }} alumno{{ cantidad|pluralize }} lleva{{ cantidad|pluralize:"n" }} dos semanas sin venir.
+
+Todos tienen el plan al dia, asi que estan pagando sin usar
+el servicio. Es el momento de llamarlos.
+
+------------------------------------------------------------
+{% for item in detectados %}{{ item.alumno.nombre_completo }}
+  Sin venir: {{ item.dias }} dias{% if item.ultima %} | Ultima asistencia: {{ item.ultima|date:"d/m/Y" }}{% else %} | Nunca ha asistido{% endif %}
+  Telefono:  {{ item.alumno.telefono|default:"-" }}
+{% endfor %}
+------------------------------------------------------------
+Ver en el panel: {{ url_alertas }}
+============================================================

@@ -1,0 +1,45 @@
+{% extends 'gestion/emails/_base.html' %}
+
+{% block asunto %}Solicitud de renovación{% endblock %}
+{% block preview %}{{ alumno.nombre_completo }} pidió renovar su plan desde el portal.{% endblock %}
+{% block bajada %}Solicitud desde el portal{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 16px;font-size:20px;color:#0D0D0D;">
+        {{ alumno.nombre_completo }} quiere renovar
+    </h1>
+
+    <p style="margin:0 0 18px;">
+        Apretó el botón de renovación en su portal. Conviene contactarlo pronto.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FAFAFA;border-radius:8px;margin-bottom:20px;">
+        <tr><td style="padding:16px 18px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;">
+                <tr><td style="padding:4px 0;color:#666;">Teléfono</td>
+                    <td style="padding:4px 0;text-align:right;color:#0D0D0D;">{{ alumno.telefono|default:"—" }}</td></tr>
+                <tr><td style="padding:4px 0;color:#666;">Email</td>
+                    <td style="padding:4px 0;text-align:right;color:#0D0D0D;">{{ alumno.email|default:"—" }}</td></tr>
+                {% if suscripcion %}
+                <tr><td style="padding:4px 0;color:#666;">Plan actual</td>
+                    <td style="padding:4px 0;text-align:right;color:#0D0D0D;">{{ suscripcion.plan.nombre }}</td></tr>
+                <tr><td style="padding:4px 0;color:#666;">Vence</td>
+                    <td style="padding:4px 0;text-align:right;color:#E64A19;font-weight:bold;">
+                        {{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}</td></tr>
+                {% endif %}
+            </table>
+        </td></tr>
+    </table>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+        <tr><td style="background:#FF5722;border-radius:8px;">
+            <a href="{{ url_ficha }}"
+               style="display:inline-block;padding:14px 34px;color:#FFFFFF;font-size:15px;font-weight:bold;text-decoration:none;">
+                Ver su ficha
+            </a>
+        </td></tr>
+    </table>
+{% endblock %}
+
+{% block nota_legal %}Aviso interno del sistema de gestión.{% endblock %}

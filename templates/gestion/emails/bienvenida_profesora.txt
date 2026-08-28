@@ -1,0 +1,39 @@
+AREA LATINA ESTUDIO - Portal de profesoras
+============================================================
+
+Hola {{ profesora.nombre_corto }}, ya eres parte del equipo.
+
+Te creamos tu cuenta en el sistema. Desde el portal vas a ver tus
+clases del dia y pasar lista, sin papel ni planillas.
+{% if clases %}
+TUS CLASES
+------------------------------------------------------------
+{% for clase in clases %}- {{ clase.get_nombre_display }} ({{ clase.get_nivel_display }})
+  {{ clase.dias_display }} | {{ clase.horario }} hrs | {{ clase.sala }}
+{% endfor %}{% else %}
+Todavia no tienes clases asignadas.
+{% endif %}
+TU ACCESO
+------------------------------------------------------------
+Usuario: {{ profesora.username }}
+Correo:  {{ profesora.email }}
+{% if enlace %}
+Elige tu contrasena aqui (el enlace vence en 48 horas):
+{{ enlace }}
+{% else %}
+La contrasena te la entrega la administracion en persona.
+Portal: {{ url_portal }}
+{% endif %}
+COMO SE USA
+------------------------------------------------------------
+1. Entra al portal con tu usuario y contrasena.
+2. En la pantalla de inicio ves tus clases del dia, con cuantos
+   alumnos hay inscritos y cuantos confirmaron que vienen.
+3. Toca "Pasar asistencia" y marca presente, ausente o justificado.
+
+Cualquier duda, responde este correo. Bienvenida.
+
+============================================================
+Area Latina Estudio
+{{ academia.direccion_completa }}
+{{ academia.email }}

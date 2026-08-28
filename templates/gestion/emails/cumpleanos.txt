@@ -1,0 +1,22 @@
+AREA LATINA ESTUDIO
+============================================================
+
+           FELIZ CUMPLEANOS, {{ alumno.primer_nombre|upper }}!
+
+============================================================
+
+Hoy es tu dia. Que lo pases increible, rodeado de la gente
+que quieres.
+{% if clase_hoy %}
+Y justo hoy tienes {{ clase_hoy.get_nombre_display }} a las
+{{ clase_hoy.hora_inicio|time:"H:i" }} hrs. Te esperamos para
+celebrarlo bailando.
+{% else %}
+Celebralo como corresponde: bailando. Te esperamos en tu
+proxima clase.
+{% endif %}
+Un abrazo grande,
+todo el equipo de Area Latina Estudio
+
+============================================================
+{{ academia.direccion_completa }} - {{ academia.email }}

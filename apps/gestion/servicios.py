@@ -214,3 +214,243 @@ def generar_alertas(dias_anticipacion=None):
         'sin_pago': sin_pago,
         'fecha': hoy,
     }
+
+
+# ---------------------------------------------------------------------------
+# Sesiones: una clase se repite en ciertos días; cada ocurrencia es una sesión
+# ---------------------------------------------------------------------------
+CODIGOS_DIA = ['LU', 'MA', 'MI', 'JU', 'VI', 'SA', 'DO']
+
+
+def codigo_dia(fecha):
+    """Lunes -> 'LU'. El orden de CODIGOS_DIA calza con date.weekday()."""
+    return CODIGOS_DIA[fecha.weekday()]
+
+
+def clase_ocurre_en(clase, fecha):
+    return codigo_dia(fecha) in clase.dias_lista
+
+
+def clases_del_dia(clases, fecha=None):
+    """De un conjunto de clases, las que tocan ese día."""
+    fecha = fecha or timezone.localdate()
+    return [c for c in clases if clase_ocurre_en(c, fecha)]
+
+
+def sesiones_proximas(clases, dias=7, desde=None):
+    """Cada ocurrencia de cada clase en el rango, ordenada por fecha y hora.
+
+    Devuelve dicts {clase, fecha, es_hoy} en vez de objetos: no hay modelo de
+    sesión, se calculan a partir de los días de la clase.
+    """
+    desde = desde or timezone.localdate()
+    hoy = timezone.localdate()
+    sesiones = []
+    for salto in range(dias):
+        fecha = desde + timedelta(days=salto)
+        for clase in clases_del_dia(clases, fecha):
+            sesiones.append({'clase': clase, 'fecha': fecha, 'es_hoy': fecha == hoy})
+    sesiones.sort(key=lambda s: (s['fecha'], s['clase'].hora_inicio))
+    return sesiones
+
+
+def proxima_sesion(clases, desde=None):
+    """La siguiente ocurrencia, mirando hasta 14 días adelante."""
+    ahora = timezone.localtime()
+    for sesion in sesiones_proximas(clases, dias=14, desde=desde):
+        if sesion['fecha'] > ahora.date():
+            return sesion
+        if sesion['fecha'] == ahora.date() and sesion['clase'].hora_fin > ahora.time():
+            return sesion
+    return None
+
+
+def inicio_sesion(sesion):
+    """datetime con zona horaria del comienzo de una sesión."""
+    from datetime import datetime
+
+    ingenuo = datetime.combine(sesion['fecha'], sesion['clase'].hora_inicio)
+    return timezone.make_aware(ingenuo, timezone.get_current_timezone())
+
+
+def puede_confirmar(sesion):
+    """Se confirma hasta una hora antes de que empiece."""
+    return timezone.now() < inicio_sesion(sesion) - timedelta(hours=1)
+
+
+# ---------------------------------------------------------------------------
+# Retención: quién dejó de venir sin avisar
+# ---------------------------------------------------------------------------
+DIAS_AUSENCIA = 14
+
+
+def alumnos_ausentes(dias=DIAS_AUSENCIA):
+    """Alumnos activos con plan vigente que llevan tiempo sin aparecer.
+
+    Es la señal más temprana de que alguien se está yendo: primero dejan de
+    venir, y recién semanas después no renuevan. Para entonces ya se fueron.
+    """
+    from apps.asistencia.models import RegistroAsistencia
+
+    from .models import Alumno
+
+    hoy = timezone.localdate()
+    corte = hoy - timedelta(days=dias)
+
+    encontrados = []
+    candidatos = Alumno.objects.filter(estado=Alumno.Estado.ACTIVO).prefetch_related(
+        'inscripciones__clase')
+
+    for alumno in candidatos:
+        # Sin plan vigente ya lo cubre la alerta de vencimiento.
+        if not alumno.suscripcion_vigente:
+            continue
+        # Sin clases inscritas no hay a qué faltar.
+        if not alumno.inscripciones.exists():
+            continue
+
+        ultima = (
+            RegistroAsistencia.objects
+            .filter(alumno=alumno, estado=RegistroAsistencia.Estado.PRESENTE)
+            .order_by('-fecha')
+            .values_list('fecha', flat=True)
+            .first()
+        )
+
+        # Recién inscrito y sin historial: se le da margen.
+        referencia = ultima or alumno.fecha_ingreso
+        if referencia > corte:
+            continue
+
+        faltas = list(
+            RegistroAsistencia.objects
+            .filter(alumno=alumno, fecha__gt=referencia)
+            .exclude(estado=RegistroAsistencia.Estado.PRESENTE)
+            .select_related('clase')
+            .order_by('-fecha')[:8]
+        )
+
+        encontrados.append({
+            'alumno': alumno,
+            'ultima': ultima,
+            'dias': (hoy - referencia).days,
+            'faltas': faltas,
+        })
+
+    encontrados.sort(key=lambda x: -x['dias'])
+    return encontrados
+
+
+def generar_alertas_ausencia(dias=DIAS_AUSENCIA):
+    """Crea la alerta de ausencia prolongada. Una sola por episodio."""
+    from .models import Alerta
+
+    detectados = alumnos_ausentes(dias)
+    creadas = 0
+
+    for item in detectados:
+        alumno = item['alumno']
+        mensaje = (
+            f'Lleva {item["dias"]} días sin venir a clases '
+            f'(última asistencia: '
+            f'{item["ultima"]:%d/%m/%Y}).' if item['ultima']
+            else f'Lleva {item["dias"]} días inscrito y nunca ha asistido.'
+        )
+        if _crear_alerta(Alerta.Tipo.AUSENCIA_PROLONGADA, alumno, mensaje):
+            creadas += 1
+
+    return creadas, detectados
+
+
+# ---------------------------------------------------------------------------
+# Cumpleaños
+# ---------------------------------------------------------------------------
+def cumpleaneros(fecha=None):
+    from .models import Alumno
+
+    fecha = fecha or timezone.localdate()
+    return Alumno.objects.filter(
+        estado=Alumno.Estado.ACTIVO,
+        fecha_nacimiento__month=fecha.month,
+        fecha_nacimiento__day=fecha.day,
+    ).exclude(email='')
+
+
+# ---------------------------------------------------------------------------
+# Cierre mensual
+# ---------------------------------------------------------------------------
+def cierre_mensual(referencia=None):
+    """Los números del mes que acaba de terminar. Todo sale de la base."""
+    from apps.asistencia.models import RegistroAsistencia
+
+    from .models import Alumno, Pago, Plan, Suscripcion
+
+    hoy = referencia or timezone.localdate()
+    inicio, fin = mes_anterior(hoy)
+    inicio_previo, fin_previo = mes_anterior(inicio)
+
+    activos_cierre = Alumno.objects.filter(
+        estado=Alumno.Estado.ACTIVO, fecha_ingreso__lte=fin).count()
+    activos_previo = Alumno.objects.filter(
+        estado=Alumno.Estado.ACTIVO, fecha_ingreso__lte=fin_previo).count()
+
+    nuevos = Alumno.objects.filter(fecha_ingreso__gte=inicio, fecha_ingreso__lte=fin)
+
+    # No renovaron: se les venció dentro del mes y siguen sin plan vigente.
+    sin_renovar = []
+    for sus in Suscripcion.objects.filter(
+        fecha_vencimiento__gte=inicio, fecha_vencimiento__lte=fin,
+        alumno__eliminado=False,
+    ).select_related('alumno', 'plan'):
+        if not sus.alumno.suscripcion_vigente:
+            sin_renovar.append(sus)
+
+    # Asistencia por clase
+    registros = RegistroAsistencia.objects.filter(fecha__gte=inicio, fecha__lte=fin)
+    por_clase = {}
+    for registro in registros.select_related('clase'):
+        datos = por_clase.setdefault(registro.clase, {'total': 0, 'presentes': 0})
+        datos['total'] += 1
+        datos['presentes'] += int(registro.estado == RegistroAsistencia.Estado.PRESENTE)
+
+    ranking = sorted(
+        ({'clase': c, 'presentes': d['presentes'], 'total': d['total'],
+          'porcentaje': round(d['presentes'] / d['total'] * 100) if d['total'] else 0}
+         for c, d in por_clase.items()),
+        key=lambda x: -x['presentes'],
+    )
+
+    total_marcas = registros.count()
+    total_presentes = registros.filter(
+        estado=RegistroAsistencia.Estado.PRESENTE).count()
+
+    # Planes más contratados en el mes
+    conteo = {}
+    for sus in Suscripcion.objects.filter(
+        fecha_inicio__gte=inicio, fecha_inicio__lte=fin
+    ).select_related('plan'):
+        conteo[sus.plan] = conteo.get(sus.plan, 0) + 1
+    top_planes = sorted(
+        ({'plan': p, 'total': n} for p, n in conteo.items()),
+        key=lambda x: -x['total'],
+    )[:3]
+
+    return {
+        'inicio': inicio,
+        'fin': fin,
+        'nombre_mes': nombre_mes(inicio),
+        'ingresos': ingresos_entre(inicio, fin),
+        'ingresos_previo': ingresos_entre(inicio_previo, fin_previo),
+        'activos': activos_cierre,
+        'activos_previo': activos_previo,
+        'diferencia_alumnos': activos_cierre - activos_previo,
+        'nuevos': nuevos,
+        'sin_renovar': sin_renovar,
+        'mejor_clase': ranking[0] if ranking else None,
+        'peor_clase': ranking[-1] if len(ranking) > 1 else None,
+        'asistencia_global': (round(total_presentes / total_marcas * 100)
+                              if total_marcas else None),
+        'top_planes': top_planes,
+        'pagos_count': Pago.objects.filter(
+            estado=Pago.Estado.PAGADO, fecha_pago__gte=inicio, fecha_pago__lte=fin).count(),
+    }

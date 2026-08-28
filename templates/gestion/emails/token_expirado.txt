@@ -1,0 +1,13 @@
+AREA LATINA ESTUDIO - Enlace de activacion vencido
+============================================================
+
+{{ usuario.get_full_name|default:usuario.username }} intento activar su
+cuenta con un enlace que ya vencio o que ya se uso.
+
+Usuario: {{ usuario.username }}
+Correo:  {{ usuario.email }}
+Rol:     {{ usuario.get_rol_display }}
+
+Para generarle uno nuevo, entra a su ficha en el panel de gestion y
+vuelve a enviarle el correo de bienvenida.
+============================================================

@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0D0D0D">
+    <title>Activar mi cuenta | Área Latina Estudio</title>
+
+    <link rel="icon" type="image/jpeg" href="{% static 'img/logo-naranja.jpg' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="{% static 'css/portales.css' %}" rel="stylesheet">
+</head>
+<body class="p-body">
+
+<div class="p-centro">
+    <div class="p-caja">
+        <img src="{% static 'img/logo-blanco.jpg' %}" alt="Área Latina Estudio" class="p-caja-logo">
+
+        <h1>Elige tu contraseña</h1>
+        <p>
+            Hola {{ usuario.first_name|default:usuario.username }}, este es tu
+            último paso. Nadie más va a conocer esta contraseña, ni siquiera
+            la academia.
+        </p>
+
+        {% if form.non_field_errors %}
+            <div class="p-mensaje error">
+                <i class="bi bi-exclamation-circle"></i>
+                <span>{% for e in form.non_field_errors %}{{ e }}{% endfor %}</span>
+            </div>
+        {% endif %}
+
+        <form method="post" class="p-form">
+            {% csrf_token %}
+
+            <div class="p-grupo">
+                <label for="{{ form.clave1.id_for_label }}">{{ form.clave1.label }}</label>
+                {{ form.clave1 }}
+                {% for e in form.clave1.errors %}<div class="p-error">{{ e }}</div>{% endfor %}
+            </div>
+
+            <div class="p-grupo">
+                <label for="{{ form.clave2.id_for_label }}">{{ form.clave2.label }}</label>
+                {{ form.clave2 }}
+                {% for e in form.clave2.errors %}<div class="p-error">{{ e }}</div>{% endfor %}
+            </div>
+
+            <div class="p-banner info" style="text-align:left">
+                <i class="bi bi-shield-lock"></i>
+                <div class="p-banner-cuerpo">
+                    Mínimo 8 caracteres. No puede ser tu RUT ni algo demasiado
+                    común, para que nadie la adivine.
+                </div>
+            </div>
+
+            <button type="submit" class="p-boton grande">
+                Activar mi cuenta
+            </button>
+        </form>
+
+        <p class="p-ayuda">
+            Tu usuario es <strong>{{ usuario.username }}</strong>. Anótalo:
+            lo vas a necesitar para entrar.
+        </p>
+    </div>
+</div>
+
+<script src="{% static 'js/portales.js' %}"></script>
+</body>
+</html>

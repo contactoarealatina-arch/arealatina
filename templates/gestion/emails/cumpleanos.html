@@ -1,0 +1,50 @@
+{% extends 'gestion/emails/_base.html' %}
+
+{% block asunto %}¡Feliz cumpleaños!{% endblock %}
+{% block preview %}Hoy es tu día, {{ alumno.primer_nombre }}. Celébralo bailando.{% endblock %}
+{% block bajada %}Hoy es tu día{% endblock %}
+
+{% block cuerpo %}
+    <!-- Banner de celebración, hecho con tablas y color: sin imágenes
+         externas, que muchos clientes de correo bloquean. -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FF5722;border-radius:12px;margin-bottom:24px;">
+        <tr><td style="padding:34px 20px;text-align:center;">
+            <div style="font-size:44px;line-height:1;margin-bottom:10px;">&#127881;</div>
+            <div style="color:#FFFFFF;font-size:26px;font-weight:bold;letter-spacing:-0.5px;">
+                ¡Feliz cumpleaños!
+            </div>
+            <div style="color:#FFE0D6;font-size:19px;margin-top:6px;">
+                {{ alumno.primer_nombre }}
+            </div>
+        </td></tr>
+    </table>
+
+    <p style="margin:0 0 18px;font-size:16px;">
+        Hoy es tu día. Que lo pases increíble, rodeado de la gente que quieres.
+    </p>
+
+    {% if clase_hoy %}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FFF6F2;border-left:4px solid #FF5722;border-radius:8px;margin-bottom:20px;">
+        <tr><td style="padding:16px 18px;font-size:15px;color:#555;">
+            Y justo hoy tienes <strong style="color:#0D0D0D;">{{ clase_hoy.get_nombre_display }}</strong>
+            a las <strong style="color:#E64A19;">{{ clase_hoy.hora_inicio|time:"H:i" }}</strong> hrs.
+            Te esperamos para celebrarlo bailando.
+        </td></tr>
+    </table>
+    {% else %}
+    <p style="margin:0 0 20px;color:#555;">
+        Celébralo como corresponde: bailando. Te esperamos en tu próxima clase.
+    </p>
+    {% endif %}
+
+    <p style="margin:0;color:#555;font-size:15px;">
+        Un abrazo grande,<br>
+        <strong style="color:#0D0D0D;">todo el equipo de Área Latina Estudio</strong>
+    </p>
+{% endblock %}
+
+{% block nota_legal %}
+    Te escribimos una vez al año, el día de tu cumpleaños.
+{% endblock %}

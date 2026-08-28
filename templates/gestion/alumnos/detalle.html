@@ -142,6 +142,13 @@
         <div class="g-card">
             <h2 class="g-card-titulo">Acciones</h2>
             <div class="d-grid gap-2">
+                {% if whatsapp %}
+                <button type="button" class="g-btn g-btn-whatsapp"
+                        data-bs-toggle="modal" data-bs-target="#modalWhatsapp">
+                    <i class="bi bi-whatsapp"></i> Enviar WhatsApp
+                </button>
+                {% endif %}
+
                 <button type="button" class="g-btn g-btn-primario"
                         data-bs-toggle="modal" data-bs-target="#modalRenovar">
                     <i class="bi bi-arrow-clockwise"></i> Renovar plan
@@ -363,6 +370,52 @@
         </div>
     </div>
 </div>
+
+<!-- ==================== MODAL WHATSAPP ==================== -->
+{% if whatsapp %}
+<div class="modal fade" id="modalWhatsapp" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-whatsapp"></i> WhatsApp a {{ alumno.primer_nombre }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="g-muted" style="font-size:.85rem">
+                    Elige un mensaje. Se abre WhatsApp con el texto escrito;
+                    tú lo revisas y decides si lo mandas.
+                </p>
+
+                <div class="d-grid gap-2">
+                    {% for opcion in whatsapp.opciones %}
+                    <a href="{{ opcion.url }}" target="_blank" rel="noopener"
+                       class="g-card text-decoration-none" style="padding:.85rem 1rem">
+                        <strong style="font-size:.9rem;color:var(--al-text)">{{ opcion.titulo }}</strong>
+                        <div class="g-muted" style="font-size:.8rem;margin-top:.25rem">
+                            {{ opcion.texto|truncatechars:110 }}
+                        </div>
+                    </a>
+                    {% endfor %}
+
+                    <a href="{{ whatsapp.base }}" target="_blank" rel="noopener"
+                       class="g-card text-decoration-none" style="padding:.85rem 1rem">
+                        <strong style="font-size:.9rem;color:var(--al-text)">Mensaje personalizado</strong>
+                        <div class="g-muted" style="font-size:.8rem;margin-top:.25rem">
+                            Abre la conversación en blanco para que escribas tú.
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <span class="g-muted" style="font-size:.78rem">+{{ whatsapp.numero }}</span>
+                <button type="button" class="g-btn g-btn-neutro" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- ==================== MODAL RENOVAR ==================== -->
 <div class="modal fade" id="modalRenovar" tabindex="-1" aria-hidden="true">

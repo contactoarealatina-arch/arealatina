@@ -589,6 +589,7 @@ class Alerta(TimeStampedModel):
         VENCIMIENTO_PROXIMO = 'VENCIMIENTO_PROXIMO', 'Plan por vencer'
         PLAN_VENCIDO = 'PLAN_VENCIDO', 'Plan vencido'
         PAGO_PENDIENTE = 'PAGO_PENDIENTE', 'Pago pendiente'
+        AUSENCIA_PROLONGADA = 'AUSENCIA', 'Lleva dos semanas sin venir'
 
     tipo = models.CharField('Tipo', max_length=20, choices=Tipo.choices)
     alumno = models.ForeignKey(
@@ -643,6 +644,7 @@ class Alerta(TimeStampedModel):
             self.Tipo.VENCIMIENTO_PROXIMO: 'warning',
             self.Tipo.PLAN_VENCIDO: 'danger',
             self.Tipo.PAGO_PENDIENTE: 'orange',
+            self.Tipo.AUSENCIA_PROLONGADA: 'warning',
         }[self.tipo]
 
 
@@ -755,6 +757,13 @@ class CorreoEnviado(models.Model):
         RECORDATORIO = 'RECORDATORIO', 'Aviso de vencimiento'
         RESUMEN = 'RESUMEN', 'Resumen para el equipo'
         CONTACTO = 'CONTACTO', 'Mensaje del formulario web'
+        RECORDATORIO_CLASE = 'REC_CLASE', 'Recordatorio de clase al alumno'
+        CONFIRMACION = 'CONFIRMACION', 'Confirmacion de asistencia'
+        BIENV_PROFE = 'BIENV_PROFE', 'Bienvenida a profesora'
+        REC_PROFE = 'REC_PROFE', 'Recordatorio de clases a profesora'
+        CUMPLEANOS = 'CUMPLEANOS', 'Saludo de cumpleanos'
+        AUSENCIA = 'AUSENCIA', 'Aviso de ausencia prolongada'
+        INFORME = 'INFORME', 'Informe mensual'
 
     tipo = models.CharField('Tipo', max_length=15, choices=Tipo.choices)
     destinatario = models.EmailField('Destinatario')
@@ -788,3 +797,93 @@ class CorreoEnviado(models.Model):
     def __str__(self):
         estado = 'OK' if self.enviado else 'FALLÓ'
         return f'[{estado}] {self.get_tipo_display()} → {self.destinatario}'
+
+
+class ConfirmacionAsistencia(models.Model):
+    """El alumno avisa desde su portal que va a venir a una clase.
+
+    Es distinto de RegistroAsistencia: esto es una intención previa, lo otro
+    es lo que realmente pasó y lo marca la profesora. Sirve para que ella
+    sepa cuánta gente esperar.
+    """
+
+    alumno = models.ForeignKey(
+        Alumno,
+        on_delete=models.CASCADE,
+        related_name='confirmaciones',
+        verbose_name='Alumno',
+    )
+    clase = models.ForeignKey(
+        Clase,
+        on_delete=models.CASCADE,
+        related_name='confirmaciones',
+        verbose_name='Clase',
+    )
+    fecha = models.DateField('Fecha de la clase')
+    confirmado_en = models.DateTimeField('Confirmado el', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Confirmación de asistencia'
+        verbose_name_plural = 'Confirmaciones de asistencia'
+        ordering = ['-fecha', '-confirmado_en']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['alumno', 'clase', 'fecha'],
+                name='confirmacion_unica_alumno_clase_fecha',
+            )
+        ]
+        indexes = [models.Index(fields=['clase', 'fecha'])]
+
+    def __str__(self):
+        return f'{self.alumno.nombre_completo} confirmó {self.clase} el {self.fecha:%d/%m/%Y}'
+
+
+class TokenActivacion(models.Model):
+    """Enlace de un solo uso para que el alumno elija su contraseña.
+
+    Se prefiere esto a mandarle una contraseña inicial predecible: el RUT
+    circula demasiado en Chile como para servir de clave, aunque se cambie
+    después.
+    """
+
+    HORAS_VALIDEZ = 48
+
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='tokens_activacion',
+        verbose_name='Usuario',
+    )
+    token = models.CharField('Token', max_length=64, unique=True, db_index=True)
+    creado_en = models.DateTimeField('Creado el', auto_now_add=True)
+    usado_en = models.DateTimeField('Usado el', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Token de activación'
+        verbose_name_plural = 'Tokens de activación'
+        ordering = ['-creado_en']
+
+    def __str__(self):
+        estado = 'usado' if self.usado_en else ('vencido' if self.vencido else 'vigente')
+        return f'Token de {self.usuario} ({estado})'
+
+    @classmethod
+    def crear_para(cls, usuario):
+        """Un token nuevo invalida los anteriores del mismo usuario."""
+        import secrets
+
+        cls.objects.filter(usuario=usuario, usado_en__isnull=True).delete()
+        return cls.objects.create(usuario=usuario, token=secrets.token_urlsafe(32))
+
+    @property
+    def vencido(self):
+        limite = self.creado_en + timedelta(hours=self.HORAS_VALIDEZ)
+        return timezone.now() > limite
+
+    @property
+    def valido(self):
+        return self.usado_en is None and not self.vencido
+
+    def marcar_usado(self):
+        self.usado_en = timezone.now()
+        self.save(update_fields=['usado_en'])

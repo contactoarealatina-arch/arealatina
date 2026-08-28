@@ -1,0 +1,171 @@
+{% extends 'portal/base_portal.html' %}
+{% load formato %}
+
+{% block titulo %}Mi portal{% endblock %}
+
+{% block contenido %}
+
+<div class="p-encabezado">
+    <h1>Hola {{ alumno.primer_nombre }}</h1>
+    <p>Este es tu espacio en Área Latina.</p>
+</div>
+
+{% if estado_pago == 'vencido' %}
+<div class="p-banner urgente">
+    <i class="bi bi-exclamation-octagon"></i>
+    <div class="p-banner-cuerpo">
+        <strong>Tu plan está vencido.</strong>
+        Renuévalo para seguir viniendo a clases.
+        {% if whatsapp %}
+            <a href="{{ whatsapp }}" target="_blank" rel="noopener" class="p-boton whatsapp">
+                <i class="bi bi-whatsapp"></i> Contactar para renovar
+            </a>
+        {% else %}
+            <a href="{% url 'portal:plan' %}" class="p-boton">Ver mi plan</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ==================== PLAN ==================== -->
+<section class="p-tarjeta">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap">
+        <h2 style="font-size:1.05rem">Mi plan</h2>
+        {% if estado_pago == 'al_dia' %}
+            <span class="p-etiqueta ok">Al día</span>
+        {% elif estado_pago == 'por_vencer' %}
+            <span class="p-etiqueta media">Por vencer</span>
+        {% elif estado_pago == 'vencido' %}
+            <span class="p-etiqueta mal">Vencido</span>
+        {% else %}
+            <span class="p-etiqueta neutra">Sin plan</span>
+        {% endif %}
+    </div>
+
+    {% if suscripcion %}
+        <div style="font-family:'Poppins',sans-serif;font-size:1.3rem;font-weight:600">
+            {{ suscripcion.plan.nombre }}
+        </div>
+
+        <dl class="p-datos">
+            <div class="p-dato"><dt>Desde</dt><dd>{{ suscripcion.fecha_inicio|date:"d/m/Y" }}</dd></div>
+            <div class="p-dato"><dt>Vence</dt><dd>{{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}</dd></div>
+        </dl>
+
+        {% if dias_restantes is not None %}
+            <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:.85rem">
+                    <span class="p-suave">
+                        {% if dias_restantes >= 0 %}
+                            Te quedan {{ dias_restantes }} día{{ dias_restantes|pluralize }}
+                        {% else %}
+                            Venció hace {{ dias_restantes|cut:"-" }} días
+                        {% endif %}
+                    </span>
+                    <span class="p-suave">{{ suscripcion.porcentaje_consumido }}%</span>
+                </div>
+                <div class="p-progreso">
+                    <div class="p-progreso-relleno {{ color_barra }}"
+                         style="width: {{ suscripcion.porcentaje_consumido }}%"></div>
+                </div>
+            </div>
+        {% endif %}
+
+        <a href="{% url 'portal:plan' %}" class="p-boton secundario">Ver detalle de mi plan</a>
+    {% else %}
+        <p class="p-suave">No tienes un plan contratado en este momento.</p>
+        {% if whatsapp %}
+            <a href="{{ whatsapp }}" target="_blank" rel="noopener" class="p-boton whatsapp">
+                <i class="bi bi-whatsapp"></i> Quiero contratar un plan
+            </a>
+        {% endif %}
+    {% endif %}
+</section>
+
+<!-- ==================== PRÓXIMA CLASE ==================== -->
+{% if siguiente %}
+<section class="p-tarjeta">
+    <h2 style="font-size:1.05rem">Tu próxima clase</h2>
+
+    <div class="p-clase-cabeza">
+        <span class="p-emoji">{{ siguiente.clase.emoji }}</span>
+        <div class="p-clase-titulo">
+            <h3 style="font-size:1.15rem;font-family:'Poppins',sans-serif">
+                {{ siguiente.clase.get_nombre_display }}
+            </h3>
+            <span class="p-nivel">{{ siguiente.clase.get_nivel_display }}</span>
+        </div>
+    </div>
+
+    <div class="p-clase-datos">
+        <div><i class="bi bi-calendar-event"></i>
+            {{ siguiente.fecha|date:"l d" }} de {{ siguiente.fecha|date:"F" }}
+        </div>
+        <div><i class="bi bi-clock"></i> {{ siguiente.clase.horario }} hrs</div>
+        <div><i class="bi bi-door-open"></i> {{ siguiente.clase.sala }}</div>
+        {% if siguiente.clase.profesora %}
+            <div><i class="bi bi-person-badge"></i> {{ siguiente.clase.profesora.get_full_name }}</div>
+        {% endif %}
+    </div>
+
+    <div class="p-etiqueta naranja" style="align-self:flex-start"
+         data-cuenta="{{ inicio_siguiente|date:'c' }}">Calculando...</div>
+
+    {% if ya_confirmada %}
+        <div class="p-etiqueta ok" style="align-self:flex-start">
+            <i class="bi bi-check-lg"></i> Ya confirmaste tu asistencia
+        </div>
+    {% elif puede_confirmar %}
+        <a href="{% url 'portal:confirmar' siguiente.clase.pk siguiente.fecha|date:'Y-m-d' %}"
+           class="p-boton grande">
+            <i class="bi bi-hand-thumbs-up"></i> Confirmar asistencia
+        </a>
+    {% else %}
+        <p class="p-suave" style="font-size:.85rem">
+            Ya no es posible confirmar: la clase empieza en menos de una hora.
+        </p>
+    {% endif %}
+</section>
+{% elif total_clases %}
+<section class="p-tarjeta">
+    <h2 style="font-size:1.05rem">Tu próxima clase</h2>
+    <p class="p-suave">No hay clases programadas en los próximos días.</p>
+</section>
+{% else %}
+<section class="p-tarjeta">
+    <h2 style="font-size:1.05rem">Tus clases</h2>
+    <p class="p-suave">
+        Todavía no estás inscrito en ninguna clase. Habla con la academia
+        para elegir tus horarios.
+    </p>
+</section>
+{% endif %}
+
+<!-- ==================== ÚLTIMOS PAGOS ==================== -->
+<section class="p-seccion">
+    <h2 class="p-seccion-titulo">Tus últimos pagos</h2>
+    {% if ultimos_pagos %}
+        <div class="p-tabla-caja">
+            <table class="p-tabla">
+                <thead><tr><th>Fecha</th><th>Concepto</th><th class="num">Monto</th></tr></thead>
+                <tbody>
+                {% for pago in ultimos_pagos %}
+                    <tr>
+                        <td class="nowrap">{{ pago.fecha_pago|date:"d/m/Y" }}</td>
+                        <td>{{ pago.concepto_display }}</td>
+                        <td class="num">${{ pago.monto_clp|clp }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <a href="{% url 'portal:pagos' %}" class="p-boton secundario">Ver todos mis pagos</a>
+    {% else %}
+        <div class="p-vacio">
+            <i class="bi bi-receipt"></i>
+            <p>Todavía no hay pagos registrados a tu nombre.</p>
+        </div>
+    {% endif %}
+</section>
+
+{% endblock %}

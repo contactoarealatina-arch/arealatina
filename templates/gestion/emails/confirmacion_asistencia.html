@@ -1,0 +1,64 @@
+{% extends 'gestion/emails/_base.html' %}
+
+{% block asunto %}Asistencia confirmada{% endblock %}
+{% block preview %}Te esperamos en {{ clase.get_nombre_display }} el {{ fecha|date:"d/m" }}.{% endblock %}
+{% block bajada %}Asistencia confirmada{% endblock %}
+
+{% block cuerpo %}
+    <div style="text-align:center;margin-bottom:20px;">
+        <div style="display:inline-block;width:64px;height:64px;border-radius:50%;background:#E8F5E9;line-height:64px;font-size:30px;color:#2E7D32;">
+            &#10003;
+        </div>
+    </div>
+
+    <h1 style="margin:0 0 16px;font-size:22px;color:#0D0D0D;text-align:center;">
+        Perfecto {{ alumno.primer_nombre }}, te esperamos
+    </h1>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FFF6F2;border-left:4px solid #FF5722;border-radius:8px;margin-bottom:20px;">
+        <tr><td style="padding:18px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;">
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Clase</td>
+                    <td style="padding:5px 0;text-align:right;color:#0D0D0D;font-weight:bold;">
+                        {{ clase.get_nombre_display }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Día</td>
+                    <td style="padding:5px 0;text-align:right;color:#0D0D0D;">
+                        {{ fecha|date:"l d" }} de {{ fecha|date:"F" }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Hora</td>
+                    <td style="padding:5px 0;text-align:right;color:#E64A19;font-weight:bold;">
+                        {{ clase.hora_inicio|time:"H:i" }} hrs
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Sala</td>
+                    <td style="padding:5px 0;text-align:right;color:#0D0D0D;">{{ clase.sala }}</td>
+                </tr>
+            </table>
+        </td></tr>
+    </table>
+
+    <p style="margin:0 0 18px;color:#555;font-size:15px;text-align:center;">
+        <strong style="color:#0D0D0D;">Recuerda llegar 10 minutos antes</strong><br>
+        para acomodarte con calma.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FAFAFA;border-radius:8px;">
+        <tr><td style="padding:14px 18px;font-size:14px;color:#555;text-align:center;">
+            {{ academia.direccion_completa }}<br>
+            <a href="{{ url_mapa }}" style="color:#FF5722;">Ver cómo llegar</a>
+        </td></tr>
+    </table>
+
+    <p style="margin:18px 0 0;color:#888;font-size:13px;text-align:center;">
+        Si al final no puedes venir, avísanos con anticipación.
+    </p>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'gestion/emails/_base.html' %}
+
+{% block asunto %}Bienvenida al equipo{% endblock %}
+{% block preview %}Ya tienes acceso al portal. Acá van tus clases y cómo pasar lista.{% endblock %}
+{% block bajada %}Portal de profesoras{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 16px;font-size:22px;color:#0D0D0D;">
+        Hola {{ profesora.nombre_corto }}, ya eres parte del equipo
+    </h1>
+
+    <p style="margin:0 0 18px;">
+        Te creamos tu cuenta en el sistema de Área Latina. Desde el portal vas
+        a ver tus clases del día y pasar lista, sin papel ni planillas.
+    </p>
+
+    {% if clases %}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FFF6F2;border-left:4px solid #FF5722;border-radius:8px;margin-bottom:18px;">
+        <tr><td style="padding:16px 18px;">
+            <div style="font-size:12px;letter-spacing:1px;color:#E64A19;font-weight:bold;text-transform:uppercase;margin-bottom:10px;">
+                Tus clases
+            </div>
+            {% for clase in clases %}
+            <div style="margin-bottom:{% if not forloop.last %}12px{% else %}0{% endif %};">
+                <strong style="color:#0D0D0D;font-size:15px;">{{ clase.get_nombre_display }}</strong>
+                <span style="color:#888;font-size:13px;"> · {{ clase.get_nivel_display }}</span><br>
+                <span style="color:#555;font-size:13px;">
+                    {{ clase.dias_display }} · {{ clase.horario }} hrs · {{ clase.sala }}
+                </span>
+            </div>
+            {% endfor %}
+        </td></tr>
+    </table>
+    {% else %}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FAFAFA;border-radius:8px;margin-bottom:18px;">
+        <tr><td style="padding:16px 18px;color:#555;font-size:14px;">
+            Todavía no tienes clases asignadas. Apenas te asignemos alguna,
+            va a aparecer en tu portal.
+        </td></tr>
+    </table>
+    {% endif %}
+
+    <!-- Acceso -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FAFAFA;border-radius:8px;margin-bottom:20px;">
+        <tr><td style="padding:16px 18px;">
+            <div style="font-size:12px;letter-spacing:1px;color:#666;font-weight:bold;text-transform:uppercase;margin-bottom:10px;">
+                Tu acceso
+            </div>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;">
+                <tr>
+                    <td style="padding:4px 0;color:#666;">Usuario</td>
+                    <td style="padding:4px 0;text-align:right;color:#0D0D0D;font-weight:bold;">
+                        {{ profesora.username }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:4px 0;color:#666;">Correo</td>
+                    <td style="padding:4px 0;text-align:right;color:#0D0D0D;">{{ profesora.email }}</td>
+                </tr>
+            </table>
+            {% if enlace %}
+                <p style="margin:12px 0 0;font-size:13px;color:#555;">
+                    Elige tu contraseña con el botón de abajo. El enlace vence en 48 horas.
+                </p>
+            {% else %}
+                <p style="margin:12px 0 0;font-size:13px;color:#555;">
+                    La contraseña te la entrega la administración en persona.
+                </p>
+            {% endif %}
+        </td></tr>
+    </table>
+
+    <!-- Botón -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 22px;">
+        <tr><td style="background:#FF5722;border-radius:8px;">
+            <a href="{% if enlace %}{{ enlace }}{% else %}{{ url_portal }}{% endif %}"
+               style="display:inline-block;padding:14px 34px;color:#FFFFFF;font-size:15px;font-weight:bold;text-decoration:none;">
+                {% if enlace %}Crear mi contraseña{% else %}Ir a mi portal{% endif %}
+            </a>
+        </td></tr>
+    </table>
+
+    <!-- Cómo se usa -->
+    <div style="font-size:12px;letter-spacing:1px;color:#666;font-weight:bold;text-transform:uppercase;margin-bottom:12px;">
+        Cómo se usa
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;color:#555;">
+        <tr>
+            <td width="34" valign="top" style="padding:0 0 14px;">
+                <div style="width:26px;height:26px;border-radius:50%;background:#FF5722;color:#FFFFFF;text-align:center;line-height:26px;font-weight:bold;font-size:13px;">1</div>
+            </td>
+            <td valign="top" style="padding:2px 0 14px;">
+                Entra al portal con tu usuario y contraseña.
+            </td>
+        </tr>
+        <tr>
+            <td width="34" valign="top" style="padding:0 0 14px;">
+                <div style="width:26px;height:26px;border-radius:50%;background:#FF5722;color:#FFFFFF;text-align:center;line-height:26px;font-weight:bold;font-size:13px;">2</div>
+            </td>
+            <td valign="top" style="padding:2px 0 14px;">
+                En la pantalla de inicio ves tus clases del día, con cuántos
+                alumnos hay inscritos y cuántos confirmaron que vienen.
+            </td>
+        </tr>
+        <tr>
+            <td width="34" valign="top" style="padding:0;">
+                <div style="width:26px;height:26px;border-radius:50%;background:#FF5722;color:#FFFFFF;text-align:center;line-height:26px;font-weight:bold;font-size:13px;">3</div>
+            </td>
+            <td valign="top" style="padding:2px 0;">
+                Toca <strong style="color:#0D0D0D;">Pasar asistencia</strong> y marca
+                presente, ausente o justificado. Está pensado para hacerlo con el
+                dedo desde una tablet.
+            </td>
+        </tr>
+    </table>
+
+    <p style="margin:20px 0 0;color:#555;font-size:14px;">
+        Cualquier duda, respóndenos este correo. Bienvenida.
+    </p>
+{% endblock %}
+
+{% block nota_legal %}
+    Recibes este correo porque formas parte del equipo de Área Latina Estudio.
+{% endblock %}

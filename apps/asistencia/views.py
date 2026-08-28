@@ -1,14 +1,12 @@
-"""Vistas del modulo de asistencia (para profesoras)."""
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+"""Puente al portal de profesoras.
 
-from apps.gestion.models import Clase
+La asistencia vive ahora en /profesoras/. Esta vista se mantiene para que
+los enlaces antiguos no queden rotos.
+"""
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
 
 
 @login_required
 def mis_clases(request):
-    """Listado de clases de la profesora conectada."""
-    clases = Clase.objects.filter(activa=True).select_related('profesora')
-    if request.user.es_profesor:
-        clases = clases.filter(profesora=request.user)
-    return render(request, 'gestion/mis_clases.html', {'clases': clases})
+    return redirect('profesoras:panel')

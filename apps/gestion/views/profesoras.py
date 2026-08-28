@@ -6,11 +6,22 @@ from django.shortcuts import get_object_or_404, redirect, render
 from apps.asistencia.models import RegistroAsistencia
 
 from ..auditoria import registrar
+from ..correos import enviar_bienvenida_profesora
 from ..forms import ProfesoraForm
 from ..models import AuditLog, Clase
 from ..permisos import gestion_requerida
 
 User = get_user_model()
+
+
+def _url_activacion(token):
+    from django.conf import settings
+    from django.urls import reverse
+
+    if not token:
+        return ''
+    base = getattr(settings, 'SITIO_URL', 'http://localhost:8000').rstrip('/')
+    return base + reverse('portal:activar', args=[token.token])
 
 
 @gestion_requerida
@@ -31,7 +42,23 @@ def profesora_nueva(request):
             profesora = form.save()
             registrar(request, AuditLog.Accion.CREAR, profesora,
                       f'Creó a la profesora {profesora.get_full_name()}')
-            messages.success(request, 'Profesora registrada.')
+
+            # Sin contraseña puesta a mano, se le manda un enlace para que
+            # la elija ella: así nadie más la conoce.
+            from apps.portal.cuentas import crear_acceso_profesora
+
+            sin_clave = not form.cleaned_data.get('password1')
+            token = crear_acceso_profesora(profesora, sin_clave)
+            enlace = _url_activacion(token)
+
+            aviso = 'Profesora registrada.'
+            if profesora.email:
+                enviado, motivo = enviar_bienvenida_profesora(profesora, enlace)
+                aviso += (' Le mandamos la bienvenida con su acceso.' if enviado
+                          else f' No salió el correo ({motivo})')
+            else:
+                aviso += ' Sin email no se le puede mandar la bienvenida.'
+            messages.success(request, aviso)
             return redirect('gestion:profesora_detalle', pk=profesora.pk)
         messages.error(request, 'Revisa los datos.')
     else:

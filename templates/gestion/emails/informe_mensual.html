@@ -1,0 +1,137 @@
+{% extends 'gestion/emails/_base.html' %}
+{% load formato %}
+
+{% block asunto %}Cierre del mes{% endblock %}
+{% block preview %}${{ ingresos|clp }} en {{ nombre_mes }}, {{ activos }} alumnos activos.{% endblock %}
+{% block bajada %}Cierre de {{ nombre_mes }}{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 20px;font-size:21px;color:#0D0D0D;">
+        Así cerró {{ nombre_mes }}
+    </h1>
+
+    <!-- Dos cifras grandes -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="margin-bottom:20px;">
+        <tr>
+            <td width="50%" valign="top" style="padding-right:6px;">
+                <div style="background:#0D0D0D;border-radius:10px;padding:20px;text-align:center;">
+                    <div style="color:#B0B0B0;font-size:11px;text-transform:uppercase;letter-spacing:1px;">
+                        Ingresos
+                    </div>
+                    <div style="color:#FF5722;font-size:26px;font-weight:bold;margin-top:6px;">
+                        ${{ ingresos|clp }}
+                    </div>
+                    {% if variacion_ingresos is not None %}
+                        <div style="color:{% if variacion_ingresos >= 0 %}#81C784{% else %}#FF8A80{% endif %};font-size:12px;margin-top:4px;">
+                            {% if variacion_ingresos >= 0 %}+{% endif %}{{ variacion_ingresos }}% vs mes anterior
+                        </div>
+                    {% endif %}
+                </div>
+            </td>
+            <td width="50%" valign="top" style="padding-left:6px;">
+                <div style="background:#0D0D0D;border-radius:10px;padding:20px;text-align:center;">
+                    <div style="color:#B0B0B0;font-size:11px;text-transform:uppercase;letter-spacing:1px;">
+                        Alumnos activos
+                    </div>
+                    <div style="color:#FFFFFF;font-size:26px;font-weight:bold;margin-top:6px;">
+                        {{ activos }}
+                    </div>
+                    <div style="color:{% if diferencia_alumnos >= 0 %}#81C784{% else %}#FF8A80{% endif %};font-size:12px;margin-top:4px;">
+                        {% if diferencia_alumnos >= 0 %}+{% endif %}{{ diferencia_alumnos }} vs mes anterior
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Detalle -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FAFAFA;border-radius:8px;margin-bottom:20px;">
+        <tr><td style="padding:18px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;">
+                <tr>
+                    <td style="padding:6px 0;color:#666;border-bottom:1px solid #EEE;">Pagos recibidos</td>
+                    <td style="padding:6px 0;text-align:right;color:#0D0D0D;font-weight:bold;border-bottom:1px solid #EEE;">
+                        {{ pagos_count }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 0;color:#666;border-bottom:1px solid #EEE;">Alumnos nuevos</td>
+                    <td style="padding:6px 0;text-align:right;color:#2E7D32;font-weight:bold;border-bottom:1px solid #EEE;">
+                        {{ nuevos|length }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 0;color:#666;border-bottom:1px solid #EEE;">No renovaron</td>
+                    <td style="padding:6px 0;text-align:right;color:#C62828;font-weight:bold;border-bottom:1px solid #EEE;">
+                        {{ sin_renovar|length }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 0;color:#666;">Asistencia global</td>
+                    <td style="padding:6px 0;text-align:right;color:#0D0D0D;font-weight:bold;">
+                        {% if asistencia_global is not None %}{{ asistencia_global }}%{% else %}sin datos{% endif %}
+                    </td>
+                </tr>
+            </table>
+        </td></tr>
+    </table>
+
+    {% if mejor_clase %}
+    <div style="font-size:12px;letter-spacing:1px;color:#666;font-weight:bold;text-transform:uppercase;margin-bottom:10px;">
+        Clases
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="font-size:14px;margin-bottom:20px;">
+        <tr style="border-bottom:1px solid #EEE;">
+            <td style="padding:8px 0;color:#666;">Más asistencia</td>
+            <td style="padding:8px 0;text-align:right;color:#0D0D0D;">
+                {{ mejor_clase.clase.get_nombre_display }}
+                <span style="color:#2E7D32;font-weight:bold;">{{ mejor_clase.presentes }}</span>
+            </td>
+        </tr>
+        {% if peor_clase %}
+        <tr>
+            <td style="padding:8px 0;color:#666;">Menos asistencia</td>
+            <td style="padding:8px 0;text-align:right;color:#0D0D0D;">
+                {{ peor_clase.clase.get_nombre_display }}
+                <span style="color:#C62828;font-weight:bold;">{{ peor_clase.presentes }}</span>
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+    {% endif %}
+
+    {% if top_planes %}
+    <div style="font-size:12px;letter-spacing:1px;color:#666;font-weight:bold;text-transform:uppercase;margin-bottom:10px;">
+        Planes más contratados
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="font-size:14px;margin-bottom:22px;">
+        {% for item in top_planes %}
+        <tr style="border-bottom:1px solid #EEE;">
+            <td style="padding:8px 0;color:#0D0D0D;">
+                {{ forloop.counter }}. {{ item.plan.nombre }}
+            </td>
+            <td style="padding:8px 0;text-align:right;color:#E64A19;font-weight:bold;">
+                {{ item.total }}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+        <tr><td style="background:#FF5722;border-radius:8px;">
+            <a href="{{ url_resumen }}"
+               style="display:inline-block;padding:14px 34px;color:#FFFFFF;font-size:15px;font-weight:bold;text-decoration:none;">
+                Ver el detalle en el panel
+            </a>
+        </td></tr>
+    </table>
+{% endblock %}
+
+{% block nota_legal %}
+    Informe automático del sistema, el día 1 de cada mes.
+{% endblock %}

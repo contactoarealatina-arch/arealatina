@@ -26,7 +26,7 @@ def gestion_requerida(vista):
             return vista(request, *args, **kwargs)
         if request.user.es_profesor:
             messages.info(request, 'Tu cuenta accede al módulo de asistencia.')
-            return redirect('asistencia:mis_clases')
+            return redirect('profesoras:panel')
         raise PermissionDenied('No tienes acceso al módulo de gestión.')
     return envoltura
 

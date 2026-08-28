@@ -1,0 +1,20 @@
+AREA LATINA ESTUDIO - Tus clases de hoy
+{{ fecha|date:"l d \d\e F"|capfirst }}
+============================================================
+
+Hola {{ profesora.nombre_corto }},
+
+Hoy tienes {{ cantidad }} clase{{ cantidad|pluralize }}:
+{% for item in clases %}
+{{ item.clase.get_nombre_display }} ({{ item.clase.get_nivel_display }})
+  {{ item.clase.horario }} hrs | {{ item.clase.sala }}
+  Inscritos: {{ item.inscritos }} | Confirmaron: {{ item.confirmados }}
+{% endfor %}
+------------------------------------------------------------
+Ir a pasar lista: {{ url_portal }}
+
+Recuerda registrar la asistencia antes de que termine la clase.
+
+============================================================
+Area Latina Estudio
+{{ academia.email }}

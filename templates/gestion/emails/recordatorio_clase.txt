@@ -1,0 +1,21 @@
+AREA LATINA ESTUDIO - Recordatorio de clase
+============================================================
+
+Hola {{ alumno.primer_nombre }}, manana bailas.
+
+{{ clase.get_nombre_display }}
+{{ fecha|date:"l d" }} de {{ fecha|date:"F" }}
+{{ clase.hora_inicio|time:"H:i" }} - {{ clase.hora_fin|time:"H:i" }} hrs
+Sala: {{ clase.sala }}{% if clase.profesora %}
+Con:  {{ clase.profesora.get_full_name }}{% endif %}
+
+CONFIRMA TU ASISTENCIA:
+{{ url_confirmar }}
+
+Confirma antes de las {{ clase.hora_inicio|time:"H:i" }} de manana.
+
+{{ academia.direccion_completa }}
+Como llegar: {{ url_mapa }}
+
+============================================================
+Area Latina Estudio - {{ academia.email }}

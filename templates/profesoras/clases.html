@@ -1,0 +1,65 @@
+{% extends 'profesoras/base_profesoras.html' %}
+
+{% block titulo %}Mis clases{% endblock %}
+
+{% block contenido %}
+
+<div class="p-encabezado">
+    <h1>{% if vista_admin %}Todas las clases{% else %}Mis clases{% endif %}</h1>
+    <p>{{ filas|length }} clase{{ filas|length|pluralize }} activa{{ filas|length|pluralize }}</p>
+</div>
+
+<form method="get" class="p-filtros">
+    <a href="{% url 'profesoras:clases' %}"
+       class="p-pildora {% if not dia %}activa{% endif %}">Todas</a>
+    {% for codigo, nombre in dias %}
+        <a href="?dia={{ codigo }}"
+           class="p-pildora {% if dia == codigo %}activa{% endif %}">{{ nombre }}</a>
+    {% endfor %}
+</form>
+
+{% if filas %}
+    <div class="p-tarjetas">
+        {% for fila in filas %}
+        <article class="p-clase {% if fila.toca_hoy %}hoy{% endif %}">
+            <div class="p-clase-cabeza">
+                <span class="p-emoji">{{ fila.clase.emoji }}</span>
+                <div class="p-clase-titulo">
+                    <h2>{{ fila.clase.get_nombre_display }}</h2>
+                    <span class="p-nivel">{{ fila.clase.get_nivel_display }}</span>
+                </div>
+                {% if fila.toca_hoy %}
+                    <span class="p-etiqueta hoy"><i class="bi bi-star-fill"></i> Hoy</span>
+                {% endif %}
+            </div>
+
+            <div class="p-clase-datos">
+                <div><i class="bi bi-calendar-week"></i> {{ fila.clase.dias_display }}</div>
+                <div><i class="bi bi-clock"></i> {{ fila.clase.horario }} hrs</div>
+                <div><i class="bi bi-door-open"></i> {{ fila.clase.sala }}</div>
+                <div><i class="bi bi-people"></i> {{ fila.inscritos }} de {{ fila.clase.cupo_maximo }} cupos</div>
+                {% if vista_admin and fila.clase.profesora %}
+                    <div><i class="bi bi-person-badge"></i> {{ fila.clase.profesora.get_full_name }}</div>
+                {% endif %}
+            </div>
+
+            {% if fila.toca_hoy %}
+                <a href="{% url 'profesoras:asistencia' fila.clase.pk hoy|date:'Y-m-d' %}"
+                   class="p-boton grande">
+                    <i class="bi bi-clipboard-check"></i> Pasar asistencia
+                </a>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="p-vacio">
+        <i class="bi bi-music-note-beamed"></i>
+        <h2>Sin clases</h2>
+        <p>
+            {% if dia %}No tienes clases ese día.{% else %}Todavía no tienes clases asignadas.{% endif %}
+        </p>
+    </div>
+{% endif %}
+
+{% endblock %}

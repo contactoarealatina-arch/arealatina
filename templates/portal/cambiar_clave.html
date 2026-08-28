@@ -1,0 +1,47 @@
+{% extends 'portal/base_portal.html' %}
+
+{% block titulo %}Cambiar contraseña{% endblock %}
+
+{% block contenido %}
+
+<div class="p-encabezado">
+    <a href="{% url 'portal:perfil' %}" class="p-atras">
+        <i class="bi bi-arrow-left"></i> Volver a mi perfil
+    </a>
+    <h1>Cambiar mi contraseña</h1>
+</div>
+
+<form method="post" class="p-tarjeta" style="max-width:420px">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="p-mensaje error">
+            <i class="bi bi-exclamation-circle"></i>
+            <span>{% for e in form.non_field_errors %}{{ e }}{% endfor %}</span>
+        </div>
+    {% endif %}
+
+    <div class="p-form">
+        <div class="p-grupo">
+            <label for="{{ form.clave_actual.id_for_label }}">{{ form.clave_actual.label }}</label>
+            {{ form.clave_actual }}
+            {% for e in form.clave_actual.errors %}<div class="p-error">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div class="p-grupo">
+            <label for="{{ form.clave1.id_for_label }}">{{ form.clave1.label }}</label>
+            {{ form.clave1 }}
+            {% for e in form.clave1.errors %}<div class="p-error">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div class="p-grupo">
+            <label for="{{ form.clave2.id_for_label }}">{{ form.clave2.label }}</label>
+            {{ form.clave2 }}
+            {% for e in form.clave2.errors %}<div class="p-error">{{ e }}</div>{% endfor %}
+        </div>
+    </div>
+
+    <button type="submit" class="p-boton grande">Cambiar contraseña</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'gestion/emails/_base.html' %}
+
+{% block asunto %}Mañana tienes clase{% endblock %}
+{% block preview %}{{ clase.get_nombre_display }} a las {{ clase.hora_inicio|time:"H:i" }}. Confirma tu asistencia.{% endblock %}
+{% block bajada %}Recordatorio de clase{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 16px;font-size:22px;color:#0D0D0D;">
+        Hola {{ alumno.primer_nombre }}, mañana bailas
+    </h1>
+
+    <p style="margin:0 0 20px;">
+        Te recordamos que mañana tienes clase. Confírmanos si vienes, así la
+        profesora sabe con cuánta gente contar.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#0D0D0D;border-radius:10px;margin-bottom:20px;">
+        <tr><td style="padding:22px;text-align:center;">
+            <div style="color:#FF5722;font-size:24px;font-weight:bold;margin-bottom:6px;">
+                {{ clase.get_nombre_display }}
+            </div>
+            <div style="color:#FFFFFF;font-size:17px;">
+                {{ fecha|date:"l d" }} de {{ fecha|date:"F" }}
+            </div>
+            <div style="color:#FF8A65;font-size:20px;font-weight:bold;margin-top:8px;">
+                {{ clase.hora_inicio|time:"H:i" }} — {{ clase.hora_fin|time:"H:i" }} hrs
+            </div>
+            <div style="color:#B0B0B0;font-size:14px;margin-top:6px;">
+                {{ clase.sala }}{% if clase.profesora %} · con {{ clase.profesora.get_full_name }}{% endif %}
+            </div>
+        </td></tr>
+    </table>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 20px;">
+        <tr><td style="background:#FF5722;border-radius:8px;">
+            <a href="{{ url_confirmar }}"
+               style="display:inline-block;padding:16px 40px;color:#FFFFFF;font-size:16px;font-weight:bold;text-decoration:none;">
+                Confirmar asistencia
+            </a>
+        </td></tr>
+    </table>
+
+    <p style="margin:0 0 18px;color:#555;font-size:14px;text-align:center;">
+        Confirma antes de las {{ clase.hora_inicio|time:"H:i" }} de mañana.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FAFAFA;border-radius:8px;">
+        <tr><td style="padding:14px 18px;font-size:14px;color:#555;text-align:center;">
+            {{ academia.direccion_completa }}<br>
+            <a href="{{ url_mapa }}" style="color:#FF5722;">Ver cómo llegar</a>
+        </td></tr>
+    </table>
+{% endblock %}
+
+{% block nota_legal %}
+    Recibes este recordatorio porque estás inscrito/a en esta clase.
+{% endblock %}

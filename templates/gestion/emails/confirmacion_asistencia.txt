@@ -1,0 +1,19 @@
+AREA LATINA ESTUDIO - Asistencia confirmada
+============================================================
+
+Perfecto {{ alumno.primer_nombre }}, te esperamos.
+
+Clase: {{ clase.get_nombre_display }}
+Dia:   {{ fecha|date:"l d" }} de {{ fecha|date:"F" }}
+Hora:  {{ clase.hora_inicio|time:"H:i" }} hrs
+Sala:  {{ clase.sala }}
+
+Recuerda llegar 10 minutos antes para acomodarte con calma.
+
+{{ academia.direccion_completa }}
+Como llegar: {{ url_mapa }}
+
+Si al final no puedes venir, avisanos con anticipacion.
+
+============================================================
+Area Latina Estudio - {{ academia.email }}

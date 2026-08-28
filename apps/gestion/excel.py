@@ -223,3 +223,50 @@ def exportar_ingresos(serie, titulo='Ingresos mensuales'):
         hoja.add_chart(grafico, 'D2')
 
     return _guardar(libro)
+
+
+# ---------------------------------------------------------------------------
+# Historial de la profesora
+# ---------------------------------------------------------------------------
+def exportar_historial_profesora(filas, titulo_mes):
+    libro, hoja = _nueva_hoja('Historial', [
+        'Fecha', 'Clase', 'Nivel', 'Profesor/a',
+        'Presentes', 'Ausentes', 'Justificados', 'Total', '% asistencia',
+    ])
+
+    for fila in filas:
+        clase = fila['clase']
+        hoja.append([
+            fila['fecha'],
+            clase.get_nombre_display(),
+            clase.get_nivel_display(),
+            clase.profesora.get_full_name() if clase.profesora else 'Sin asignar',
+            fila['presentes'],
+            fila['ausentes'],
+            fila['justificados'],
+            fila['total'],
+            fila['porcentaje'] / 100,
+        ])
+
+    for fila in hoja.iter_rows(min_row=2, min_col=1, max_col=1):
+        for celda in fila:
+            celda.number_format = 'DD/MM/YYYY'
+    for fila in hoja.iter_rows(min_row=2, min_col=9, max_col=9):
+        for celda in fila:
+            celda.number_format = '0%'
+
+    if filas:
+        total_marcas = sum(f['total'] for f in filas)
+        total_presentes = sum(f['presentes'] for f in filas)
+        ultima = hoja.max_row + 1
+        hoja.cell(row=ultima, column=1, value=f'Resumen {titulo_mes}').font = Font(bold=True)
+        hoja.cell(row=ultima, column=5, value=total_presentes).font = Font(bold=True)
+        hoja.cell(row=ultima, column=8, value=total_marcas).font = Font(bold=True)
+        celda = hoja.cell(row=ultima, column=9,
+                          value=(total_presentes / total_marcas) if total_marcas else 0)
+        celda.number_format = '0%'
+        celda.font = Font(bold=True)
+
+    _formato_filas(hoja)
+    _ajustar(hoja)
+    return _guardar(libro)

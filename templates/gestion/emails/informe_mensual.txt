@@ -1,0 +1,25 @@
+{% load formato %}AREA LATINA ESTUDIO - Cierre de {{ nombre_mes }}
+============================================================
+
+INGRESOS:        ${{ ingresos|clp }}{% if variacion_ingresos is not None %} ({% if variacion_ingresos >= 0 %}+{% endif %}{{ variacion_ingresos }}% vs mes anterior){% endif %}
+ALUMNOS ACTIVOS: {{ activos }} ({% if diferencia_alumnos >= 0 %}+{% endif %}{{ diferencia_alumnos }} vs mes anterior)
+
+DETALLE
+------------------------------------------------------------
+Pagos recibidos:   {{ pagos_count }}
+Alumnos nuevos:    {{ nuevos|length }}
+No renovaron:      {{ sin_renovar|length }}
+Asistencia global: {% if asistencia_global is not None %}{{ asistencia_global }}%{% else %}sin datos{% endif %}
+{% if mejor_clase %}
+CLASES
+------------------------------------------------------------
+Mas asistencia:  {{ mejor_clase.clase.get_nombre_display }} ({{ mejor_clase.presentes }}){% if peor_clase %}
+Menos asistencia: {{ peor_clase.clase.get_nombre_display }} ({{ peor_clase.presentes }}){% endif %}
+{% endif %}{% if top_planes %}
+PLANES MAS CONTRATADOS
+------------------------------------------------------------
+{% for item in top_planes %}{{ forloop.counter }}. {{ item.plan.nombre }} - {{ item.total }}
+{% endfor %}{% endif %}
+------------------------------------------------------------
+Ver el detalle: {{ url_resumen }}
+============================================================

@@ -1,4 +1,5 @@
 """Módulo 2 — Gestión de alumnos (CRUD completo)."""
+import re
 from datetime import timedelta
 
 from django.contrib import messages
@@ -32,6 +33,17 @@ from ..permisos import gestion_requerida
 from .. import servicios
 
 POR_PAGINA = 20
+
+
+def _url_activacion(token):
+    """Enlace absoluto de activación para el correo."""
+    from django.conf import settings
+    from django.urls import reverse
+
+    if not token:
+        return ''
+    base = getattr(settings, 'SITIO_URL', 'http://localhost:8000').rstrip('/')
+    return base + reverse('portal:activar', args=[token.token])
 
 
 # ---------------------------------------------------------------------------
@@ -167,9 +179,15 @@ def alumno_nuevo(request):
             # alumno igual quedó guardado.
             aviso = f'{alumno.nombre_completo} quedó registrado.'
             if alumno.email:
-                enviado, motivo = enviar_bienvenida(alumno)
-                aviso += (' Le mandamos el correo de bienvenida.' if enviado
+                from apps.portal.cuentas import crear_acceso
+
+                usuario, token = crear_acceso(alumno)
+                enlace = _url_activacion(token)
+                enviado, motivo = enviar_bienvenida(alumno, enlace, usuario)
+                aviso += (' Le mandamos la bienvenida con su acceso al portal.' if enviado
                           else f' Ojo: no salió el correo de bienvenida ({motivo})')
+            else:
+                aviso += ' Sin email no se le puede crear acceso al portal.'
             messages.success(request, aviso)
             return redirect('gestion:alumno_detalle', pk=alumno.pk)
 
@@ -262,7 +280,54 @@ def alumno_detalle(request, pk):
         'form_renovar': RenovarPlanForm(),
         'pagos_pendientes': alumno.pagos.exclude(estado=Pago.Estado.PAGADO).count(),
         'dias_aviso': ConfiguracionAlertas.obtener().dias_anticipacion,
+        'whatsapp': _mensajes_whatsapp(alumno),
     })
+
+
+def _mensajes_whatsapp(alumno):
+    """Enlaces wa.me con el mensaje ya escrito.
+
+    Sin API ni costo: es un enlace que abre WhatsApp Web o la app con el
+    texto puesto. La persona lo revisa y aprieta enviar.
+    """
+    from urllib.parse import quote
+
+    numero = re.sub(r'\D', '', alumno.telefono or '')
+    if not numero:
+        return None
+    if not numero.startswith('56'):
+        numero = '56' + numero.lstrip('0')
+
+    sus = alumno.suscripcion_vigente
+    nombre = alumno.primer_nombre
+    vence = f'{sus.fecha_vencimiento:%d/%m}' if sus else ''
+    plan = sus.plan.nombre if sus else 'tu plan'
+    valor = f'{sus.plan.precio_clp:,}'.replace(',', '.') if sus else ''
+
+    plantillas = [
+        ('Aviso de vencimiento',
+         f'Hola {nombre}, te escribimos de Área Latina. Tu {plan} vence el '
+         f'{vence}. ¿Lo renovamos para que no pierdas tu lugar?'),
+        ('Pago pendiente',
+         f'Hola {nombre}, te escribimos de Área Latina. Nos aparece un pago '
+         f'pendiente en tu ficha. ¿Lo vemos?'),
+        ('Renovación de plan',
+         f'Hola {nombre}, te escribimos de Área Latina. Puedes renovar tu '
+         f'{plan} por ${valor}. ¿Te lo dejamos listo?'),
+        ('Hace tiempo que no vienes',
+         f'Hola {nombre}, te escribimos de Área Latina. Hace un tiempo que no '
+         f'te vemos por la sala. ¿Todo bien? Te echamos de menos.'),
+    ]
+
+    return {
+        'numero': numero,
+        'base': f'https://wa.me/{numero}',
+        'opciones': [
+            {'titulo': titulo, 'texto': texto,
+             'url': f'https://wa.me/{numero}?text={quote(texto)}'}
+            for titulo, texto in plantillas
+        ],
+    }
 
 
 # ---------------------------------------------------------------------------

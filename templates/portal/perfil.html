@@ -1,0 +1,116 @@
+{% extends 'portal/base_portal.html' %}
+
+{% block titulo %}Mi perfil{% endblock %}
+
+{% block contenido %}
+
+<div class="p-encabezado">
+    <h1>Mi perfil</h1>
+    <p>Mantén tus datos al día para que podamos contactarte.</p>
+</div>
+
+<section class="p-tarjeta">
+    <div style="display:flex;align-items:center;gap:1rem">
+        {% if alumno.foto %}
+            <img src="{{ alumno.foto.url }}" alt="" class="p-avatar" style="width:72px;height:72px">
+        {% else %}
+            <span class="p-avatar" style="width:72px;height:72px;font-size:1.3rem">{{ alumno.iniciales }}</span>
+        {% endif %}
+        <div>
+            <h2 style="font-size:1.15rem">{{ alumno.nombre_completo }}</h2>
+            <span class="p-suave">{{ alumno.rut }}</span>
+        </div>
+    </div>
+
+    <dl class="p-datos">
+        <div class="p-dato"><dt>Email</dt><dd>{{ alumno.email|default:"—" }}</dd></div>
+        <div class="p-dato"><dt>Usuario</dt><dd>{{ user.username }}</dd></div>
+        <div class="p-dato"><dt>Alumno desde</dt><dd>{{ alumno.fecha_ingreso|date:"d/m/Y" }}</dd></div>
+    </dl>
+
+    <p class="p-ayuda">
+        El email y el RUT los cambia la administración. Si están mal, escríbenos.
+    </p>
+</section>
+
+<form method="post" enctype="multipart/form-data" class="p-tarjeta">
+    {% csrf_token %}
+    <h2 style="font-size:1.05rem">Mis datos de contacto</h2>
+
+    <div class="p-form">
+        <div class="p-grupo">
+            <label for="{{ form.telefono.id_for_label }}">Teléfono</label>
+            {{ form.telefono }}
+            {% for e in form.telefono.errors %}<div class="p-error">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div class="p-grupo">
+            <label for="{{ form.direccion.id_for_label }}">Dirección</label>
+            {{ form.direccion }}
+            {% for e in form.direccion.errors %}<div class="p-error">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div class="p-grupo">
+            <label for="{{ form.foto.id_for_label }}">Foto de perfil</label>
+            <input type="file" name="foto" accept="image/*" class="p-campo"
+                   id="{{ form.foto.id_for_label }}">
+            <span class="p-ayuda">Opcional. Ayuda a que la profesora te reconozca.</span>
+            {% for e in form.foto.errors %}<div class="p-error">{{ e }}</div>{% endfor %}
+        </div>
+    </div>
+
+    <h2 style="font-size:1.05rem;margin-top:.5rem">En caso de emergencia</h2>
+
+    <div class="p-form">
+        <div class="p-grupo">
+            <label for="{{ form.contacto_emergencia.id_for_label }}">¿A quién avisamos?</label>
+            {{ form.contacto_emergencia }}
+            {% for e in form.contacto_emergencia.errors %}<div class="p-error">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div class="p-grupo">
+            <label for="{{ form.telefono_emergencia.id_for_label }}">Su teléfono</label>
+            {{ form.telefono_emergencia }}
+            {% for e in form.telefono_emergencia.errors %}<div class="p-error">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div class="p-grupo">
+            <label for="{{ form.relacion_emergencia.id_for_label }}">Relación</label>
+            {{ form.relacion_emergencia }}
+        </div>
+    </div>
+
+    <button type="submit" class="p-boton grande">
+        <i class="bi bi-check-lg"></i> Guardar cambios
+    </button>
+</form>
+
+<section class="p-tarjeta">
+    <h2 style="font-size:1.05rem">Seguridad</h2>
+    <p class="p-suave">
+        Tu contraseña es solo tuya: la academia no la conoce ni puede verla.
+    </p>
+    <a href="{% url 'portal:cambiar_clave' %}" class="p-boton secundario">
+        <i class="bi bi-key"></i> Cambiar mi contraseña
+    </a>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Formato del teléfono chileno mientras escribe.
+document.querySelectorAll('[data-telefono]').forEach(function (campo) {
+    campo.addEventListener('input', function () {
+        var d = campo.value.replace(/\D/g, '');
+        if (d.indexOf('56') === 0) { d = d.slice(2); }
+        d = d.slice(0, 9);
+        var salida = '+56';
+        if (d.length > 0) { salida += ' ' + d.slice(0, 1); }
+        if (d.length > 1) { salida += ' ' + d.slice(1, 5); }
+        if (d.length > 5) { salida += ' ' + d.slice(5, 9); }
+        campo.value = d.length ? salida : '';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends 'profesoras/base_profesoras.html' %}
+
+{% block titulo %}Mis clases de hoy{% endblock %}
+
+{% block contenido %}
+
+<div class="p-encabezado">
+    <h1>
+        {% if vista_admin %}
+            Clases de hoy
+        {% else %}
+            Hola {{ user.nombre_corto }}
+        {% endif %}
+    </h1>
+    <p>
+        {% if clases_hoy %}
+            {% if vista_admin %}
+                Estas son todas las clases del equipo para hoy.
+            {% else %}
+                Aquí están tus clases de hoy.
+            {% endif %}
+        {% else %}
+            {{ hoy|date:"l d \d\e F"|capfirst }}
+        {% endif %}
+    </p>
+</div>
+
+{% if clases_hoy %}
+    <div class="p-tarjetas">
+        {% for fila in clases_hoy %}
+        <article class="p-clase">
+            <div class="p-clase-cabeza">
+                <span class="p-emoji">{{ fila.clase.emoji }}</span>
+                <div class="p-clase-titulo">
+                    <h2>{{ fila.clase.get_nombre_display }}</h2>
+                    <span class="p-nivel">{{ fila.clase.get_nivel_display }}</span>
+                </div>
+                {% if fila.ya_paso_lista %}
+                    <span class="p-etiqueta ok"><i class="bi bi-check-lg"></i> Lista pasada</span>
+                {% endif %}
+            </div>
+
+            <div class="p-clase-datos">
+                <div><i class="bi bi-clock"></i> {{ fila.clase.horario }} hrs</div>
+                <div><i class="bi bi-door-open"></i> {{ fila.clase.sala }}</div>
+                {% if vista_admin and fila.clase.profesora %}
+                    <div><i class="bi bi-person-badge"></i> {{ fila.clase.profesora.get_full_name }}</div>
+                {% endif %}
+            </div>
+
+            <div class="p-cifras">
+                <div class="p-cifra">
+                    <strong>{{ fila.inscritos }}</strong>
+                    <span>inscrito{{ fila.inscritos|pluralize }}</span>
+                </div>
+                <div class="p-cifra destacada">
+                    <strong>{{ fila.confirmados }}</strong>
+                    <span>confirmaron</span>
+                </div>
+            </div>
+
+            <a href="{% url 'profesoras:asistencia' fila.clase.pk hoy|date:'Y-m-d' %}"
+               class="p-boton grande">
+                <i class="bi bi-clipboard-check"></i>
+                {% if fila.ya_paso_lista %}Revisar la lista{% else %}Pasar asistencia{% endif %}
+            </a>
+        </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="p-vacio">
+        <i class="bi bi-cup-hot"></i>
+        <h2>Hoy no tienes clases</h2>
+        {% if siguiente %}
+            <p>
+                Tu próxima clase es <strong>{{ siguiente.clase.get_nombre_display }}</strong><br>
+                el {{ siguiente.fecha|date:"l d \d\e F"|lower }}
+                a las {{ siguiente.clase.hora_inicio|time:"H:i" }} hrs.
+            </p>
+        {% elif total_clases %}
+            <p>No hay clases programadas en los próximos días.</p>
+        {% else %}
+            <p>Todavía no tienes clases asignadas. Habla con la administración.</p>
+        {% endif %}
+    </div>
+{% endif %}
+
+{% if semana %}
+<section class="p-seccion">
+    <h2 class="p-seccion-titulo">Esta semana</h2>
+    <div class="p-semana">
+        {% for sesion in semana %}
+        <div class="p-fila-semana">
+            <div class="p-fecha">
+                <strong>{{ sesion.fecha|date:"D"|capfirst }}</strong>
+                <span>{{ sesion.fecha|date:"d/m" }}</span>
+            </div>
+            <div class="p-fila-datos">
+                <strong>{{ sesion.clase.emoji }} {{ sesion.clase.get_nombre_display }}</strong>
+                <span>{{ sesion.clase.horario }} hrs · {{ sesion.clase.sala }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

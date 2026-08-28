@@ -1,0 +1,97 @@
+{% extends 'profesoras/base_profesoras.html' %}
+
+{% block titulo %}Historial{% endblock %}
+
+{% block contenido %}
+
+<div class="p-encabezado">
+    <h1>Historial</h1>
+    <p>{{ nombre_mes|capfirst }}</p>
+</div>
+
+<form method="get" class="p-filtros">
+    <select name="mes" class="p-select" onchange="this.form.submit()">
+        {% for numero, nombre in meses %}
+            <option value="{{ numero }}" {% if numero == mes_actual %}selected{% endif %}>
+                {{ nombre|capfirst }}
+            </option>
+        {% endfor %}
+    </select>
+    <select name="anio" class="p-select" onchange="this.form.submit()">
+        {% for anio in anios %}
+            <option value="{{ anio }}" {% if anio == anio_actual %}selected{% endif %}>{{ anio }}</option>
+        {% endfor %}
+    </select>
+    <noscript><button type="submit" class="p-boton">Ver</button></noscript>
+    {% if filas %}
+        <a href="{% url 'profesoras:historial_exportar' %}?mes={{ mes_actual }}&anio={{ anio_actual }}"
+           class="p-boton secundario">
+            <i class="bi bi-file-earmark-excel"></i> Excel
+        </a>
+    {% endif %}
+</form>
+
+{% if filas %}
+    <div class="p-resumen">
+        <div class="p-cifra-grande">
+            <strong>{{ sesiones }}</strong>
+            <span>clase{{ sesiones|pluralize }} dictada{{ sesiones|pluralize }}</span>
+        </div>
+        <div class="p-cifra-grande">
+            <strong>{{ total_presentes }}</strong>
+            <span>asistencias</span>
+        </div>
+        <div class="p-cifra-grande destacada">
+            <strong>{% if promedio is not None %}{{ promedio }}%{% else %}—{% endif %}</strong>
+            <span>promedio del mes</span>
+        </div>
+    </div>
+
+    <div class="p-tabla-caja">
+        <table class="p-tabla">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Clase</th>
+                    {% if vista_admin %}<th>Profesor/a</th>{% endif %}
+                    <th class="num">Presentes</th>
+                    <th class="num">Ausentes</th>
+                    <th class="num">Justif.</th>
+                    <th class="num">%</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for fila in filas %}
+                <tr>
+                    <td class="nowrap">{{ fila.fecha|date:"d/m/Y" }}</td>
+                    <td>
+                        {{ fila.clase.emoji }} {{ fila.clase.get_nombre_display }}
+                        <span class="p-suave">{{ fila.clase.get_nivel_display }}</span>
+                    </td>
+                    {% if vista_admin %}
+                        <td class="p-suave">
+                            {{ fila.clase.profesora.get_full_name|default:"—" }}
+                        </td>
+                    {% endif %}
+                    <td class="num">{{ fila.presentes }}</td>
+                    <td class="num">{{ fila.ausentes }}</td>
+                    <td class="num">{{ fila.justificados }}</td>
+                    <td class="num">
+                        <span class="p-etiqueta {% if fila.porcentaje >= 75 %}ok{% elif fila.porcentaje >= 50 %}media{% else %}baja{% endif %}">
+                            {{ fila.porcentaje }}%
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="p-vacio">
+        <i class="bi bi-clock-history"></i>
+        <h2>Sin registros este mes</h2>
+        <p>No se pasó lista en {{ nombre_mes }}.</p>
+    </div>
+{% endif %}
+
+{% endblock %}

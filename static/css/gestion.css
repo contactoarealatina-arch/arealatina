@@ -526,6 +526,14 @@ a:hover { color: var(--al-orange-lite); }
 
 .g-btn-peligro:hover { background-color: var(--al-rojo); color: #FFFFFF; }
 
+.g-btn-whatsapp {
+    background-color: #25D366;
+    border-color: #25D366;
+    color: #FFFFFF;
+}
+
+.g-btn-whatsapp:hover { background-color: #1DA851; border-color: #1DA851; color: #FFFFFF; }
+
 .g-btn-sm { font-size: 0.78rem; padding: 0.3rem 0.7rem; min-height: 32px; }
 
 .g-btn-icono {

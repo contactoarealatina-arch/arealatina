@@ -1,0 +1,94 @@
+{% extends 'portal/base_portal.html' %}
+
+{% block titulo %}Mis clases{% endblock %}
+
+{% block contenido %}
+
+<div class="p-encabezado">
+    <h1>Mis clases</h1>
+    <p>{{ mis_clases|length }} clase{{ mis_clases|length|pluralize }} inscrita{{ mis_clases|length|pluralize }}</p>
+</div>
+
+{% if mis_clases %}
+    <div class="p-tarjetas">
+        {% for clase in mis_clases %}
+        <article class="p-clase">
+            <div class="p-clase-cabeza">
+                <span class="p-emoji">{{ clase.emoji }}</span>
+                <div class="p-clase-titulo">
+                    <h2>{{ clase.get_nombre_display }}</h2>
+                    <span class="p-nivel">{{ clase.get_nivel_display }}</span>
+                </div>
+            </div>
+            <div class="p-clase-datos">
+                <div><i class="bi bi-calendar-week"></i> {{ clase.dias_display }}</div>
+                <div><i class="bi bi-clock"></i> {{ clase.horario }} hrs</div>
+                <div><i class="bi bi-door-open"></i> {{ clase.sala }}</div>
+                {% if clase.profesora %}
+                    <div><i class="bi bi-person-badge"></i> {{ clase.profesora.get_full_name }}</div>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <section class="p-seccion">
+        <h2 class="p-seccion-titulo">Esta semana</h2>
+
+        {% if sesiones %}
+        <div class="p-semana">
+            {% for sesion in sesiones %}
+            <div class="p-fila-semana">
+                <div class="p-fecha">
+                    <strong>{{ sesion.fecha|date:"D"|capfirst }}</strong>
+                    <span>{{ sesion.fecha|date:"d/m" }}</span>
+                </div>
+
+                <div class="p-fila-datos" style="flex:1">
+                    <strong>{{ sesion.clase.emoji }} {{ sesion.clase.get_nombre_display }}</strong>
+                    <span>{{ sesion.clase.horario }} hrs · {{ sesion.clase.sala }}</span>
+                </div>
+
+                <div style="flex-shrink:0">
+                    {% if sesion.estado == 'puede_confirmar' %}
+                        <a href="{% url 'portal:confirmar' sesion.clase.pk sesion.fecha|date:'Y-m-d' %}"
+                           class="p-boton" style="min-height:40px;font-size:.85rem">Confirmar</a>
+                    {% elif sesion.estado == 'confirmada' %}
+                        <span class="p-etiqueta ok"><i class="bi bi-check-lg"></i> Confirmada</span>
+                    {% elif sesion.estado == 'asistio' %}
+                        <span class="p-etiqueta ok"><i class="bi bi-check-lg"></i> Asististe</span>
+                    {% elif sesion.estado == 'ausente' %}
+                        <span class="p-etiqueta mal">Ausente</span>
+                    {% elif sesion.estado == 'justificado' %}
+                        <span class="p-etiqueta media">Justificado</span>
+                    {% elif sesion.estado == 'en_curso' %}
+                        <span class="p-etiqueta naranja">En curso</span>
+                    {% elif sesion.estado == 'sin_confirmar' %}
+                        <span class="p-etiqueta neutra">No confirmada</span>
+                    {% else %}
+                        <span class="p-etiqueta neutra">Fuera de plazo</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <p class="p-ayuda">
+            Puedes confirmar hasta una hora antes de que empiece la clase.
+        </p>
+        {% else %}
+        <div class="p-vacio">
+            <i class="bi bi-calendar-x"></i>
+            <p>No hay clases tuyas en los próximos 7 días.</p>
+        </div>
+        {% endif %}
+    </section>
+{% else %}
+    <div class="p-vacio">
+        <i class="bi bi-music-note-beamed"></i>
+        <h2>Todavía no estás en ninguna clase</h2>
+        <p>Habla con la academia para elegir tus horarios y empezar a bailar.</p>
+    </div>
+{% endif %}
+
+{% endblock %}

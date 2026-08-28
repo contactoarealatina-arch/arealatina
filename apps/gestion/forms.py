@@ -358,7 +358,8 @@ class PagoForm(MixinWidgets, forms.ModelForm):
 class ProfesoraForm(MixinWidgets, forms.ModelForm):
     password1 = forms.CharField(
         required=False, label='Contraseña', widget=forms.PasswordInput(attrs={'class': 'g-input'}),
-        help_text='Déjala en blanco para no cambiar la contraseña actual.',
+        help_text='Si la dejas en blanco, se le manda un enlace para que la '
+                  'elija ella misma. Es lo recomendable.',
     )
 
     class Meta:
@@ -383,8 +384,6 @@ class ProfesoraForm(MixinWidgets, forms.ModelForm):
         self.fields['first_name'].label = 'Nombre'
         self.fields['last_name'].label = 'Apellido'
         self.fields['username'].label = 'Usuario para entrar al sistema'
-        if not self.instance.pk:
-            self.fields['password1'].required = True
         self.estilizar()
 
     def clean_rut(self):

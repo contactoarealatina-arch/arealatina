@@ -42,6 +42,8 @@ LOCAL_APPS = [
     'apps.web',
     'apps.gestion',
     'apps.asistencia',
+    'apps.profesoras',
+    'apps.portal',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -202,6 +204,10 @@ DEFAULT_FROM_EMAIL = env(
     default='Area Latina Estudio <contacto.arealatina@gmail.com>',
 )
 
+# Dominio para los enlaces de los correos: en un correo una ruta relativa
+# no lleva a ninguna parte.
+SITIO_URL = env('SITIO_URL', default='http://localhost:8000')
+
 # ---------------------------------------------------------------------------
 # APScheduler
 # ---------------------------------------------------------------------------
@@ -224,4 +230,6 @@ ACADEMIA = {
     'facebook': 'https://www.facebook.com/latinasouthpm/',
     'tiktok': '',
     'whatsapp': '',
+    # Solo digitos con codigo de pais, para los enlaces wa.me
+    'whatsapp_numero': env('WHATSAPP_NUMERO', default=''),
 }

@@ -1,0 +1,13 @@
+AREA LATINA ESTUDIO - Solicitud de renovacion
+============================================================
+
+{{ alumno.nombre_completo }} quiere renovar su plan.
+Lo pidio desde su portal.
+
+Telefono: {{ alumno.telefono|default:"-" }}
+Email:    {{ alumno.email|default:"-" }}
+{% if suscripcion %}Plan:     {{ suscripcion.plan.nombre }}
+Vence:    {{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}
+{% endif %}
+Ver su ficha: {{ url_ficha }}
+============================================================

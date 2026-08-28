@@ -1,0 +1,147 @@
+{% extends 'portal/base_portal.html' %}
+{% load formato %}
+
+{% block titulo %}Mi plan{% endblock %}
+
+{% block contenido %}
+
+<div class="p-encabezado">
+    <h1>Mi plan</h1>
+    <p>Tu plan actual y los que has tenido antes.</p>
+</div>
+
+{% if avisar and estado_pago != 'vencido' %}
+<div class="p-banner atento">
+    <i class="bi bi-hourglass-split"></i>
+    <div class="p-banner-cuerpo">
+        <strong>Tu plan vence el {{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}.</strong>
+        Renuévalo antes y no pierdas tu lugar en las clases.
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+            {% if whatsapp %}
+                <a href="{{ whatsapp }}" target="_blank" rel="noopener" class="p-boton whatsapp">
+                    <i class="bi bi-whatsapp"></i> Escribir por WhatsApp
+                </a>
+            {% endif %}
+            <form method="post" action="{% url 'portal:solicitar_renovacion' %}">
+                {% csrf_token %}
+                <button type="submit" class="p-boton">Solicitar renovación</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% elif estado_pago == 'vencido' %}
+<div class="p-banner urgente">
+    <i class="bi bi-exclamation-octagon"></i>
+    <div class="p-banner-cuerpo">
+        <strong>Tu plan está vencido.</strong>
+        Renuévalo para volver a las clases.
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+            {% if whatsapp %}
+                <a href="{{ whatsapp }}" target="_blank" rel="noopener" class="p-boton whatsapp">
+                    <i class="bi bi-whatsapp"></i> Escribir por WhatsApp
+                </a>
+            {% endif %}
+            <form method="post" action="{% url 'portal:solicitar_renovacion' %}">
+                {% csrf_token %}
+                <button type="submit" class="p-boton">Solicitar renovación</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if suscripcion %}
+<section class="p-tarjeta">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap">
+        <h2 style="font-size:1.05rem">Plan activo</h2>
+        {% if estado_pago == 'al_dia' %}
+            <span class="p-etiqueta ok">Al día</span>
+        {% elif estado_pago == 'por_vencer' %}
+            <span class="p-etiqueta media">Por vencer</span>
+        {% else %}
+            <span class="p-etiqueta mal">Vencido</span>
+        {% endif %}
+    </div>
+
+    <div style="font-family:'Poppins',sans-serif;font-size:1.5rem;font-weight:600">
+        {{ suscripcion.plan.nombre }}
+    </div>
+
+    {% if suscripcion.plan.descripcion %}
+        <p class="p-suave">{{ suscripcion.plan.descripcion }}</p>
+    {% endif %}
+
+    <dl class="p-datos">
+        <div class="p-dato"><dt>Valor</dt><dd>${{ suscripcion.plan.precio_clp|clp }}</dd></div>
+        <div class="p-dato"><dt>Duración</dt><dd>{{ suscripcion.plan.duracion_dias }} días</dd></div>
+        <div class="p-dato"><dt>Desde</dt><dd>{{ suscripcion.fecha_inicio|date:"d/m/Y" }}</dd></div>
+        <div class="p-dato"><dt>Vence</dt><dd>{{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}</dd></div>
+    </dl>
+
+    <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:.85rem">
+            <span class="p-suave">
+                {% if dias_restantes >= 0 %}
+                    Te quedan {{ dias_restantes }} día{{ dias_restantes|pluralize }}
+                {% else %}
+                    Venció hace {{ dias_restantes|cut:"-" }} días
+                {% endif %}
+            </span>
+            <span class="p-suave">{{ suscripcion.porcentaje_consumido }}% consumido</span>
+        </div>
+        <div class="p-progreso">
+            <div class="p-progreso-relleno {{ color_barra }}"
+                 style="width: {{ suscripcion.porcentaje_consumido }}%"></div>
+        </div>
+    </div>
+</section>
+{% else %}
+<div class="p-vacio">
+    <i class="bi bi-card-checklist"></i>
+    <h2>No tienes un plan activo</h2>
+    <p>Habla con la academia para contratar uno y volver a las clases.</p>
+    {% if whatsapp %}
+        <a href="{{ whatsapp }}" target="_blank" rel="noopener" class="p-boton whatsapp">
+            <i class="bi bi-whatsapp"></i> Escribir por WhatsApp
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<section class="p-seccion">
+    <h2 class="p-seccion-titulo">Historial de planes</h2>
+    {% if historial %}
+        <div class="p-tabla-caja">
+            <table class="p-tabla">
+                <thead>
+                    <tr><th>Plan</th><th>Desde</th><th>Hasta</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                {% for sus in historial %}
+                    <tr>
+                        <td>{{ sus.plan.nombre }}</td>
+                        <td class="nowrap">{{ sus.fecha_inicio|date:"d/m/Y" }}</td>
+                        <td class="nowrap">{{ sus.fecha_vencimiento|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if sus.estado == 'ACTIVA' %}
+                                <span class="p-etiqueta ok">Activa</span>
+                            {% elif sus.estado == 'VENCIDA' %}
+                                <span class="p-etiqueta neutra">Vencida</span>
+                            {% else %}
+                                <span class="p-etiqueta mal">Cancelada</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="p-vacio">
+            <i class="bi bi-clock-history"></i>
+            <p>Todavía no tienes historial de planes.</p>
+        </div>
+    {% endif %}
+</section>
+
+{% endblock %}

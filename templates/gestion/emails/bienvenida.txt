@@ -20,6 +20,15 @@ Plan:         {{ suscripcion.plan.nombre }}
 Desde:        {{ suscripcion.fecha_inicio|date:"d/m/Y" }}
 Valido hasta: {{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}
 {% endif %}
+{% if enlace %}TU PORTAL
+------------------------------------------------------------
+Usuario: {{ usuario.username }}
+Elige tu contrasena aqui (vence en 48 horas):
+{{ enlace }}
+
+Desde tu portal ves tus clases, tu plan y tus pagos, y confirmas
+tu asistencia antes de cada clase.
+{% endif %}
 PARA TU PRIMERA CLASE
 ------------------------------------------------------------
 - Llega 10 minutos antes para acomodarte con calma.

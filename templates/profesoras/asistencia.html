@@ -1,0 +1,142 @@
+{% extends 'profesoras/base_profesoras.html' %}
+
+{% block titulo %}Pasar lista{% endblock %}
+
+{% block contenido %}
+
+<div class="p-encabezado con-volver">
+    <a href="{% url 'profesoras:panel' %}" class="p-atras">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+    <h1>{{ clase.emoji }} {{ clase.get_nombre_display }}</h1>
+    <p>
+        {{ fecha|date:"l d \d\e F"|capfirst }} · {{ clase.horario }} hrs · {{ clase.sala }}
+        {% if total_confirmados %}
+            · <strong class="p-naranja">{{ total_confirmados }} confirmaron</strong>
+        {% endif %}
+    </p>
+</div>
+
+{% if ya_registrada %}
+    <div class="p-mensaje info">
+        <i class="bi bi-info-circle"></i>
+        <span>Ya se pasó lista este día. Puedes corregir y volver a guardar.</span>
+    </div>
+{% endif %}
+
+{% if filas %}
+<form method="post" id="formAsistencia">
+    {% csrf_token %}
+
+    <div class="p-atajos">
+        <button type="button" class="p-boton secundario" data-marcar="PRESENTE">
+            <i class="bi bi-check-all"></i> Todos presentes
+        </button>
+        <button type="button" class="p-boton secundario" data-marcar="AUSENTE">
+            <i class="bi bi-x-lg"></i> Todos ausentes
+        </button>
+    </div>
+
+    <div class="p-lista-alumnos">
+        {% for fila in filas %}
+        <article class="p-alumno" data-fila>
+            <div class="p-alumno-cabeza">
+                {% if fila.alumno.foto %}
+                    <img src="{{ fila.alumno.foto.url }}" alt="" class="p-avatar">
+                {% else %}
+                    <span class="p-avatar">{{ fila.alumno.iniciales }}</span>
+                {% endif %}
+                <div class="p-alumno-nombre">
+                    <strong>{{ fila.alumno.nombre_completo }}</strong>
+                    <span>
+                        {% if fila.confirmo %}
+                            <span class="p-etiqueta ok"><i class="bi bi-check-lg"></i> Confirmó</span>
+                        {% endif %}
+                        {% if fila.porcentaje_mes is not None %}
+                            {{ fila.porcentaje_mes }}% este mes
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="p-estados">
+                {% for valor, etiqueta in estados %}
+                <label class="p-estado {{ valor|lower }}">
+                    <input type="radio" name="estado_{{ fila.alumno.pk }}" value="{{ valor }}"
+                           {% if fila.registro and fila.registro.estado == valor %}checked{% elif not fila.registro and valor == 'PRESENTE' %}checked{% endif %}>
+                    <span>{{ etiqueta }}</span>
+                </label>
+                {% endfor %}
+            </div>
+
+            <input type="text" name="obs_{{ fila.alumno.pk }}" class="p-observacion"
+                   maxlength="200" placeholder="Observación (opcional)"
+                   value="{{ fila.registro.observacion|default:'' }}">
+        </article>
+        {% endfor %}
+    </div>
+
+    <!-- Barra fija: el botón de guardar siempre a la vista, sin scroll -->
+    <div class="p-barra-guardar">
+        <span class="p-contador">
+            <strong id="contadorPresentes">0</strong> presentes de {{ filas|length }}
+        </span>
+        <button type="submit" class="p-boton grande">
+            <i class="bi bi-check-lg"></i> Guardar asistencia
+        </button>
+    </div>
+</form>
+{% else %}
+    <div class="p-vacio">
+        <i class="bi bi-people"></i>
+        <h2>Esta clase no tiene alumnos inscritos</h2>
+        <p>Sin alumnos no hay lista que pasar.</p>
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var form = document.getElementById('formAsistencia');
+    if (!form) { return; }
+
+    var contador = document.getElementById('contadorPresentes');
+
+    function pintarFila(radio) {
+        var fila = radio.closest('[data-fila]');
+        if (!fila) { return; }
+        fila.setAttribute('data-estado', radio.value);
+    }
+
+    function recontar() {
+        var presentes = form.querySelectorAll('input[value="PRESENTE"]:checked').length;
+        if (contador) { contador.textContent = presentes; }
+    }
+
+    form.addEventListener('change', function (e) {
+        if (e.target.type === 'radio') {
+            pintarFila(e.target);
+            recontar();
+        }
+    });
+
+    // Marcar toda la lista de una vez: en un grupo de veinte ahorra veinte toques.
+    document.querySelectorAll('[data-marcar]').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            var estado = boton.getAttribute('data-marcar');
+            form.querySelectorAll('input[type="radio"][value="' + estado + '"]')
+                .forEach(function (radio) {
+                    radio.checked = true;
+                    pintarFila(radio);
+                });
+            recontar();
+        });
+    });
+
+    form.querySelectorAll('input[type="radio"]:checked').forEach(pintarFila);
+    recontar();
+})();
+</script>
+{% endblock %}
