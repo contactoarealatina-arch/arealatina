@@ -1750,3 +1750,115 @@ html[data-nivel="bajo"] .entrando { animation: none; }
     .puerta-icono { width: 54px; height: 54px; font-size: 1.4rem; }
     .nav-entrar { padding: 0.5rem 0.5rem; }
 }
+
+/* Icono de la pantalla de bloqueo por seguridad */
+.bloqueo-icono {
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #FF8A80;
+    background-color: rgba(244, 67, 54, 0.12);
+    border: 1px solid rgba(244, 67, 54, 0.4);
+}
+
+
+/* ==========================================================================
+   AVISO DE COOKIES
+   ========================================================================== */
+.cookies {
+    position: fixed;
+    left: 50%;
+    bottom: 1rem;
+    transform: translate(-50%, 140%);
+    z-index: 1080;
+    width: min(760px, calc(100vw - 2rem));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-accent);
+    border-radius: var(--radio);
+    padding: 1rem 1.25rem;
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cookies.visible { transform: translate(-50%, 0); }
+
+.cookies-texto {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+    flex: 1;
+    min-width: 240px;
+}
+
+.cookies-texto i { color: var(--color-accent); font-size: 1.15rem; flex-shrink: 0; margin-top: 2px; }
+.cookies-texto strong { color: var(--color-text); font-weight: 500; }
+.cookies .btn { flex-shrink: 0; }
+
+@media (max-width: 575.98px) {
+    .cookies { bottom: 0.5rem; padding: 0.9rem 1rem; }
+    .cookies .btn { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cookies { transition: none; }
+}
+
+/* ==========================================================================
+   DOCUMENTOS LEGALES
+   ========================================================================== */
+.documento { font-size: 0.98rem; }
+
+.documento-fecha {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    padding-bottom: 1.25rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.documento h2 {
+    font-size: 1.2rem;
+    color: var(--color-accent);
+    margin: 2.25rem 0 0.85rem;
+}
+
+.documento h2:first-of-type { margin-top: 0; }
+
+.documento p { margin-bottom: 1rem; }
+.documento strong { color: var(--color-text); font-weight: 600; }
+
+.documento ul {
+    margin: 0 0 1.25rem;
+    padding-left: 1.2rem;
+    color: var(--color-text-muted);
+}
+
+.documento li { margin-bottom: 0.5rem; }
+
+.documento-nota {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    margin-top: 2.5rem;
+    padding: 1rem 1.25rem;
+    background-color: rgba(255, 87, 34, 0.08);
+    border: 1px solid rgba(255, 87, 34, 0.3);
+    border-radius: var(--radio);
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.documento-nota i { color: var(--color-accent); font-size: 1.1rem; flex-shrink: 0; margin-top: 2px; }

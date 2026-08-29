@@ -4,6 +4,9 @@ from .models import (
     Alerta,
     Alumno,
     AuditLog,
+    BrechaSeguridad,
+    RespaldoLog,
+    SolicitudARCO,
     Clase,
     ConfiguracionAlertas,
     CorreoEnviado,
@@ -147,7 +150,8 @@ class PagoAdmin(admin.ModelAdmin):
 @admin.register(NotaInterna)
 class NotaInternaAdmin(admin.ModelAdmin):
     list_display = ('alumno', 'autor', 'created_at')
-    search_fields = ('alumno__nombre_completo', 'texto')
+    # 'texto' va cifrado en la base: no se puede buscar por contenido.
+    search_fields = ('alumno__nombre_completo',)
     autocomplete_fields = ('alumno',)
     readonly_fields = ('autor',)
 
@@ -206,4 +210,57 @@ class AuditLogAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         # El log no se borra: es la bitácora del sistema.
+        return False
+
+
+@admin.register(SolicitudARCO)
+class SolicitudARCOAdmin(admin.ModelAdmin):
+    list_display = ('codigo', 'nombre', 'tipo', 'estado', 'created_at', 'dias_restantes')
+    list_filter = ('estado', 'tipo', 'created_at')
+    search_fields = ('codigo', 'nombre', 'email', 'identificador')
+    date_hierarchy = 'created_at'
+    readonly_fields = ('codigo', 'nombre', 'email', 'identificador', 'tipo',
+                       'descripcion', 'ip', 'created_at')
+    fieldsets = (
+        ('Solicitud', {'fields': ('codigo', 'nombre', 'email', 'identificador',
+                                  'tipo', 'descripcion', 'ip', 'created_at')}),
+        ('Gestión', {'fields': ('estado', 'respuesta', 'atendida_por', 'cerrada_en')}),
+    )
+
+    def has_add_permission(self, request):
+        # Las solicitudes entran por el formulario público.
+        return False
+
+    @admin.display(description='Días restantes')
+    def dias_restantes(self, obj):
+        dias = obj.dias_restantes
+        return '—' if dias is None else f'{dias} días'
+
+
+@admin.register(BrechaSeguridad)
+class BrechaSeguridadAdmin(admin.ModelAdmin):
+    list_display = ('fecha_deteccion', 'gravedad', 'estado', 'personas_afectadas',
+                    'horas_restantes_display')
+    list_filter = ('estado', 'gravedad', 'fecha_deteccion')
+    search_fields = ('descripcion', 'datos_afectados')
+    date_hierarchy = 'fecha_deteccion'
+
+    @admin.display(description='Plazo de 72 h')
+    def horas_restantes_display(self, obj):
+        if obj.notificada_autoridad_en:
+            return 'Notificada'
+        return f'{obj.horas_restantes:.0f} h restantes'
+
+
+@admin.register(RespaldoLog)
+class RespaldoLogAdmin(admin.ModelAdmin):
+    list_display = ('created_at', 'archivo', 'tamano_legible', 'estado', 'destino')
+    list_filter = ('estado', 'created_at')
+    readonly_fields = ('archivo', 'destino', 'tamano_bytes', 'estado',
+                       'detalle', 'created_at')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
         return False

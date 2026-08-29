@@ -53,7 +53,17 @@
         {% for registro in pagina.object_list %}
             <tr>
                 <td class="g-nowrap g-muted">{{ registro.timestamp|date:"d/m/Y H:i" }}</td>
-                <td>{{ registro.usuario.get_full_name|default:registro.usuario.username|default:"Sistema" }}</td>
+                <td>
+                    {% comment %}
+                    Un intento fallido no tiene usuario: |default no sirve
+                    porque igual evalua el argumento sobre None y revienta.
+                    {% endcomment %}
+                    {% if registro.usuario %}
+                        {{ registro.usuario.get_full_name|default:registro.usuario.username }}
+                    {% else %}
+                        <span class="g-muted">Sistema</span>
+                    {% endif %}
+                </td>
                 <td>
                     <span class="g-badge {% if registro.accion == 'ELIMINAR' %}g-badge-rojo{% elif registro.accion == 'CREAR' %}g-badge-verde{% else %}g-badge-gris{% endif %}">
                         {{ registro.get_accion_display }}

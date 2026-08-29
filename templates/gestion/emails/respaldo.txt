@@ -1,0 +1,14 @@
+AREA LATINA ESTUDIO - Respaldo de la base de datos
+============================================================
+
+El respaldo automatico se completo correctamente.
+
+Archivo: {{ respaldo.archivo }}
+Tamano:  {{ respaldo.tamano_legible }}
+Destino: {{ respaldo.destino|default:"disco local" }}
+Fecha:   {{ respaldo.created_at|date:"d/m/Y H:i" }}
+
+Se conservan los respaldos de los ultimos 30 dias.
+
+============================================================
+Area Latina Estudio

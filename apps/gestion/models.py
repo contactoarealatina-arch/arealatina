@@ -6,7 +6,11 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 
+from encrypted_model_fields.fields import EncryptedCharField, EncryptedTextField
+
 from apps.usuarios.models import TimeStampedModel
+
+from .validadores import validar_foto
 
 
 class DiaSemana(models.TextChoices):
@@ -220,10 +224,22 @@ class Alumno(TimeStampedModel):
 
     telefono = models.CharField('Teléfono', max_length=20, blank=True)
     email = models.EmailField('Email', blank=True)
-    direccion = models.CharField('Dirección', max_length=200, blank=True)
+    direccion = EncryptedCharField('Dirección', max_length=200, blank=True, default='')
 
-    contacto_emergencia = models.CharField('Contacto de emergencia', max_length=150)
-    telefono_emergencia = models.CharField('Teléfono de emergencia', max_length=20)
+    # Estos cuatro campos van cifrados en la base de datos. Se eligieron
+    # justamente porque NUNCA se buscan ni se filtran.
+    #
+    # RUT, email y telefono quedan SIN cifrar a proposito: Fernet no es
+    # determinista (el mismo valor da un texto distinto cada vez), asi que
+    # cifrarlos romperia tres cosas a la vez, y en silencio:
+    #   1. unique=True del RUT dejaria de detectar duplicados
+    #   2. filter(rut=...) del alta devolveria vacio siempre
+    #   3. el buscador del listado (icontains) no encontraria nada
+    # Para esos tres la proteccion es: cifrado de disco del proveedor, TLS
+    # en transito, control de acceso por rol y registro de quien consulta
+    # cada ficha.
+    contacto_emergencia = EncryptedCharField('Contacto de emergencia', max_length=150)
+    telefono_emergencia = EncryptedCharField('Teléfono de emergencia', max_length=20)
     relacion_emergencia = models.CharField(
         'Relación',
         max_length=10,
@@ -232,14 +248,17 @@ class Alumno(TimeStampedModel):
     )
 
     fecha_ingreso = models.DateField('Fecha de ingreso', default=timezone.localdate)
-    foto = models.ImageField('Foto', upload_to='alumnos/', null=True, blank=True)
+    foto = models.ImageField(
+        'Foto', upload_to='alumnos/', null=True, blank=True,
+        validators=[validar_foto],
+        help_text='JPG, PNG o WebP. Máximo 5 MB.')
     estado = models.CharField(
         'Estado',
         max_length=10,
         choices=Estado.choices,
         default=Estado.ACTIVO,
     )
-    observaciones = models.TextField('Observaciones', blank=True)
+    observaciones = EncryptedTextField('Observaciones', blank=True, default='')
 
     usuario = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -571,7 +590,7 @@ class NotaInterna(TimeStampedModel):
         related_name='notas_escritas',
         verbose_name='Autor',
     )
-    texto = models.TextField('Nota')
+    texto = EncryptedTextField('Nota')
 
     class Meta:
         verbose_name = 'Nota interna'
@@ -715,6 +734,11 @@ class AuditLog(models.Model):
         RENOVAR = 'RENOVAR', 'Renovó plan'
         ASISTENCIA = 'ASISTENCIA', 'Registró asistencia'
         LOGIN = 'LOGIN', 'Inició sesión'
+        LOGOUT = 'LOGOUT', 'Cerró sesión'
+        LOGIN_FALLIDO = 'LOGIN_FALLIDO', 'Intento fallido'
+        VER_FICHA = 'VER_FICHA', 'Consultó una ficha'
+        EXPORTAR = 'EXPORTAR', 'Descargó un reporte'
+        ARCO = 'ARCO', 'Solicitud de datos personales'
 
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -723,11 +747,13 @@ class AuditLog(models.Model):
         related_name='acciones',
         verbose_name='Usuario',
     )
-    accion = models.CharField('Acción', max_length=12, choices=Accion.choices)
+    accion = models.CharField('Acción', max_length=15, choices=Accion.choices)
     modelo = models.CharField('Modelo', max_length=50, blank=True)
     objeto_id = models.PositiveIntegerField('ID del objeto', null=True, blank=True)
     descripcion = models.CharField('Descripción', max_length=250, blank=True)
     ip = models.GenericIPAddressField('IP', null=True, blank=True)
+    user_agent = models.CharField('Navegador', max_length=250, blank=True)
+    sospechoso = models.BooleanField('Marcado como sospechoso', default=False)
     timestamp = models.DateTimeField('Fecha y hora', auto_now_add=True)
 
     class Meta:
@@ -737,6 +763,8 @@ class AuditLog(models.Model):
         indexes = [
             models.Index(fields=['-timestamp']),
             models.Index(fields=['modelo', 'objeto_id']),
+            models.Index(fields=['accion', '-timestamp']),
+            models.Index(fields=['ip', '-timestamp']),
         ]
 
     def __str__(self):
@@ -887,3 +915,186 @@ class TokenActivacion(models.Model):
     def marcar_usado(self):
         self.usado_en = timezone.now()
         self.save(update_fields=['usado_en'])
+
+
+class SolicitudARCO(models.Model):
+    """Solicitud de una persona sobre sus datos personales.
+
+    La Ley 21.719 reconoce los derechos de Acceso, Rectificacion,
+    Cancelacion, Oposicion y Portabilidad, y da un plazo para responder.
+    Este modelo deja constancia de que la solicitud llego y de cuando.
+    """
+
+    DIAS_PLAZO = 30
+
+    class Tipo(models.TextChoices):
+        ACCESO = 'ACCESO', 'Acceso a mis datos'
+        RECTIFICACION = 'RECTIFICACION', 'Rectificación de datos'
+        CANCELACION = 'CANCELACION', 'Cancelación (eliminación)'
+        OPOSICION = 'OPOSICION', 'Oposición al tratamiento'
+        PORTABILIDAD = 'PORTABILIDAD', 'Portabilidad de datos'
+
+    class Estado(models.TextChoices):
+        PENDIENTE = 'PENDIENTE', 'Pendiente'
+        EN_PROCESO = 'EN_PROCESO', 'En proceso'
+        COMPLETADA = 'COMPLETADA', 'Completada'
+        RECHAZADA = 'RECHAZADA', 'Rechazada'
+
+    codigo = models.CharField('Número de caso', max_length=20, unique=True, editable=False)
+    nombre = models.CharField('Nombre completo', max_length=150)
+    email = models.EmailField('Email de contacto')
+    identificador = models.CharField(
+        'RUT o email registrado', max_length=60, blank=True,
+        help_text='Para poder encontrar sus datos en el sistema.')
+    tipo = models.CharField('Tipo de solicitud', max_length=15, choices=Tipo.choices)
+    descripcion = models.TextField('Detalle de la solicitud')
+
+    estado = models.CharField('Estado', max_length=12, choices=Estado.choices,
+                              default=Estado.PENDIENTE)
+    respuesta = models.TextField('Respuesta entregada', blank=True)
+    atendida_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='solicitudes_arco', verbose_name='Atendida por')
+    cerrada_en = models.DateTimeField('Cerrada el', null=True, blank=True)
+
+    ip = models.GenericIPAddressField('IP de origen', null=True, blank=True)
+    created_at = models.DateTimeField('Recibida el', auto_now_add=True)
+    updated_at = models.DateTimeField('Actualizada el', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Solicitud ARCO'
+        verbose_name_plural = 'Solicitudes ARCO'
+        ordering = ['estado', 'created_at']
+
+    def __str__(self):
+        return f'{self.codigo} · {self.get_tipo_display()} · {self.nombre}'
+
+    def save(self, *args, **kwargs):
+        if not self.codigo:
+            import secrets
+            marca = timezone.localdate().strftime('%Y%m')
+            self.codigo = f'ARCO-{marca}-{secrets.token_hex(3).upper()}'
+        super().save(*args, **kwargs)
+
+    @property
+    def fecha_limite(self):
+        return (self.created_at + timedelta(days=self.DIAS_PLAZO)).date()
+
+    @property
+    def dias_restantes(self):
+        if self.estado in (self.Estado.COMPLETADA, self.Estado.RECHAZADA):
+            return None
+        return (self.fecha_limite - timezone.localdate()).days
+
+    @property
+    def urgente(self):
+        dias = self.dias_restantes
+        return dias is not None and dias <= 7
+
+
+class BrechaSeguridad(models.Model):
+    """Registro de un incidente de seguridad.
+
+    La Ley 21.719 obliga a notificar las brechas a la autoridad dentro de
+    un plazo corto. Este modelo existe para que, si pasa, haya un lugar
+    donde anotar la hora exacta de deteccion y las acciones tomadas, en
+    vez de reconstruirlo despues de memoria.
+    """
+
+    HORAS_PLAZO = 72
+
+    class Estado(models.TextChoices):
+        DETECTADA = 'DETECTADA', 'Detectada'
+        EN_INVESTIGACION = 'INVESTIGACION', 'En investigación'
+        NOTIFICADA = 'NOTIFICADA', 'Notificada a la autoridad'
+        CERRADA = 'CERRADA', 'Cerrada'
+
+    class Gravedad(models.TextChoices):
+        BAJA = 'BAJA', 'Baja'
+        MEDIA = 'MEDIA', 'Media'
+        ALTA = 'ALTA', 'Alta'
+        CRITICA = 'CRITICA', 'Crítica'
+
+    fecha_deteccion = models.DateTimeField('Detectada el', default=timezone.now)
+    descripcion = models.TextField('Qué pasó')
+    datos_afectados = models.TextField(
+        'Datos afectados',
+        help_text='Qué información quedó expuesta y de cuántas personas.')
+    personas_afectadas = models.PositiveIntegerField('Personas afectadas', default=0)
+    gravedad = models.CharField('Gravedad', max_length=8, choices=Gravedad.choices,
+                                default=Gravedad.MEDIA)
+    acciones_tomadas = models.TextField('Acciones tomadas', blank=True)
+
+    estado = models.CharField('Estado', max_length=14, choices=Estado.choices,
+                              default=Estado.DETECTADA)
+    notificada_autoridad_en = models.DateTimeField(
+        'Notificada a la autoridad el', null=True, blank=True)
+    notificados_afectados = models.BooleanField(
+        'Se avisó a las personas afectadas', default=False)
+
+    registrada_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='brechas_registradas', verbose_name='Registrada por')
+    created_at = models.DateTimeField('Registrada el', auto_now_add=True)
+    updated_at = models.DateTimeField('Actualizada el', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Brecha de seguridad'
+        verbose_name_plural = 'Brechas de seguridad'
+        ordering = ['-fecha_deteccion']
+
+    def __str__(self):
+        return f'{self.get_gravedad_display()} · {self.fecha_deteccion:%d/%m/%Y %H:%M}'
+
+    @property
+    def horas_transcurridas(self):
+        return (timezone.now() - self.fecha_deteccion).total_seconds() / 3600
+
+    @property
+    def horas_restantes(self):
+        return max(self.HORAS_PLAZO - self.horas_transcurridas, 0)
+
+    @property
+    def semaforo(self):
+        """verde / amarillo / rojo segun lo que queda del plazo de 72 horas."""
+        if self.notificada_autoridad_en:
+            return 'verde'
+        restantes = self.horas_restantes
+        if restantes <= 24:
+            return 'rojo'
+        if restantes <= 48:
+            return 'amarillo'
+        return 'verde'
+
+
+class RespaldoLog(models.Model):
+    """Constancia de cada respaldo de la base de datos."""
+
+    class Estado(models.TextChoices):
+        OK = 'OK', 'Correcto'
+        ERROR = 'ERROR', 'Con error'
+
+    archivo = models.CharField('Archivo', max_length=200)
+    destino = models.CharField('Destino', max_length=250, blank=True)
+    tamano_bytes = models.BigIntegerField('Tamaño (bytes)', default=0)
+    estado = models.CharField('Estado', max_length=6, choices=Estado.choices,
+                              default=Estado.OK)
+    detalle = models.TextField('Detalle', blank=True)
+    created_at = models.DateTimeField('Fecha', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Respaldo'
+        verbose_name_plural = 'Respaldos'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.archivo} ({self.tamano_legible})'
+
+    @property
+    def tamano_legible(self):
+        tam = float(self.tamano_bytes)
+        for unidad in ('B', 'KB', 'MB', 'GB'):
+            if tam < 1024:
+                return f'{tam:.1f} {unidad}'
+            tam /= 1024
+        return f'{tam:.1f} TB'

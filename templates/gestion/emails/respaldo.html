@@ -1,0 +1,54 @@
+{% extends 'gestion/emails/_base.html' %}
+
+{% block asunto %}Respaldo completado{% endblock %}
+{% block preview %}El respaldo automático de la base de datos se guardó correctamente.{% endblock %}
+{% block bajada %}Respaldo de la base de datos{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 16px;font-size:20px;color:#0D0D0D;">
+        Respaldo completado
+    </h1>
+
+    <p style="margin:0 0 18px;">
+        El respaldo automático de la base de datos terminó sin problemas.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FAFAFA;border-radius:8px;margin-bottom:18px;">
+        <tr><td style="padding:16px 18px;font-size:14px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding:5px 0;color:#666;width:90px;">Archivo</td>
+                    <td style="padding:5px 0;color:#0D0D0D;font-weight:bold;">
+                        {{ respaldo.archivo }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Tamaño</td>
+                    <td style="padding:5px 0;color:#0D0D0D;">{{ respaldo.tamano_legible }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Destino</td>
+                    <td style="padding:5px 0;color:#0D0D0D;">
+                        {{ respaldo.destino|default:"disco local" }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Fecha</td>
+                    <td style="padding:5px 0;color:#0D0D0D;">
+                        {{ respaldo.created_at|date:"d/m/Y H:i" }}
+                    </td>
+                </tr>
+            </table>
+        </td></tr>
+    </table>
+
+    <p style="margin:0;color:#555;font-size:14px;">
+        Se conservan los respaldos de los últimos 30 días. Los más antiguos
+        se eliminan solos.
+    </p>
+{% endblock %}
+
+{% block nota_legal %}
+    Aviso automático del sistema de respaldos.
+{% endblock %}

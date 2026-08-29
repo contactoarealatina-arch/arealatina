@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Mis derechos sobre mis datos | Área Latina Estudio{% endblock %}
+{% block descripcion %}Solicita acceso, corrección o eliminación de tus datos personales en Área Latina Estudio.{% endblock %}
+
+{% block contenido %}
+
+<header class="page-header">
+    <div class="container">
+        <span class="etiqueta">Tus datos, tus reglas</span>
+        <h1>Mis derechos</h1>
+        <p>
+            Pídenos ver, corregir o borrar la información que tenemos de ti.
+            Te respondemos dentro de {{ plazo }} días.
+        </p>
+    </div>
+</header>
+
+<section class="seccion">
+    <div class="container">
+        <div class="row g-5 justify-content-center">
+
+            <div class="col-lg-7">
+                <div class="card-al">
+                    <h2 class="h4 mb-3">Envíanos tu solicitud</h2>
+
+                    <form method="post" class="row g-3">
+                        {% csrf_token %}
+
+                        <div class="col-md-6">
+                            <label for="{{ form.nombre.id_for_label }}" class="form-label">
+                                Nombre completo *
+                            </label>
+                            {{ form.nombre }}
+                            {% for e in form.nombre.errors %}<div class="errorlist">{{ e }}</div>{% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                Email de contacto *
+                            </label>
+                            {{ form.email }}
+                            {% for e in form.email.errors %}<div class="errorlist">{{ e }}</div>{% endfor %}
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form.identificador.id_for_label }}" class="form-label">
+                                {{ form.identificador.label }}
+                            </label>
+                            {{ form.identificador }}
+                            <div class="texto-suave" style="font-size:.85rem;margin-top:.3rem">
+                                Nos ayuda a encontrar tus datos. Si no estás registrado, déjalo vacío.
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form.tipo.id_for_label }}" class="form-label">
+                                ¿Qué necesitas? *
+                            </label>
+                            {{ form.tipo }}
+                            {% for e in form.tipo.errors %}<div class="errorlist">{{ e }}</div>{% endfor %}
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form.descripcion.id_for_label }}" class="form-label">
+                                {{ form.descripcion.label }} *
+                            </label>
+                            {{ form.descripcion }}
+                            {% for e in form.descripcion.errors %}<div class="errorlist">{{ e }}</div>{% endfor %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="d-flex align-items-start gap-2" style="cursor:pointer">
+                                {{ form.acepta }}
+                                <span class="texto-suave" style="font-size:.88rem">
+                                    {{ form.acepta.label }}
+                                </span>
+                            </label>
+                            {% for e in form.acepta.errors %}<div class="errorlist">{{ e }}</div>{% endfor %}
+                        </div>
+
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-acento btn-lg">
+                                <i class="bi bi-send me-2"></i>Enviar solicitud
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card-al mb-3">
+                    <h3 class="h5 mb-3">Qué puedes pedir</h3>
+
+                    <div class="dato-clase mb-3" style="align-items:flex-start">
+                        <i class="bi bi-eye"></i>
+                        <span><strong class="text-white">Acceso</strong><br>
+                        Ver toda la información que tenemos de ti.</span>
+                    </div>
+                    <div class="dato-clase mb-3" style="align-items:flex-start">
+                        <i class="bi bi-pencil"></i>
+                        <span><strong class="text-white">Rectificación</strong><br>
+                        Corregir un dato equivocado o desactualizado.</span>
+                    </div>
+                    <div class="dato-clase mb-3" style="align-items:flex-start">
+                        <i class="bi bi-trash"></i>
+                        <span><strong class="text-white">Cancelación</strong><br>
+                        Que eliminemos tus datos de nuestros registros.</span>
+                    </div>
+                    <div class="dato-clase mb-3" style="align-items:flex-start">
+                        <i class="bi bi-hand-index"></i>
+                        <span><strong class="text-white">Oposición</strong><br>
+                        Que dejemos de usarlos para algo puntual.</span>
+                    </div>
+                    <div class="dato-clase" style="align-items:flex-start">
+                        <i class="bi bi-download"></i>
+                        <span><strong class="text-white">Portabilidad</strong><br>
+                        Recibir tus datos en un archivo para llevártelos.</span>
+                    </div>
+                </div>
+
+                <div class="card-al">
+                    <h3 class="h5 mb-2">Cómo funciona</h3>
+                    <p style="font-size:.9rem;margin-bottom:.75rem">
+                        Al enviar el formulario recibes un correo con tu número de caso.
+                        Tenemos {{ plazo }} días para responderte.
+                    </p>
+                    <p style="font-size:.9rem;margin:0">
+                        Puede que te pidamos verificar tu identidad antes de entregarte
+                        información: es para proteger tus propios datos de que alguien
+                        los pida haciéndose pasar por ti.
+                    </p>
+                </div>
+
+                <p class="mt-3" style="font-size:.88rem">
+                    Revisa también nuestra
+                    <a href="{% url 'web:privacidad' %}">política de privacidad</a>.
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}

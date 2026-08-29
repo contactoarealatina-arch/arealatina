@@ -1,6 +1,7 @@
 """
 Configuracion de Django para el proyecto Area Latina Estudio.
 """
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -35,6 +36,8 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     'django_apscheduler',
+    'axes',            # freno a la fuerza bruta en el login
+    'storages',        # fotos en almacenamiento de objetos (R2)
 ]
 
 LOCAL_APPS = [
@@ -50,6 +53,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'csp.middleware.CSPMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -57,6 +61,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
+]
+
+# Axes primero: intercepta el intento antes de que Django valide la clave.
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -94,6 +105,10 @@ DATABASES = {
         'PASSWORD': env('DB_PASSWORD'),
         'HOST': env('DB_HOST', default='localhost'),
         'PORT': env('DB_PORT', default='5432'),
+        # En produccion la base viaja por internet: TLS obligatorio.
+        # En local Postgres suele no tener certificado, por eso se relaja.
+        'OPTIONS': {'sslmode': env('DB_SSLMODE', default='prefer')},
+        'CONN_MAX_AGE': 60,
     }
 }
 
@@ -108,7 +123,8 @@ LOGOUT_REDIRECT_URL = 'web:index'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+     'OPTIONS': {'min_length': 8}},
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
@@ -158,8 +174,14 @@ CACHES = {
 # ---------------------------------------------------------------------------
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False   # el JS necesita leerla para las peticiones
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
 X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+# SECURE_BROWSER_XSS_FILTER queda fuera a proposito: la cabecera
+# X-XSS-Protection esta obsoleta y los navegadores actuales la ignoran o
+# la desaconsejan. Quien protege de XSS hoy es la CSP de mas abajo.
 SESSION_COOKIE_AGE = 60 * 60 * 8          # 8 horas de jornada
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
@@ -177,6 +199,125 @@ if not DEBUG:
         'CSRF_TRUSTED_ORIGINS',
         default=['https://arealatinaestudio.cl', 'https://www.arealatinaestudio.cl'],
     )
+
+# ---------------------------------------------------------------------------
+# django-axes: freno a la fuerza bruta
+# ---------------------------------------------------------------------------
+# Reemplaza al freno artesanal que habia antes. Se prefiere axes porque
+# guarda los intentos en base de datos (auditables, sobreviven al reinicio)
+# y es codigo revisado por mucha gente, cosa que importa cuando hay que
+# defender el sistema ante un tercero.
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_LOCK_OUT_AT_FAILURE = True
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCKOUT_TEMPLATE = 'seguridad/bloqueado.html'
+# Bloquea la combinacion IP + usuario: asi un atacante no deja fuera a un
+# alumno legitimo simplemente fallando su usuario desde otra parte.
+AXES_LOCKOUT_PARAMETERS = [['ip_address', 'username']]
+AXES_IPWARE_PROXY_COUNT = 1 if not DEBUG else None
+AXES_IPWARE_META_PRECEDENCE_ORDER = ['HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR']
+AXES_VERBOSE = True
+
+# ---------------------------------------------------------------------------
+# Content Security Policy
+# ---------------------------------------------------------------------------
+# Es la defensa real contra XSS: aunque alguien logre inyectar un <script>,
+# el navegador se niega a ejecutarlo si no viene de un origen permitido.
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", 'https://cdn.jsdelivr.net')
+CSP_STYLE_SRC = ("'self'", 'https://cdn.jsdelivr.net',
+                 'https://fonts.googleapis.com', "'unsafe-inline'")
+CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net')
+CSP_IMG_SRC = ("'self'", 'data:', 'https:')
+CSP_FRAME_SRC = ("'self'", 'https://www.google.com')   # el mapa de contacto
+CSP_FRAME_ANCESTORS = ("'none'",)
+CSP_BASE_URI = ("'self'",)
+CSP_FORM_ACTION = ("'self'",)
+CSP_OBJECT_SRC = ("'none'",)
+# 'unsafe-inline' en estilos es una concesion consciente: hay estilos en
+# linea en las plantillas de correo y en algunas vistas. En scripts NO se
+# permite, que es donde de verdad importa.
+
+# ---------------------------------------------------------------------------
+# Cifrado de campos sensibles
+# ---------------------------------------------------------------------------
+# Solo se cifran campos que nunca se buscan ni se filtran. Ver comentario
+# en apps/gestion/models.py sobre por que RUT, email y telefono quedan sin
+# cifrar a nivel de campo.
+FIELD_ENCRYPTION_KEY = env('FIELD_ENCRYPTION_KEY', default='')
+
+# ---------------------------------------------------------------------------
+# Almacenamiento de archivos
+# ---------------------------------------------------------------------------
+# Las fotos de alumnos van a Cloudflare R2 cuando hay credenciales. En el
+# disco de Railway se borrarian en cada despliegue.
+USAR_R2 = bool(env('R2_ACCESS_KEY_ID', default=''))
+
+if USAR_R2:
+    STORAGES['default'] = {
+        'BACKEND': 'apps.gestion.almacenamiento.AlmacenamientoPrivado',
+    }
+    AWS_ACCESS_KEY_ID = env('R2_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = env('R2_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = env('R2_BUCKET')
+    AWS_S3_ENDPOINT_URL = env('R2_ENDPOINT')
+    AWS_S3_REGION_NAME = 'auto'
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    AWS_DEFAULT_ACL = None          # el bucket es privado
+    AWS_QUERYSTRING_AUTH = True     # URLs firmadas, no publicas
+    AWS_QUERYSTRING_EXPIRE = 3600   # cada URL vive una hora
+
+# ---------------------------------------------------------------------------
+# Registro de eventos de seguridad
+# ---------------------------------------------------------------------------
+CARPETA_LOGS = BASE_DIR / 'logs'
+CARPETA_LOGS.mkdir(exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'seguridad': {
+            'format': '{asctime} {levelname} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'archivo_seguridad': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': CARPETA_LOGS / 'seguridad.log',
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 5,
+            'formatter': 'seguridad',
+            'encoding': 'utf-8',
+        },
+        'consola': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'seguridad',
+        },
+    },
+    'loggers': {
+        'django.security': {
+            'handlers': ['archivo_seguridad', 'consola'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'axes': {
+            'handlers': ['archivo_seguridad'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'arealatina.seguridad': {
+            'handlers': ['archivo_seguridad', 'consola'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# Direccion publica del sitio, para los enlaces de los correos.
+SITIO_URL = env('SITIO_URL', default='http://localhost:8000')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

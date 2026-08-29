@@ -5,6 +5,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
+from .validadores import redimensionar_foto
 from .models import (
     Alumno,
     Clase,
@@ -132,6 +133,17 @@ class AlumnoForm(MixinWidgets, forms.ModelForm):
         if existente.exists():
             raise forms.ValidationError('Ya hay un alumno registrado con este RUT.')
         return rut
+
+    def clean_foto(self):
+        """Reduce la imagen antes de guardarla y le quita los metadatos.
+
+        El EXIF de una foto de celular puede traer las coordenadas del
+        lugar donde se tomó: eso no tiene por qué quedar guardado.
+        """
+        foto = self.cleaned_data.get('foto')
+        if foto and hasattr(foto, 'content_type'):
+            return redimensionar_foto(foto)
+        return foto
 
     def clean_fecha_nacimiento(self):
         fecha = self.cleaned_data.get('fecha_nacimiento')

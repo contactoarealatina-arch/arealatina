@@ -1,0 +1,23 @@
+AREA LATINA ESTUDIO - Proteccion de datos personales
+============================================================
+
+Hola {{ solicitud.nombre }},
+
+Recibimos tu solicitud y quedo registrada.
+
+NUMERO DE CASO: {{ solicitud.codigo }}
+
+Tipo:               {{ solicitud.get_tipo_display }}
+Recibida:           {{ solicitud.created_at|date:"d/m/Y H:i" }}
+Plazo de respuesta: {{ solicitud.fecha_limite|date:"d/m/Y" }}
+
+Puede que te escribamos para verificar tu identidad antes de
+entregarte informacion. Es para proteger tus propios datos de que
+alguien los pida haciendose pasar por ti.
+
+Si tienes dudas, responde este correo.
+
+============================================================
+Area Latina Estudio
+{{ academia.direccion_completa }}
+{{ academia.email }}

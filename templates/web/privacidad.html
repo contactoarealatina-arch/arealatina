@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Política de privacidad | Área Latina Estudio{% endblock %}
+{% block descripcion %}Cómo Área Latina Estudio trata los datos personales de sus alumnos, conforme a la Ley 21.719.{% endblock %}
+
+{% block contenido %}
+
+<header class="page-header">
+    <div class="container">
+        <span class="etiqueta">Protección de datos</span>
+        <h1>Política de privacidad</h1>
+        <p>Qué datos te pedimos, para qué los usamos y qué puedes hacer con ellos.</p>
+    </div>
+</header>
+
+<section class="seccion">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <article class="documento">
+
+                    <p class="documento-fecha">
+                        Última actualización: {{ actualizada }}
+                    </p>
+
+                    <h2>Quién trata tus datos</h2>
+                    <p>
+                        El responsable es <strong>{{ academia.nombre }}</strong>, con
+                        domicilio en {{ academia.direccion_completa }}. Para cualquier
+                        consulta sobre tus datos personales, escríbenos a
+                        <a href="mailto:{{ academia.email }}">{{ academia.email }}</a>.
+                    </p>
+
+                    <h2>Qué datos recopilamos</h2>
+                    <p>Solo lo necesario para inscribirte y llevar tu ficha:</p>
+                    <ul>
+                        <li><strong>Identificación:</strong> nombre completo, RUT y fecha de nacimiento.</li>
+                        <li><strong>Contacto:</strong> teléfono, correo electrónico y dirección.</li>
+                        <li><strong>Contacto de emergencia:</strong> nombre, teléfono y relación contigo.</li>
+                        <li><strong>Actividad en la academia:</strong> clases inscritas, asistencia y plan contratado.</li>
+                        <li><strong>Pagos:</strong> monto, fecha, concepto y método. No guardamos datos de tarjetas.</li>
+                        <li><strong>Fotografía:</strong> solo si nos la entregas, y únicamente para identificarte en tu ficha.</li>
+                    </ul>
+
+                    <h2>Para qué los usamos</h2>
+                    <ul>
+                        <li>Gestionar tu inscripción, tus clases y tu plan.</li>
+                        <li>Llevar el control de asistencia y de pagos.</li>
+                        <li>Avisarte cuando tu plan está por vencer o cuando tienes clase.</li>
+                        <li>Contactar a tu persona de emergencia si te ocurre algo en el estudio.</li>
+                    </ul>
+                    <p>
+                        <strong>No usamos tus datos para publicidad</strong> ni los vendemos
+                        ni los cedemos a terceros con fines comerciales.
+                    </p>
+
+                    <h2>Con qué base legal</h2>
+                    <p>
+                        Tratamos tus datos para poder cumplir el contrato de servicios que
+                        tienes con la academia. El contacto de emergencia y la fotografía
+                        se tratan con tu consentimiento, y puedes retirarlo cuando quieras.
+                    </p>
+
+                    <h2>Con quién se comparten</h2>
+                    <p>Con nadie más que los proveedores que hacen funcionar el sistema:</p>
+                    <ul>
+                        <li><strong>El proveedor de alojamiento</strong>, donde vive la base de datos.</li>
+                        <li><strong>Brevo</strong>, que entrega los correos que te enviamos.</li>
+                    </ul>
+                    <p>
+                        Ambos actúan solo por encargo nuestro y no pueden usar tus datos
+                        para otra cosa.
+                    </p>
+
+                    <h2>Cuánto tiempo los guardamos</h2>
+                    <ul>
+                        <li>Mientras seas alumno o alumna activa.</li>
+                        <li>Hasta <strong>3 años</strong> después de que dejes la academia,
+                            por si vuelves y para respaldo contable.</li>
+                        <li>Pasado ese plazo, tus datos personales se anonimizan
+                            automáticamente: se conserva solo información estadística que
+                            ya no permite identificarte.</li>
+                    </ul>
+
+                    <h2>Cómo los protegemos</h2>
+                    <ul>
+                        <li>Todo el sitio viaja cifrado por HTTPS.</li>
+                        <li>Los datos más sensibles se guardan cifrados en la base.</li>
+                        <li>Cada persona del equipo ve solo lo que su rol necesita.</li>
+                        <li>Queda registro de quién consulta o modifica cada ficha.</li>
+                        <li>El acceso se bloquea tras varios intentos fallidos de contraseña.</li>
+                        <li>Se hacen respaldos automáticos de la base de datos.</li>
+                    </ul>
+
+                    <h2>Tus derechos</h2>
+                    <p>Sobre tus datos personales puedes pedir:</p>
+                    <ul>
+                        <li><strong>Acceso:</strong> saber qué información tenemos de ti.</li>
+                        <li><strong>Rectificación:</strong> corregir lo que esté equivocado.</li>
+                        <li><strong>Cancelación:</strong> que eliminemos tus datos.</li>
+                        <li><strong>Oposición:</strong> que dejemos de usarlos para algo concreto.</li>
+                        <li><strong>Portabilidad:</strong> recibir tus datos en un archivo para llevártelos.</li>
+                    </ul>
+                    <p>
+                        Se ejercen desde
+                        <a href="{% url 'web:mis_derechos' %}">el formulario de derechos</a>
+                        o escribiendo a {{ academia.email }}. Tenemos
+                        <strong>30 días</strong> para responderte.
+                    </p>
+
+                    <h2>Cookies</h2>
+                    <p>
+                        Usamos solo cookies técnicas: la de sesión, que te mantiene
+                        conectado, y la de seguridad, que protege los formularios.
+                        <strong>No usamos cookies de publicidad ni de rastreo</strong>, ni
+                        propias ni de terceros.
+                    </p>
+
+                    <h2>Cambios en esta política</h2>
+                    <p>
+                        Si cambia algo importante, actualizamos esta página y avisamos por
+                        correo a quienes estén registrados.
+                    </p>
+
+                    <div class="documento-nota">
+                        <i class="bi bi-info-circle"></i>
+                        <div>
+                            ¿Dudas sobre tus datos? Escríbenos a
+                            <a href="mailto:{{ academia.email }}">{{ academia.email }}</a>
+                            o usa el
+                            <a href="{% url 'web:mis_derechos' %}">formulario de derechos</a>.
+                        </div>
+                    </div>
+
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

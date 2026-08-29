@@ -1,0 +1,68 @@
+{% extends 'gestion/emails/_base.html' %}
+
+{% block asunto %}Recibimos tu solicitud{% endblock %}
+{% block preview %}Tu número de caso es {{ solicitud.codigo }}. Te respondemos dentro de 30 días.{% endblock %}
+{% block bajada %}Protección de datos personales{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 16px;font-size:22px;color:#0D0D0D;">
+        Recibimos tu solicitud
+    </h1>
+
+    <p style="margin:0 0 20px;">
+        Hola {{ solicitud.nombre }}, tu solicitud quedó registrada. Guarda este
+        correo: el número de caso te sirve para hacer seguimiento.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#0D0D0D;border-radius:10px;margin-bottom:18px;">
+        <tr><td style="padding:22px;text-align:center;">
+            <div style="color:#B0B0B0;font-size:12px;letter-spacing:1px;text-transform:uppercase;">
+                Número de caso
+            </div>
+            <div style="color:#FF5722;font-size:26px;font-weight:bold;margin-top:6px;letter-spacing:1px;">
+                {{ solicitud.codigo }}
+            </div>
+        </td></tr>
+    </table>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FAFAFA;border-radius:8px;margin-bottom:18px;">
+        <tr><td style="padding:16px 18px;font-size:14px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Tipo</td>
+                    <td style="padding:5px 0;text-align:right;color:#0D0D0D;font-weight:bold;">
+                        {{ solicitud.get_tipo_display }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Recibida</td>
+                    <td style="padding:5px 0;text-align:right;color:#0D0D0D;">
+                        {{ solicitud.created_at|date:"d/m/Y H:i" }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Plazo de respuesta</td>
+                    <td style="padding:5px 0;text-align:right;color:#E64A19;font-weight:bold;">
+                        {{ solicitud.fecha_limite|date:"d/m/Y" }}
+                    </td>
+                </tr>
+            </table>
+        </td></tr>
+    </table>
+
+    <p style="margin:0 0 8px;color:#555;font-size:14px;">
+        Puede que te escribamos para verificar tu identidad antes de entregarte
+        información. Es para proteger tus propios datos de que alguien los pida
+        haciéndose pasar por ti.
+    </p>
+    <p style="margin:0;color:#555;font-size:14px;">
+        Si tienes dudas, responde este correo.
+    </p>
+{% endblock %}
+
+{% block nota_legal %}
+    Recibes este correo porque enviaste una solicitud sobre tus datos personales
+    en arealatinaestudio.cl
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'gestion/emails/_base.html' %}
+
+{% block asunto %}Nueva solicitud de datos personales{% endblock %}
+{% block preview %}{{ solicitud.get_tipo_display }} de {{ solicitud.nombre }}. Plazo: {{ solicitud.fecha_limite|date:"d/m/Y" }}.{% endblock %}
+{% block bajada %}Solicitud ARCO recibida{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 16px;font-size:20px;color:#0D0D0D;">
+        Nueva solicitud {{ solicitud.codigo }}
+    </h1>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FFF3E0;border-left:4px solid #FF9800;border-radius:8px;margin-bottom:18px;">
+        <tr><td style="padding:14px 18px;font-size:14px;color:#6D4C41;">
+            <strong>Hay {{ solicitud.DIAS_PLAZO }} días de plazo legal para responder.</strong><br>
+            Vence el {{ solicitud.fecha_limite|date:"d/m/Y" }}.
+        </td></tr>
+    </table>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FAFAFA;border-radius:8px;margin-bottom:18px;">
+        <tr><td style="padding:16px 18px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;">
+                <tr>
+                    <td style="padding:5px 0;color:#666;width:110px;">Tipo</td>
+                    <td style="padding:5px 0;color:#0D0D0D;font-weight:bold;">
+                        {{ solicitud.get_tipo_display }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Solicitante</td>
+                    <td style="padding:5px 0;color:#0D0D0D;">{{ solicitud.nombre }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Email</td>
+                    <td style="padding:5px 0;">
+                        <a href="mailto:{{ solicitud.email }}" style="color:#FF5722;">{{ solicitud.email }}</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:#666;">Identificador</td>
+                    <td style="padding:5px 0;color:#0D0D0D;">{{ solicitud.identificador|default:"No indicado" }}</td>
+                </tr>
+            </table>
+        </td></tr>
+    </table>
+
+    <div style="font-size:12px;letter-spacing:1px;color:#666;font-weight:bold;text-transform:uppercase;margin-bottom:8px;">
+        Lo que pide
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#FFF6F2;border-left:4px solid #FF5722;border-radius:8px;">
+        <tr><td style="padding:16px 18px;color:#333;font-size:14px;line-height:1.7;">
+            {{ solicitud.descripcion|linebreaksbr }}
+        </td></tr>
+    </table>
+
+    <p style="margin:18px 0 0;color:#888;font-size:13px;">
+        Gestiona la solicitud desde el panel, en Gestión → Solicitudes de datos.
+    </p>
+{% endblock %}
+
+{% block nota_legal %}
+    Aviso automático del formulario de derechos de arealatinaestudio.cl
+{% endblock %}

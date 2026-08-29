@@ -1,0 +1,20 @@
+AREA LATINA ESTUDIO - Nueva solicitud de datos personales
+============================================================
+
+SOLICITUD {{ solicitud.codigo }}
+
+ATENCION: hay {{ solicitud.DIAS_PLAZO }} dias de plazo legal para responder.
+Vence el {{ solicitud.fecha_limite|date:"d/m/Y" }}.
+
+Tipo:          {{ solicitud.get_tipo_display }}
+Solicitante:   {{ solicitud.nombre }}
+Email:         {{ solicitud.email }}
+Identificador: {{ solicitud.identificador|default:"No indicado" }}
+Recibida:      {{ solicitud.created_at|date:"d/m/Y H:i" }}
+
+LO QUE PIDE
+------------------------------------------------------------
+{{ solicitud.descripcion }}
+
+------------------------------------------------------------
+Gestiona la solicitud desde el panel, en Gestion > Solicitudes de datos.

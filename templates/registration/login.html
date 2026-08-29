@@ -66,9 +66,15 @@
                     </div>
                 </div>
             {% elif form.errors %}
+                {# El texto viene del formulario: un solo lugar donde cambiarlo,
+                   y siempre el mismo sin importar qué falló. #}
                 <div class="acceso-aviso peligro">
                     <i class="bi bi-exclamation-circle"></i>
-                    <div>Usuario o contraseña incorrectos. Inténtalo de nuevo.</div>
+                    <div>
+                        {% for error in form.non_field_errors %}{{ error }}{% empty %}
+                            Usuario o contraseña incorrectos. Verifica tus datos.
+                        {% endfor %}
+                    </div>
                 </div>
             {% endif %}
 

@@ -170,6 +170,10 @@
         <div class="footer-base">
             © {% now "Y" %} {{ academia.nombre }} — Puerto Montt, Chile. Todos los derechos reservados.
             <span class="footer-separador">·</span>
+            <a href="{% url 'web:privacidad' %}" class="footer-acceso">Privacidad</a>
+            <span class="footer-separador">·</span>
+            <a href="{% url 'web:mis_derechos' %}" class="footer-acceso">Mis datos</a>
+            <span class="footer-separador">·</span>
             {% if user.is_authenticated %}
                 <a href="{% url 'gestion:dashboard' %}" class="footer-acceso">Panel</a>
             {% else %}
@@ -178,6 +182,47 @@
         </div>
     </div>
 </footer>
+
+<!-- ==================== BANNER DE COOKIES ==================== -->
+{# Solo cookies tecnicas: no hay que pedir permiso para esas, pero si
+   informar. Por eso es un aviso con "Entendido" y no un consentimiento
+   con opciones que no existen. #}
+<div class="cookies" id="avisoCookies" hidden>
+    <div class="cookies-texto">
+        <i class="bi bi-shield-check"></i>
+        <div>
+            Usamos solo cookies técnicas, las necesarias para mantener tu sesión
+            y proteger los formularios. <strong>No usamos publicidad ni rastreo.</strong>
+            <a href="{% url 'web:privacidad' %}">Ver política de privacidad</a>
+        </div>
+    </div>
+    <button type="button" class="btn btn-acento btn-sm" id="aceptarCookies">Entendido</button>
+</div>
+
+<script>
+// El aviso se muestra una vez y se recuerda en el navegador. Si el
+// almacenamiento no esta disponible (modo privado), simplemente se muestra
+// siempre: es preferible a que reviente.
+(function () {
+    var aviso = document.getElementById('avisoCookies');
+    var boton = document.getElementById('aceptarCookies');
+    if (!aviso || !boton) { return; }
+
+    var visto = false;
+    try { visto = localStorage.getItem('al-cookies') === 'ok'; } catch (e) {}
+
+    if (!visto) {
+        aviso.hidden = false;
+        requestAnimationFrame(function () { aviso.classList.add('visible'); });
+    }
+
+    boton.addEventListener('click', function () {
+        aviso.classList.remove('visible');
+        setTimeout(function () { aviso.hidden = true; }, 300);
+        try { localStorage.setItem('al-cookies', 'ok'); } catch (e) {}
+    });
+})();
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'js/main.js' %}"></script>
