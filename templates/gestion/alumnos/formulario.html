@@ -317,7 +317,7 @@
 
 {% block extra_js %}
 {{ duraciones_planes|json_script:"duracionesPlanes" }}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 // El resumen del paso 4 lee estos campos: se marcan aquí para no
 // ensuciar el formulario con atributos repetidos.
 (function () {

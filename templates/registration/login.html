@@ -130,7 +130,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 // Las dos puertas llevan al mismo formulario: las credenciales son las
 // mismas y el sistema ya sabe a dónde mandar a cada rol después de
 // entrar. La elección solo cambia el texto, para que la persona sienta

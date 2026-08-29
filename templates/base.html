@@ -21,7 +21,7 @@
 
     {# Decide que puede correr este dispositivo ANTES de pintar la pagina. #}
     <script src="{% static 'js/capacidades.js' %}"></script>
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
         window.AL = window.AL || {};
         window.AL.urls = { heroWebgl: "{% static 'js/hero-webgl.js' %}" };
     </script>
@@ -199,7 +199,7 @@
     <button type="button" class="btn btn-acento btn-sm" id="aceptarCookies">Entendido</button>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 // El aviso se muestra una vez y se recuerda en el navegador. Si el
 // almacenamiento no esta disponible (modo privado), simplemente se muestra
 // siempre: es preferible a que reviente.

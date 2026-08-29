@@ -234,7 +234,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 // Cambio entre tabla y tarjetas. Se guarda en la URL para que sobreviva
 // al filtrar o al cambiar de página.
 (function () {

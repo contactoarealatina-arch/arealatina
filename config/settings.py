@@ -226,6 +226,14 @@ AXES_VERBOSE = True
 # el navegador se niega a ejecutarlo si no viene de un origen permitido.
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = ("'self'", 'https://cdn.jsdelivr.net')
+# Cada carga genera un nonce distinto y solo los <script> que lo llevan
+# se ejecutan. Asi los scripts propios en linea funcionan sin abrir la
+# puerta con 'unsafe-inline': un script inyectado no puede adivinarlo.
+CSP_INCLUDE_NONCE_IN = ['script-src']
+# Los navegadores piden los .map de las librerias cuando estan abiertas
+# las herramientas de desarrollo. Sin esto la consola se llena de errores
+# que no son problemas reales.
+CSP_CONNECT_SRC = ("'self'", 'https://cdn.jsdelivr.net')
 CSP_STYLE_SRC = ("'self'", 'https://cdn.jsdelivr.net',
                  'https://fonts.googleapis.com', "'unsafe-inline'")
 CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net')

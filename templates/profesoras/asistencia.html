@@ -97,7 +97,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 (function () {
     var form = document.getElementById('formAsistencia');
     if (!form) { return; }

@@ -151,7 +151,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 // Marcar toda la lista de una vez: en una clase de 20 ahorra 20 clics.
 document.querySelectorAll('[data-marcar]').forEach(function (boton) {
     boton.addEventListener('click', function () {

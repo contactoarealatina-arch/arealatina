@@ -67,7 +67,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 // El campo de búsqueda solo ayuda a encontrar al alumno; el valor real
 // sigue viajando en el select del formulario.
 (function () {

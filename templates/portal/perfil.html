@@ -98,7 +98,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 // Formato del teléfono chileno mientras escribe.
 document.querySelectorAll('[data-telefono]').forEach(function (campo) {
     campo.addEventListener('input', function () {

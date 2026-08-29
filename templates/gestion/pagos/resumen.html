@@ -189,7 +189,7 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 {{ grafico_ingresos|json_script:"datosResumen" }}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 (function () {
     if (!window.Chart) { return; }
     var nodo = document.getElementById('datosResumen');
