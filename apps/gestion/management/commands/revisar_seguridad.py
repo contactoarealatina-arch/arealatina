@@ -15,14 +15,21 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 OK, FALLA, AVISO = 'OK', 'FALLA', 'AVISO'
+# Un ajuste que todavia no aplica porque estas en desarrollo no es una
+# falla: es algo que se activa solo al subir. Mezclarlos hace que la
+# lista grite por cosas que no hay que arreglar, y entonces se deja de
+# mirar la lista.
+PENDIENTE = 'PENDIENTE'
 
 
 class Command(BaseCommand):
     help = 'Revisa el estado de seguridad del sistema.'
 
     def add_arguments(self, parser):
-        parser.add_argument('--produccion', action='store_true',
-                            help='Evalúa como si DEBUG estuviera en False.')
+        parser.add_argument(
+            '--produccion', action='store_true',
+            help='Exige los ajustes de producción aunque estés en desarrollo. '
+                 'Sirve para ver qué faltaría; normalmente no hace falta.')
 
     def handle(self, *args, **opciones):
         self.prod = opciones['produccion'] or not settings.DEBUG
@@ -31,9 +38,12 @@ class Command(BaseCommand):
         self.stdout.write('')
         self.stdout.write(self.style.MIGRATE_HEADING(
             'REVISIÓN DE SEGURIDAD · Área Latina Estudio'))
-        if not self.prod:
-            self.stdout.write(self.style.WARNING(
-                'Evaluando en modo desarrollo. Usa --produccion para el criterio real.'))
+        self.desarrollo = settings.DEBUG
+        if self.desarrollo:
+            self.stdout.write(self.style.HTTP_INFO(
+                'Estás en desarrollo (DEBUG=True). Los ajustes de HTTPS se activan\n'
+                'solos al poner DEBUG=False, así que aquí salen como [ -- ] pendientes,\n'
+                'no como fallas.'))
         self.stdout.write('')
 
         self._configuracion()
@@ -46,9 +56,10 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
     def _marcar(self, titulo, estado, detalle=''):
         self.resultados.append((titulo, estado, detalle))
-        simbolo = {OK: '[ OK ]', FALLA: '[FALLA]', AVISO: '[AVISO]'}[estado]
+        simbolo = {OK: '[ OK ]', FALLA: '[FALLA]', AVISO: '[AVISO]',
+                   PENDIENTE: '[ -- ]'}[estado]
         estilo = {OK: self.style.SUCCESS, FALLA: self.style.ERROR,
-                  AVISO: self.style.WARNING}[estado]
+                  AVISO: self.style.WARNING, PENDIENTE: self.style.HTTP_INFO}[estado]
         linea = f'  {simbolo} {titulo}'
         if detalle:
             linea += f'  — {detalle}'
@@ -62,9 +73,10 @@ class Command(BaseCommand):
     def _configuracion(self):
         self._seccion('Configuración HTTP')
 
-        self._marcar('DEBUG desactivado en producción',
-                     OK if not settings.DEBUG else (AVISO if not self.prod else FALLA),
-                     'DEBUG=True (normal en desarrollo)' if settings.DEBUG else '')
+        self._marcar(
+            'DEBUG desactivado',
+            OK if not settings.DEBUG else PENDIENTE,
+            'normal mientras desarrollas; ponlo en False al subir' if settings.DEBUG else '')
 
         clave = settings.SECRET_KEY
         self._marcar('SECRET_KEY con largo suficiente',
@@ -96,23 +108,29 @@ class Command(BaseCommand):
                      OK if "'unsafe-inline'" not in getattr(settings, 'CSP_SCRIPT_SRC', ()) else FALLA,
                      'sin unsafe-inline en script-src')
 
-        # Lo que solo aplica en producción
-        if self.prod:
-            for nombre, ajuste in [
-                ('HTTPS forzado', 'SECURE_SSL_REDIRECT'),
-                ('Cookie de sesión solo por HTTPS', 'SESSION_COOKIE_SECURE'),
-                ('Cookie CSRF solo por HTTPS', 'CSRF_COOKIE_SECURE'),
-                ('HSTS con subdominios', 'SECURE_HSTS_INCLUDE_SUBDOMAINS'),
-                ('HSTS preload', 'SECURE_HSTS_PRELOAD'),
-            ]:
-                self._marcar(nombre, OK if getattr(settings, ajuste, False) else FALLA)
+        # Estos viven dentro de 'if not DEBUG' en settings.py: en desarrollo
+        # no existen a proposito, porque forzar HTTPS en localhost dejaria el
+        # sitio inaccesible.
+        nota = 'se activa al poner DEBUG=False'
+        for nombre, ajuste in [
+            ('HTTPS forzado', 'SECURE_SSL_REDIRECT'),
+            ('Cookie de sesión solo por HTTPS', 'SESSION_COOKIE_SECURE'),
+            ('Cookie CSRF solo por HTTPS', 'CSRF_COOKIE_SECURE'),
+            ('HSTS con subdominios', 'SECURE_HSTS_INCLUDE_SUBDOMAINS'),
+            ('HSTS preload', 'SECURE_HSTS_PRELOAD'),
+        ]:
+            puesto = getattr(settings, ajuste, False)
+            if puesto:
+                self._marcar(nombre, OK)
+            else:
+                self._marcar(nombre, PENDIENTE if self.desarrollo else FALLA, nota)
 
-            segundos = getattr(settings, 'SECURE_HSTS_SECONDS', 0)
-            self._marcar('HSTS de al menos un año',
-                         OK if segundos >= 31536000 else FALLA, f'{segundos} s')
+        segundos = getattr(settings, 'SECURE_HSTS_SECONDS', 0)
+        if segundos >= 31536000:
+            self._marcar('HSTS de al menos un año', OK, f'{segundos} s')
         else:
-            self._marcar('HTTPS, HSTS y cookies seguras', AVISO,
-                         'solo se activan con DEBUG=False')
+            self._marcar('HSTS de al menos un año',
+                         PENDIENTE if self.desarrollo else FALLA, nota)
 
         self._seccion('Sesiones y cookies')
         self._marcar('Cookie de sesión inaccesible desde JS',
@@ -172,13 +190,14 @@ class Command(BaseCommand):
 
         opciones = settings.DATABASES['default'].get('OPTIONS', {})
         modo = opciones.get('sslmode', 'no definido')
-        if self.prod:
-            self._marcar('TLS en la conexión a PostgreSQL',
-                         OK if modo in ('require', 'verify-ca', 'verify-full') else FALLA,
-                         f'sslmode={modo}')
+        seguro = modo in ('require', 'verify-ca', 'verify-full')
+        if seguro:
+            self._marcar('TLS en la conexión a PostgreSQL', OK, f'sslmode={modo}')
         else:
-            self._marcar('TLS en la conexión a PostgreSQL', AVISO,
-                         f'sslmode={modo} (poner "require" en producción)')
+            # El Postgres local no tiene certificado; el de un hosting si.
+            self._marcar('TLS en la conexión a PostgreSQL',
+                         PENDIENTE if self.desarrollo else FALLA,
+                         f'sslmode={modo} · pon DB_SSLMODE=require en el hosting')
 
         self._marcar('Clave de cifrado de campos definida',
                      OK if getattr(settings, 'FIELD_ENCRYPTION_KEY', '') else FALLA)
@@ -261,24 +280,53 @@ class Command(BaseCommand):
     def _resumen(self):
         ok = sum(1 for _, e, _ in self.resultados if e == OK)
         fallas = [t for t, e, _ in self.resultados if e == FALLA]
-        avisos = sum(1 for _, e, _ in self.resultados if e == AVISO)
+        pendientes = [t for t, e, _ in self.resultados if e == PENDIENTE]
+        avisos = [t for t, e, _ in self.resultados if e == AVISO]
+        total = len(self.resultados)
 
         self.stdout.write('')
-        self.stdout.write('=' * 62)
-        self.stdout.write(
-            f'  {ok} correctos · {len(fallas)} fallas · {avisos} avisos '
-            f'de {len(self.resultados)} puntos')
-        self.stdout.write('=' * 62)
+        self.stdout.write('=' * 64)
+        self.stdout.write(f'  {ok} de {total} correctos ahora')
+        if pendientes:
+            self.stdout.write(
+                f'  {len(pendientes)} se activan solos al subir (DEBUG=False)')
+        if avisos:
+            self.stdout.write(f'  {len(avisos)} por revisar')
+        if fallas:
+            self.stdout.write(self.style.ERROR(f'  {len(fallas)} hay que corregir'))
+        self.stdout.write('=' * 64)
 
         if fallas:
             self.stdout.write('')
-            self.stdout.write(self.style.ERROR('  Hay que corregir:'))
+            self.stdout.write(self.style.ERROR('  HAY QUE CORREGIR:'))
             for f in fallas:
                 self.stdout.write(self.style.ERROR(f'    · {f}'))
-        else:
+
+        if pendientes:
             self.stdout.write('')
-            self.stdout.write(self.style.SUCCESS('  Sin fallas.'))
+            self.stdout.write(self.style.HTTP_INFO(
+                '  Al subir a producción, en las variables del hosting:'))
+            self.stdout.write('    DEBUG=False')
+            self.stdout.write('    DB_SSLMODE=require')
+            self.stdout.write('    SITIO_URL=https://tudominio.cl')
+            self.stdout.write(self.style.HTTP_INFO(
+                '  Con eso, estos se activan solos:'))
+            for p in pendientes:
+                self.stdout.write(f'    · {p}')
+
+        if avisos:
+            self.stdout.write('')
+            self.stdout.write(self.style.WARNING('  Por revisar:'))
+            for a in avisos:
+                self.stdout.write(self.style.WARNING(f'    · {a}'))
+
         self.stdout.write('')
+        if not fallas:
+            mensaje = ('  Sin fallas. El sistema está bien para subir.'
+                       if pendientes else
+                       '  Sin fallas ni pendientes. Todo en verde.')
+            self.stdout.write(self.style.SUCCESS(mensaje))
+            self.stdout.write('')
 
     # ------------------------------------------------------------------
     def _en_env(self, clave):
