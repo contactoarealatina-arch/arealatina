@@ -792,6 +792,7 @@ class CorreoEnviado(models.Model):
         CUMPLEANOS = 'CUMPLEANOS', 'Saludo de cumpleanos'
         AUSENCIA = 'AUSENCIA', 'Aviso de ausencia prolongada'
         INFORME = 'INFORME', 'Informe mensual'
+        RESENA = 'RESENA', 'Pedido de resena en Google'
 
     tipo = models.CharField('Tipo', max_length=15, choices=Tipo.choices)
     destinatario = models.EmailField('Destinatario')

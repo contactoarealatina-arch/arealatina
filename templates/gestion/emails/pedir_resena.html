@@ -1,0 +1,60 @@
+{% extends 'gestion/emails/_base.html' %}
+
+{% block asunto %}¿Cómo ha sido tu experiencia?{% endblock %}
+{% block preview %}Llevas {{ semanas }} semanas bailando con nosotros. Nos ayudaría mucho tu opinión.{% endblock %}
+{% block bajada %}Tu opinión nos ayuda{% endblock %}
+
+{% block cuerpo %}
+    <h1 style="margin:0 0 16px;font-size:22px;color:#0D0D0D;">
+        ¿Cómo lo estás pasando, {{ alumno.primer_nombre }}?
+    </h1>
+
+    <p style="margin:0 0 18px;">
+        Llevas {{ semanas }} semanas con nosotros y ya has venido a
+        {{ clases_asistidas }} clase{{ clases_asistidas|pluralize }}. Nos encantaría
+        saber qué te ha parecido.
+    </p>
+
+    <p style="margin:0 0 22px;">
+        Si te has sentido bien en la sala, contarlo en Google ayuda a que otra
+        persona que está dudando se anime a dar el primer paso. Es la forma más
+        directa que tenemos de que nos encuentren.
+    </p>
+
+    <!-- Estrellas y botón -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:#0D0D0D;border-radius:12px;margin-bottom:20px;">
+        <tr><td style="padding:28px 22px;text-align:center;">
+            <div style="font-size:26px;letter-spacing:4px;margin-bottom:14px;">
+                ⭐⭐⭐⭐⭐
+            </div>
+            <div style="color:#FFFFFF;font-size:15px;margin-bottom:18px;">
+                Toma menos de un minuto
+            </div>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                <tr><td style="background:#FF5722;border-radius:8px;">
+                    <a href="{{ enlace_resena }}"
+                       style="display:inline-block;padding:15px 38px;color:#FFFFFF;font-size:16px;font-weight:bold;text-decoration:none;">
+                        Escribir mi reseña
+                    </a>
+                </td></tr>
+            </table>
+            <div style="color:#7A716C;font-size:12px;margin-top:14px;">
+                Se abre directo en Google, ya listo para escribir
+            </div>
+        </td></tr>
+    </table>
+
+    <p style="margin:0 0 8px;color:#555;font-size:14px;">
+        Y si hay algo que no te ha gustado, prefiero que me lo digas a mí primero:
+        responde este correo y lo conversamos. Para eso estamos.
+    </p>
+    <p style="margin:0;color:#555;font-size:14px;">
+        Gracias por bailar con nosotros.
+    </p>
+{% endblock %}
+
+{% block nota_legal %}
+    Recibes este correo una sola vez, porque eres alumno o alumna de
+    Área Latina Estudio.
+{% endblock %}

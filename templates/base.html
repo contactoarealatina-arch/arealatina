@@ -127,6 +127,16 @@
                         </a>
                     {% endif %}
                 </div>
+
+                {% if academia.google_resenas %}
+                    {# Solo aparece si hay enlace configurado: un boton que
+                       lleva a ninguna parte es peor que no tenerlo. #}
+                    <a href="{{ academia.google_resenas }}" target="_blank"
+                       rel="noopener" class="btn-resena btn-resena-sm mt-3">
+                        <i class="bi bi-star-fill"></i>
+                        <span>Déjanos tu reseña</span>
+                    </a>
+                {% endif %}
             </div>
 
             <div class="col-6 col-lg-2 offset-lg-1">

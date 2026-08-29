@@ -260,6 +260,36 @@
     </div>
 </section>
 
+<!-- ==================== RESEÑAS DE GOOGLE ==================== -->
+{% if academia.google_resenas %}
+<section class="seccion seccion-compacta">
+    <div class="container">
+        <div class="resena-franja fade-in">
+            <div class="resena-franja-datos">
+                <div class="resena-estrellas" aria-hidden="true">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                </div>
+                <div>
+                    <strong>{{ academia.google_rating }} en Google</strong>
+                    {% if academia.google_total_resenas %}
+                        <span>Basado en {{ academia.google_total_resenas }} reseña{{ academia.google_total_resenas|pluralize }}</span>
+                    {% else %}
+                        <span>Sé parte de nuestras reseñas</span>
+                    {% endif %}
+                </div>
+            </div>
+            <a href="{{ academia.google_resenas }}" target="_blank" rel="noopener"
+               class="btn-resena" data-iman="0.25">
+                <i class="bi bi-google"></i>
+                <span>Danos tu opinión</span>
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
 <!-- ==================== CTA FINAL ==================== -->
 <section class="cta-franja">
     <div class="container fade-in">

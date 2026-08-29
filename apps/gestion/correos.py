@@ -581,3 +581,41 @@ def enviar_informe_mensual(referencia=None):
         },
         referencia=f'INFORME-{datos["inicio"]:%Y%m}',
     )
+
+
+# ---------------------------------------------------------------------------
+# Pedido de resena en Google
+# ---------------------------------------------------------------------------
+SEMANAS_ANTES_DE_PEDIR = 3
+CLASES_MINIMAS = 3
+
+
+def enviar_pedido_resena(alumno, semanas, clases_asistidas):
+    """Le pide al alumno que cuente su experiencia en Google.
+
+    Se manda UNA sola vez por alumno, y solo a quien ya lleva tiempo y ha
+    venido a varias clases. Pedirle una resena a alguien que se inscribio
+    ayer no tiene sentido: no tiene nada que contar todavia, y Google
+    desaconseja pedir opiniones a quien no ha vivido el servicio.
+    """
+    enlace = settings.ACADEMIA.get('google_resenas', '')
+    if not enlace:
+        return False, 'Falta configurar el enlace de resenas de Google.'
+    if not _configurado():
+        return False, 'SMTP sin configurar.'
+
+    return _enviar(
+        tipo=CorreoEnviado.Tipo.RESENA,
+        destinatarios=[alumno.email],
+        asunto=f'{alumno.primer_nombre}, ¿cómo ha sido tu experiencia? · Área Latina',
+        plantilla='pedir_resena',
+        contexto={
+            'alumno': alumno,
+            'semanas': semanas,
+            'clases_asistidas': clases_asistidas,
+            'enlace_resena': enlace,
+        },
+        alumno=alumno,
+        # Una vez por alumno y nunca mas: insistir molesta y no sirve.
+        referencia=f'RESENA-{alumno.pk}',
+    )

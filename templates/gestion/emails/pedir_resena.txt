@@ -1,0 +1,28 @@
+AREA LATINA ESTUDIO
+Tu opinion nos ayuda
+============================================================
+
+Como lo estas pasando, {{ alumno.primer_nombre }}?
+
+Llevas {{ semanas }} semanas con nosotros y ya has venido a
+{{ clases_asistidas }} clase{{ clases_asistidas|pluralize }}. Nos encantaria
+saber que te ha parecido.
+
+Si te has sentido bien en la sala, contarlo en Google ayuda a que
+otra persona que esta dudando se anime a dar el primer paso. Es la
+forma mas directa que tenemos de que nos encuentren.
+
+ESCRIBE TU RESENA AQUI (toma menos de un minuto):
+{{ enlace_resena }}
+
+Y si hay algo que no te ha gustado, prefiero que me lo digas a mi
+primero: responde este correo y lo conversamos. Para eso estamos.
+
+Gracias por bailar con nosotros.
+
+============================================================
+Recibes este correo una sola vez, porque eres alumno o alumna
+de Area Latina Estudio.
+
+{{ academia.direccion_completa }}
+{{ academia.email }}

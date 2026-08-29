@@ -9,6 +9,7 @@ Horarios:
     08:00  recordatorio de clases a las profesoras
     09:00  alertas de vencimiento + avisos a alumnos + resumen al equipo
            + saludos de cumpleaños + revisión de ausencias
+    10:00  pedido de reseña a los alumnos con más de 3 semanas
     18:00  recordatorio de la clase de mañana a los alumnos
     día 1  informe mensual al dueño
 """
@@ -105,11 +106,71 @@ def job_informe_mensual():
 # ---------------------------------------------------------------------------
 # Registro para el planificador
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# 10:00 — pedir resena a quien ya lleva tiempo y viene seguido
+# ---------------------------------------------------------------------------
+def job_pedir_resenas():
+    """Le pide su opinion a los alumnos que ya conocen la academia.
+
+    Filtra por dos cosas a la vez, y las dos importan:
+      · Antiguedad: al menos tres semanas desde que se inscribio
+      · Asistencia real: al menos tres clases marcadas como presente
+
+    Lo segundo es lo que evita pedirle una resena a alguien que se
+    inscribio y nunca aparecio. Ese correo solo consigue molestar, y en el
+    peor caso una estrella.
+    """
+    from datetime import timedelta
+
+    from django.conf import settings
+
+    from apps.asistencia.models import RegistroAsistencia
+
+    from .models import Alumno, CorreoEnviado
+
+    if not settings.ACADEMIA.get('google_resenas'):
+        return 'sin enlace de Google configurado'
+
+    hoy = timezone.localdate()
+    limite = hoy - timedelta(weeks=correos.SEMANAS_ANTES_DE_PEDIR)
+
+    ya_pedido = set(
+        CorreoEnviado.objects
+        .filter(tipo=CorreoEnviado.Tipo.RESENA, enviado=True)
+        .values_list('alumno_id', flat=True)
+    )
+
+    candidatos = (
+        Alumno.objects
+        .filter(estado=Alumno.Estado.ACTIVO, fecha_ingreso__lte=limite)
+        .exclude(email='')
+        .exclude(pk__in=ya_pedido)
+    )
+
+    enviados = omitidos = 0
+    for alumno in candidatos:
+        asistencias = RegistroAsistencia.objects.filter(
+            alumno=alumno, estado=RegistroAsistencia.Estado.PRESENTE
+        ).count()
+
+        if asistencias < correos.CLASES_MINIMAS:
+            omitidos += 1
+            continue
+
+        semanas = max((hoy - alumno.fecha_ingreso).days // 7, 1)
+        ok, _ = correos.enviar_pedido_resena(alumno, semanas, asistencias)
+        enviados += int(ok)
+        omitidos += int(not ok)
+
+    return f'{enviados} pedidos enviados, {omitidos} omitidos'
+
+
 TRABAJOS = [
     # (id, función, hora, minuto, día del mes)
     ('planes_vencidos', job_marcar_planes_vencidos, 0, 1, None),
     ('recordatorio_profesoras', job_recordatorio_profesoras, 8, 0, None),
     ('alertas_manana', job_manana, 9, 0, None),
     ('recordatorio_clases', job_recordatorio_clases, 18, 0, None),
+    ('pedir_resenas', job_pedir_resenas, 10, 0, None),
     ('informe_mensual', job_informe_mensual, 8, 0, 1),
 ]

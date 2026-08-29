@@ -150,6 +150,32 @@
     </div>
 </section>
 
+<!-- ==================== RESEÑA ==================== -->
+{% if academia.google_resenas %}
+<section class="seccion pt-0">
+    <div class="container">
+        <div class="resena-card fade-in">
+            <div class="resena-estrellas" aria-hidden="true">
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+            </div>
+            <h2>¿Ya eres parte de Área Latina?</h2>
+            <p>
+                Cuéntale a otros cómo ha sido tu experiencia bailando con nosotros.
+                Tu opinión ayuda a que más gente se anime a dar el primer paso.
+            </p>
+            <a href="{{ academia.google_resenas }}" target="_blank" rel="noopener"
+               class="btn-resena btn-resena-lg" data-iman="0.25">
+                <i class="bi bi-google"></i>
+                <span>Escribir una reseña</span>
+            </a>
+            <span class="resena-nota">Se abre en Google · toma menos de un minuto</span>
+        </div>
+    </div>
+</section>
+{% endif %}
+
 <!-- ==================== MAPA ==================== -->
 <section class="seccion bg-seccion pt-0">
     <div class="container">

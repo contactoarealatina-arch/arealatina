@@ -381,4 +381,17 @@ ACADEMIA = {
     'whatsapp': '',
     # Solo digitos con codigo de pais, para los enlaces wa.me
     'whatsapp_numero': env('WHATSAPP_NUMERO', default=''),
+
+    # Enlace corto de resenas de Google Business Profile.
+    # Se saca de business.google.com -> "Pedir resenas", y queda con la
+    # forma https://g.page/r/CODIGO/review
+    # Mientras este vacio, ningun boton de resena aparece en el sitio: es
+    # preferible eso a mandar a la gente a un enlace roto.
+    'google_resenas': env('GOOGLE_REVIEW_LINK', default=''),
+    # Lo que se muestra junto a las estrellas. Se actualiza a mano cada
+    # cierto tiempo: la API de Google para leer el rating requiere
+    # verificacion del negocio y una clave, y no vale la pena por un dato
+    # que cambia una vez al mes.
+    'google_rating': env('GOOGLE_RATING', default='5,0'),
+    'google_total_resenas': env.int('GOOGLE_TOTAL_RESENAS', default=0),
 }
