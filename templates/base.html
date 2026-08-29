@@ -129,8 +129,10 @@
                 </div>
 
                 {% if academia.google_resenas %}
-                    {# Solo aparece si hay enlace configurado: un boton que
-                       lleva a ninguna parte es peor que no tenerlo. #}
+                    {% comment %}
+                        Solo aparece si hay enlace configurado: un botón que
+                        lleva a ninguna parte es peor que no tenerlo.
+                    {% endcomment %}
                     <a href="{{ academia.google_resenas }}" target="_blank"
                        rel="noopener" class="btn-resena btn-resena-sm mt-3">
                         <i class="bi bi-star-fill"></i>
@@ -194,9 +196,11 @@
 </footer>
 
 <!-- ==================== BANNER DE COOKIES ==================== -->
-{# Solo cookies tecnicas: no hay que pedir permiso para esas, pero si
-   informar. Por eso es un aviso con "Entendido" y no un consentimiento
-   con opciones que no existen. #}
+{% comment %}
+    Solo cookies técnicas: no hay que pedir permiso para esas, pero sí
+    informar. Por eso es un aviso con "Entendido" y no un consentimiento
+    con opciones que no existen.
+{% endcomment %}
 <div class="cookies" id="avisoCookies" hidden>
     <div class="cookies-texto">
         <i class="bi bi-shield-check"></i>

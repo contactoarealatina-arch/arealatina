@@ -66,8 +66,10 @@
                     </div>
                 </div>
             {% elif form.errors %}
-                {# El texto viene del formulario: un solo lugar donde cambiarlo,
-                   y siempre el mismo sin importar qué falló. #}
+                {% comment %}
+                    El texto viene del formulario: un solo lugar donde
+                    cambiarlo, y siempre el mismo sin importar qué falló.
+                {% endcomment %}
                 <div class="acceso-aviso peligro">
                     <i class="bi bi-exclamation-circle"></i>
                     <div>

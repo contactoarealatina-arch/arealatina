@@ -6,13 +6,20 @@
 :root {
     --color-bg:          #0D0D0D;
     --color-bg-section:  #1A1A1A;
-    --color-bg-card:     #222222;
+    --color-bg-card:     #2A1B12;
+
+    /* Degradado cálido de sección. Ninguna sección queda en negro plano.
+       Las alternas usan el mismo degradado invertido: se ve la costura
+       entre una sección y la siguiente sin salirse de estos dos colores,
+       que es lo que mantiene legible el ritmo de la página. */
+    --grad-seccion:     linear-gradient(145deg, #1F1108 0%, #2A1508 100%);
+    --grad-seccion-alt: linear-gradient(145deg, #2A1508 0%, #1F1108 100%);
     --color-text:        #FFFFFF;
     --color-text-muted:  #B0B0B0;
     --color-accent:      #FF5722;
     --color-accent-dark: #E64A19;
     --color-accent-lite: #FF8A65;
-    --color-border:      #2A2A2A;
+    --color-border:      #3A2618;
 
     --font-titulo: 'Poppins', system-ui, sans-serif;
     --font-cuerpo: 'Inter', system-ui, sans-serif;
@@ -34,7 +41,8 @@ html {
 }
 
 body {
-    background-color: var(--color-bg);
+    background-color: #1F1108;
+    background-image: var(--grad-seccion);
     color: var(--color-text);
     font-family: var(--font-cuerpo);
     font-size: 1rem;
@@ -75,7 +83,7 @@ p {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--color-bg);
+    background: #150B05;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -93,11 +101,15 @@ p {
 .texto-acento      { color: var(--color-accent) !important; }
 .texto-acento-lite { color: var(--color-accent-lite) !important; }
 .texto-suave       { color: var(--color-text-muted) !important; }
-.bg-seccion        { background-color: var(--color-bg-section); }
-.bg-base           { background-color: var(--color-bg); }
+/* Doble clase a proposito: .seccion se declara mas abajo con la misma
+   especificidad y, al ir despues, ganaba. Asi la alternancia manda. */
+.seccion.bg-seccion { background-image: var(--grad-seccion-alt); }
+.seccion.bg-base    { background-image: var(--grad-seccion); }
+.bg-seccion:not(.seccion) { background-image: var(--grad-seccion-alt); }
 
 .seccion {
     padding: 96px 0;
+    background-image: var(--grad-seccion);
 }
 
 .seccion-titulo {
@@ -193,7 +205,7 @@ p {
    Navbar
    -------------------------------------------------------------------------- */
 .navbar-al {
-    background-color: rgba(13, 13, 13, 0.92);
+    background-color: rgba(21, 11, 5, 0.92);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--color-border);
     padding: 0.75rem 0;
@@ -201,7 +213,7 @@ p {
 }
 
 .navbar-al.scrolled {
-    background-color: rgba(13, 13, 13, 0.98);
+    background-color: rgba(21, 11, 5, 0.98);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
 }
 
@@ -269,7 +281,7 @@ p {
     text-align: center;
     padding: 100px 0 80px;
     overflow: hidden;
-    background-color: var(--color-bg);
+    background-color: #150B05;
 }
 
 .hero::before {
@@ -438,7 +450,7 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
     position: relative;
     padding: calc(var(--navbar-alto) + 72px) 0 72px;
     text-align: center;
-    background-color: var(--color-bg-section);
+    background-image: var(--grad-seccion-alt);
     border-bottom: 1px solid var(--color-border);
     overflow: hidden;
 }
@@ -596,7 +608,7 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
 
 .form-control,
 .form-select {
-    background-color: var(--color-bg);
+    background-color: #1A0F07;
     border: 1px solid var(--color-border);
     border-radius: 10px;
     color: var(--color-text);
@@ -606,7 +618,7 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
 
 .form-control:focus,
 .form-select:focus {
-    background-color: var(--color-bg);
+    background-color: #1A0F07;
     border-color: var(--color-accent);
     box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.18);
     color: var(--color-text);
@@ -681,7 +693,7 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
    Footer
    -------------------------------------------------------------------------- */
 .footer-al {
-    background-color: var(--color-bg-section);
+    background-image: var(--grad-seccion-alt);
     border-top: 1px solid var(--color-border);
     padding: 64px 0 0;
 }
@@ -864,7 +876,7 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
    -------------------------------------------------------------------------- */
 @media (max-width: 991.98px) {
     .navbar-al .navbar-collapse {
-        background-color: var(--color-bg-section);
+        background-image: var(--grad-seccion-alt);
         border: 1px solid var(--color-border);
         border-radius: var(--radio);
         padding: 1rem;
@@ -1471,7 +1483,7 @@ html[data-nivel="bajo"] [data-tilt] {
     justify-content: center;
     padding: calc(var(--navbar-alto) + 40px) 0 60px;
     overflow: hidden;
-    background-color: var(--color-bg);
+    background-color: #150B05;
 }
 
 .acceso::before {
