@@ -4,22 +4,31 @@
    ========================================================================== */
 
 :root {
+    /* Negro de base: hero, navbar y pie. */
     --color-bg:          #0D0D0D;
-    --color-bg-section:  #1A1A1A;
-    --color-bg-card:     #2A1B12;
 
-    /* Degradado cálido de sección. Ninguna sección queda en negro plano.
-       Las alternas usan el mismo degradado invertido: se ve la costura
-       entre una sección y la siguiente sin salirse de estos dos colores,
-       que es lo que mantiene legible el ritmo de la página. */
-    --grad-seccion:     linear-gradient(145deg, #1F1108 0%, #2A1508 100%);
-    --grad-seccion-alt: linear-gradient(145deg, #2A1508 0%, #1F1108 100%);
+    /* Los dos matices que separan una sección de la siguiente. No es
+       decoración: con el mismo negro repetido el ojo no registra que
+       cambió de sección y la página se siente apagada al bajar.
+       El segundo es cálido a propósito, nunca gris frío. */
+    --seccion-1:         #151515;
+    --seccion-2:         #1C1815;
+
+    --color-bg-section:  #1C1815;
+    --color-bg-card:     #221D18;
+    --card-hover:        #2A2118;
+
     --color-text:        #FFFFFF;
     --color-text-muted:  #B0B0B0;
     --color-accent:      #FF5722;
     --color-accent-dark: #E64A19;
     --color-accent-lite: #FF8A65;
-    --color-border:      #3A2618;
+    --color-border:      #2A2A2A;
+
+    /* El naranja como presencia constante, no solo en los botones. */
+    --borde-card:        rgba(255, 87, 34, 0.12);
+    --borde-card-hover:  rgba(255, 87, 34, 0.5);
+    --glow-naranja:      0 0 20px rgba(255, 87, 34, 0.25);
 
     --font-titulo: 'Poppins', system-ui, sans-serif;
     --font-cuerpo: 'Inter', system-ui, sans-serif;
@@ -41,8 +50,7 @@ html {
 }
 
 body {
-    background-color: #1F1108;
-    background-image: var(--grad-seccion);
+    background-color: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-cuerpo);
     font-size: 1rem;
@@ -83,7 +91,7 @@ p {
 }
 
 ::-webkit-scrollbar-track {
-    background: #150B05;
+    background: var(--color-bg);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -101,15 +109,22 @@ p {
 .texto-acento      { color: var(--color-accent) !important; }
 .texto-acento-lite { color: var(--color-accent-lite) !important; }
 .texto-suave       { color: var(--color-text-muted) !important; }
-/* Doble clase a proposito: .seccion se declara mas abajo con la misma
-   especificidad y, al ir despues, ganaba. Asi la alternancia manda. */
-.seccion.bg-seccion { background-image: var(--grad-seccion-alt); }
-.seccion.bg-base    { background-image: var(--grad-seccion); }
-.bg-seccion:not(.seccion) { background-image: var(--grad-seccion-alt); }
+/* La alternancia va por posición, no por una clase escrita a mano.
+   Con la clase manual bastaba que una sección se ocultara (la galería,
+   por ejemplo, que solo aparece si hay fotos) para que dos secciones
+   seguidas quedaran del mismo tono, que es justo lo que se quiere
+   evitar. Por posición nunca se repite. */
+.bg-seccion:not(.seccion) { background-color: var(--seccion-2); }
 
 .seccion {
     padding: 96px 0;
-    background-image: var(--grad-seccion);
+    background-color: var(--seccion-1);
+}
+
+/* El hero y la franja CTA no llevan .seccion, así que conservan su
+   propio fondo y no entran en esta alternancia. */
+.seccion:nth-of-type(even) {
+    background-color: var(--seccion-2);
 }
 
 .seccion-titulo {
@@ -205,7 +220,7 @@ p {
    Navbar
    -------------------------------------------------------------------------- */
 .navbar-al {
-    background-color: rgba(21, 11, 5, 0.92);
+    background-color: rgba(13, 13, 13, 0.92);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--color-border);
     padding: 0.75rem 0;
@@ -213,7 +228,7 @@ p {
 }
 
 .navbar-al.scrolled {
-    background-color: rgba(21, 11, 5, 0.98);
+    background-color: rgba(13, 13, 13, 0.98);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
 }
 
@@ -281,7 +296,7 @@ p {
     text-align: center;
     padding: 100px 0 80px;
     overflow: hidden;
-    background-color: #150B05;
+    background-color: var(--color-bg);
 }
 
 .hero::before {
@@ -376,25 +391,59 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
    -------------------------------------------------------------------------- */
 .card-al {
     background-color: var(--color-bg-card);
-    border: 1px solid var(--color-border);
+    /* Borde naranja tenue desde el principio: el acento se siente en toda
+       la página, no solo al pasar el cursor. */
+    border: 1px solid var(--borde-card);
     border-radius: var(--radio);
     padding: 2rem;
     height: 100%;
-    transition: transform var(--transicion), border-color var(--transicion),
-                box-shadow var(--transicion);
+    transition: transform 0.3s ease, border-color 0.3s ease,
+                background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card-al:hover {
-    border-color: var(--color-accent);
-    transform: scale(1.02);
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+    border-color: var(--borde-card-hover);
+    background-color: var(--card-hover);
+    transform: translateY(-6px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55),
+                0 0 0 1px rgba(255, 87, 34, 0.12);
 }
+
+/* Filo naranja que aparece arriba de la tarjeta al pasar el cursor. */
+.card-al::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-lite));
+    border-radius: var(--radio) var(--radio) 0 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.card-al:hover::before { opacity: 1; }
 
 .card-estilo .emoji {
     font-size: 3rem;
     line-height: 1;
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 84px;
+    height: 84px;
     margin-bottom: 1rem;
+    border-radius: 50%;
+    /* Halo tenue: el emoji deja de flotar suelto sobre el fondo. */
+    background: radial-gradient(circle, rgba(255, 87, 34, 0.16), transparent 70%);
+    box-shadow: var(--glow-naranja);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.card-estilo:hover .emoji {
+    box-shadow: 0 0 30px rgba(255, 87, 34, 0.45);
+    transform: scale(1.06);
 }
 
 .card-estilo h3 {
@@ -426,7 +475,11 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
    CTA
    -------------------------------------------------------------------------- */
 .cta-franja {
-    background: linear-gradient(120deg, var(--color-accent-dark), #C63C14);
+    /* Naranja sólido, el golpe de color antes del pie.
+       Va un punto más oscuro que el #E64A19 de los botones porque con
+       ese, el texto blanco da 3,92:1 y la accesibilidad AA exige 4,5.
+       Este da 4,85:1 y a simple vista es el mismo naranja quemado. */
+    background-color: #CC4114;
     padding: 72px 0;
     text-align: center;
 }
@@ -438,7 +491,7 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
 }
 
 .cta-franja p {
-    color: rgba(255, 255, 255, 0.88);
+    color: #FFFFFF;
     max-width: 560px;
     margin: 0 auto 2rem;
 }
@@ -450,7 +503,7 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
     position: relative;
     padding: calc(var(--navbar-alto) + 72px) 0 72px;
     text-align: center;
-    background-image: var(--grad-seccion-alt);
+    background-color: var(--seccion-2);
     border-bottom: 1px solid var(--color-border);
     overflow: hidden;
 }
@@ -608,7 +661,7 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
 
 .form-control,
 .form-select {
-    background-color: #1A0F07;
+    background-color: #111111;
     border: 1px solid var(--color-border);
     border-radius: 10px;
     color: var(--color-text);
@@ -618,7 +671,7 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
 
 .form-control:focus,
 .form-select:focus {
-    background-color: #1A0F07;
+    background-color: #111111;
     border-color: var(--color-accent);
     box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.18);
     color: var(--color-text);
@@ -693,7 +746,7 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
    Footer
    -------------------------------------------------------------------------- */
 .footer-al {
-    background-image: var(--grad-seccion-alt);
+    background-color: var(--color-bg);
     border-top: 1px solid var(--color-border);
     padding: 64px 0 0;
 }
@@ -876,7 +929,7 @@ html[data-webgl="activo"] .hero::before { opacity: 0.35; }
    -------------------------------------------------------------------------- */
 @media (max-width: 991.98px) {
     .navbar-al .navbar-collapse {
-        background-image: var(--grad-seccion-alt);
+        background-color: var(--seccion-2);
         border: 1px solid var(--color-border);
         border-radius: var(--radio);
         padding: 1rem;
@@ -1483,7 +1536,7 @@ html[data-nivel="bajo"] [data-tilt] {
     justify-content: center;
     padding: calc(var(--navbar-alto) + 40px) 0 60px;
     overflow: hidden;
-    background-color: #150B05;
+    background-color: var(--color-bg);
 }
 
 .acceso::before {
