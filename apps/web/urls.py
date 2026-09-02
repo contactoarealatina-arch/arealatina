@@ -12,7 +12,7 @@ urlpatterns = [
     path('en-escena/', views.en_escena, name='en_escena'),
     path('comunidad/', views.comunidad, name='comunidad'),
     path('nosotros/', views.nosotros, name='nosotros'),
-    path('mi-app/', views.mi_app, name='mi_app'),
+    path('mi-espacio/', views.mi_espacio, name='mi_espacio'),
     path('contacto/', views.contacto, name='contacto'),
 
     # Proteccion de datos personales (Ley 21.719)

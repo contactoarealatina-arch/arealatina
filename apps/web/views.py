@@ -70,8 +70,8 @@ COMO_EMPEZAR = [
     },
     {
         'icono': 'bi-phone',
-        'titulo': 'Reserva en la app',
-        'texto': 'Reserva tus clases y entrena cuando quieras.',
+        'titulo': 'Entra a tu espacio',
+        'texto': 'Tus clases, tu plan y tus pagos desde el celular.',
     },
 ]
 
@@ -122,14 +122,24 @@ VALORES = [
     },
 ]
 
-# Lo que ofrece la app, tal como está en la lámina 07 del brief.
-APP_FUNCIONES = [
-    {'icono': 'bi-calendar3', 'texto': 'Ver horarios'},
-    {'icono': 'bi-clock', 'texto': 'Reservar clases'},
-    {'icono': 'bi-credit-card', 'texto': 'Administrar su plan'},
-    {'icono': 'bi-cash-coin', 'texto': 'Revisar pagos'},
-    {'icono': 'bi-bell', 'texto': 'Recibir novedades'},
-    {'icono': 'bi-gift', 'texto': 'Acceder a beneficios'},
+# Lo que hoy se puede hacer en el portal. La lámina 07 del brief pedía
+# esto para una app móvil que todavía no existe; el portal web ya lo hace,
+# así que se muestra lo que funciona de verdad en vez de una promesa.
+PORTAL_ALUMNO = [
+    {'icono': 'bi-calendar3', 'texto': 'Ver tus clases y horarios'},
+    {'icono': 'bi-check2-square', 'texto': 'Confirmar tu asistencia'},
+    {'icono': 'bi-credit-card', 'texto': 'Revisar tu plan y cuánto te queda'},
+    {'icono': 'bi-cash-coin', 'texto': 'Ver el historial de tus pagos'},
+    {'icono': 'bi-arrow-repeat', 'texto': 'Pedir la renovación de tu plan'},
+    {'icono': 'bi-person-gear', 'texto': 'Cambiar tus datos y tu contraseña'},
+]
+
+PORTAL_PROFESOR = [
+    {'icono': 'bi-calendar-week', 'texto': 'Ver tus clases del día'},
+    {'icono': 'bi-clipboard-check', 'texto': 'Pasar lista desde el celular'},
+    {'icono': 'bi-people', 'texto': 'Revisar quién está inscrito'},
+    {'icono': 'bi-clock-history', 'texto': 'Consultar el historial de asistencia'},
+    {'icono': 'bi-file-earmark-spreadsheet', 'texto': 'Exportar el historial a Excel'},
 ]
 
 PREGUNTAS = [
@@ -304,9 +314,9 @@ OG = {
     'nosotros': ('Nosotros · Área Latina Estudio',
                  'Un ecosistema de movimiento, bienestar, formación y comunidad '
                  'en Puerto Montt. Conoce la historia, el equipo y la visión.'),
-    'mi-app': ('Mi App · Área Latina Estudio',
-               'La web explica, la app acompaña. Reserva clases, administra tu '
-               'plan y revisa tus pagos desde el celular.'),
+    'mi-espacio': ('Mi espacio · Área Latina Estudio',
+                   'Si ya eres alumno o profesor de Área Latina, entra a tu '
+                   'espacio: tus clases, tu plan y tus pagos en un solo lugar.'),
     'contacto': ('Contacto · Área Latina Estudio',
                  'Guillermo Gallardo 310, Puerto Montt. Escríbenos y coordinamos '
                  'tu primera clase.'),
@@ -454,9 +464,16 @@ def nosotros(request):
     }))
 
 
-def mi_app(request):
-    return render(request, 'web/mi_app.html', _con_og('mi-app', {
-        'funciones': APP_FUNCIONES,
+def mi_espacio(request):
+    """Qué hay detrás del login, antes de entrar.
+
+    No es una página de "próximamente": todo lo que se lista acá ya
+    funciona. La app móvil se menciona en una línea y sin prometer
+    funciones, porque todavía no existe.
+    """
+    return render(request, 'web/mi_espacio.html', _con_og('mi-espacio', {
+        'alumno': PORTAL_ALUMNO,
+        'profesor': PORTAL_PROFESOR,
     }))
 
 

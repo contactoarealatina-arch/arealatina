@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Mi espacio | Área Latina Estudio{% endblock %}
+{% block descripcion %}Si ya eres alumno o profesor de Área Latina Estudio, entra a tu espacio: tus clases, tu plan y tus pagos en un solo lugar.{% endblock %}
+
+{% block contenido %}
+
+<header class="page-header">
+    <div class="container">
+        <span class="etiqueta">Mi espacio</span>
+        <h1>Tus clases, tu plan y tus pagos en un solo lugar</h1>
+        <p>
+            Si ya eres parte de Área Latina, tienes una cuenta esperándote. Entra
+            con las credenciales que te dio la academia y revisa todo desde el
+            celular, sin preguntar nada por WhatsApp.
+        </p>
+
+        <div class="d-flex flex-wrap gap-3 mt-4 justify-content-center">
+            {% if user.is_authenticated %}
+                <a href="{% if user.puede_gestionar %}{% url 'gestion:dashboard' %}{% else %}{% url 'gestion:asistencia' %}{% endif %}"
+                   class="btn btn-acento btn-lg" data-iman="0.3">
+                    Ir a mi panel
+                </a>
+            {% else %}
+                <a href="{% url 'usuarios:login' %}" class="btn btn-acento btn-lg" data-iman="0.3">
+                    Iniciar sesión
+                </a>
+            {% endif %}
+            <a href="{% url 'web:contacto' %}" class="btn btn-acento-outline btn-lg" data-iman="0.3">
+                Todavía no soy parte
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- ==================== SI ERES ALUMNO ==================== -->
+<section class="seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Si eres alumno o alumna</span>
+            <h2 class="seccion-titulo">Qué puedes hacer desde tu cuenta</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            {% for funcion in alumno %}
+            <div class="col-sm-6 col-lg-4 fade-in" data-retraso="{{ forloop.counter0 }}00">
+                <div class="funcion-fila">
+                    <span class="funcion-icono"><i class="bi {{ funcion.icono }}"></i></span>
+                    <span>{{ funcion.texto }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== SI ERES PROFESOR ==================== -->
+<section class="seccion bg-seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Si eres profesor o profesora</span>
+            <h2 class="seccion-titulo">Tu sala, desde el celular</h2>
+            <div class="linea-acento"></div>
+            <p class="seccion-bajada">
+                Pasar lista deja de ser un cuaderno. Cada clase queda registrada
+                al instante y el historial se puede exportar cuando haga falta.
+            </p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            {% for funcion in profesor %}
+            <div class="col-sm-6 col-lg-4 fade-in" data-retraso="{{ forloop.counter0 }}00">
+                <div class="funcion-fila">
+                    <span class="funcion-icono"><i class="bi {{ funcion.icono }}"></i></span>
+                    <span>{{ funcion.texto }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== COMO SE ENTRA ==================== -->
+<section class="seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Cómo se entra</span>
+            <h2 class="seccion-titulo">No hay que registrarse</h2>
+            <div class="linea-acento"></div>
+            <p class="seccion-bajada">
+                La cuenta la crea la academia cuando te inscribes. Nadie se
+                registra solo: así nos aseguramos de que cada cuenta corresponde
+                a una persona real del estudio.
+            </p>
+        </div>
+
+        <div class="pasos">
+            <div class="paso fade-in">
+                <span class="paso-numero">1</span>
+                <span class="paso-icono"><i class="bi bi-person-plus"></i></span>
+                <h3 class="h6">Te inscribes</h3>
+                <p>Vienes al estudio o nos escribes, y quedas inscrito en tu clase.</p>
+            </div>
+            <div class="paso fade-in" data-retraso="100">
+                <span class="paso-numero">2</span>
+                <span class="paso-icono"><i class="bi bi-envelope-check"></i></span>
+                <h3 class="h6">Te llega un correo</h3>
+                <p>Con tu usuario y un enlace para que elijas tu propia contraseña.</p>
+            </div>
+            <div class="paso fade-in" data-retraso="200">
+                <span class="paso-numero">3</span>
+                <span class="paso-icono"><i class="bi bi-box-arrow-in-right"></i></span>
+                <h3 class="h6">Entras</h3>
+                <p>Desde el botón "Entrar" del menú, en cualquier dispositivo.</p>
+            </div>
+            <div class="paso fade-in" data-retraso="300">
+                <span class="paso-numero">4</span>
+                <span class="paso-icono"><i class="bi bi-shield-check"></i></span>
+                <h3 class="h6">Listo</h3>
+                <p>Tu espacio queda disponible mientras seas parte del estudio.</p>
+            </div>
+        </div>
+
+        <div class="nota-suelta fade-in">
+            <i class="bi bi-key"></i>
+            <div>
+                <strong>¿Olvidaste tu contraseña o nunca te llegó el correo?</strong>
+                Escríbenos y te la reiniciamos el mismo día.
+            </div>
+            <a href="{% url 'web:contacto' %}" class="btn btn-acento-outline btn-sm">
+                Escribirnos
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== LA APP MOVIL ==================== -->
+{% comment %}
+    Una línea, sin lista de funciones ni fecha. La app no existe todavía y
+    prometer pantallas que nadie puede abrir envejece mal.
+{% endcomment %}
+<section class="seccion seccion-compacta bg-seccion">
+    <div class="container">
+        <div class="redes-franja fade-in">
+            <div>
+                <h2 class="h5 mb-1">
+                    <i class="bi bi-phone texto-acento me-2"></i>Más adelante, una app
+                </h2>
+                <p class="mb-0 texto-suave">
+                    Estamos trabajando en llevar esto mismo a una aplicación para
+                    celular. Mientras tanto, el portal funciona igual desde el
+                    navegador del teléfono.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-franja">
+    <div class="container fade-in">
+        <h2>¿Todavía no eres parte?</h2>
+        <p>Inscríbete y tu cuenta queda creada el mismo día.</p>
+        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg" data-iman="0.3">
+            Únete ahora
+        </a>
+    </div>
+</section>
+
+{% endblock %}

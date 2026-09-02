@@ -28,7 +28,7 @@ class PaginasSitemap(Sitemap):
         ('web:comunidad', 0.7),
         ('web:nosotros', 0.6),
         ('web:contacto', 0.6),
-        ('web:mi_app', 0.5),
+        ('web:mi_espacio', 0.5),
         ('web:privacidad', 0.2),
         ('web:mis_derechos', 0.2),
     ]

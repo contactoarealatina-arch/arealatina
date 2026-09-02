@@ -281,36 +281,53 @@
 </section>
 {% endif %}
 
-<!-- ==================== LA APP ==================== -->
+<!-- ==================== MI ESPACIO ==================== -->
+{% comment %}
+    Antes acá iba la app, que todavía no existe. El portal sí existe y
+    estaba escondido detrás del icono "Entrar" del menú: esta sección es
+    la que lo pone a la vista.
+{% endcomment %}
 <section class="seccion">
     <div class="container">
         <div class="row g-5 align-items-center">
             <div class="col-lg-6 fade-in">
-                <span class="etiqueta">Mi App</span>
-                <h2 class="seccion-titulo text-start">La web explica. La app acompaña.</h2>
+                <span class="etiqueta">Mi espacio</span>
+                <h2 class="seccion-titulo text-start">¿Ya eres parte? Entra a tu espacio</h2>
                 <div class="linea-acento inicio"></div>
                 <p>
-                    Acá descubres, comparas y te inscribes. Una vez dentro, la app se
-                    hace cargo del día a día: tus reservas, tu plan y tus pagos en el
-                    mismo lugar.
+                    Acá descubres, comparas y te inscribes. Una vez dentro, tu
+                    cuenta se hace cargo del día a día: tus clases, tu plan y tus
+                    pagos en un solo lugar, desde el celular.
                 </p>
-                <a href="{% url 'web:mi_app' %}" class="btn btn-acento-outline" data-iman="0.25">
-                    Conoce Mi App <i class="bi bi-arrow-right ms-1"></i>
-                </a>
+
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    {% if user.is_authenticated %}
+                        <a href="{% if user.puede_gestionar %}{% url 'gestion:dashboard' %}{% else %}{% url 'gestion:asistencia' %}{% endif %}"
+                           class="btn btn-acento" data-iman="0.25">
+                            Ir a mi panel
+                        </a>
+                    {% else %}
+                        <a href="{% url 'usuarios:login' %}" class="btn btn-acento" data-iman="0.25">
+                            Iniciar sesión
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'web:mi_espacio' %}" class="btn btn-acento-outline">
+                        Ver qué incluye <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
             </div>
 
             <div class="col-lg-6 fade-in">
                 <div class="canales">
                     <div class="canal">
-                        <i class="bi bi-globe2"></i>
-                        <strong>Web</strong>
-                        <span>Descubrir, comparar, inscribirse</span>
+                        <i class="bi bi-person-arms-up"></i>
+                        <strong>Alumnos</strong>
+                        <span>Tus clases, tu plan y tus pagos</span>
                     </div>
-                    <div class="canal-flecha"><i class="bi bi-arrow-right"></i></div>
                     <div class="canal">
-                        <i class="bi bi-phone"></i>
-                        <strong>App</strong>
-                        <span>Reservar, pagar, gestionar, asistir</span>
+                        <i class="bi bi-clipboard-check"></i>
+                        <strong>Profesores</strong>
+                        <span>Tus clases y pasar lista</span>
                     </div>
                 </div>
             </div>
