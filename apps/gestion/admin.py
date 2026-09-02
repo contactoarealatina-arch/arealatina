@@ -5,6 +5,7 @@ from .models import (
     Alumno,
     AuditLog,
     BrechaSeguridad,
+    Categoria,
     RespaldoLog,
     SolicitudARCO,
     Clase,
@@ -12,9 +13,11 @@ from .models import (
     CorreoEnviado,
     Inscripcion,
     NotaInterna,
+    Evento,
     Pago,
     Plan,
     Suscripcion,
+    Testimonio,
 )
 
 
@@ -45,14 +48,15 @@ class NotaInternaInline(admin.TabularInline):
 
 @admin.register(Clase)
 class ClaseAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'nivel', 'dias_display', 'horario', 'sala',
-                    'profesora', 'inscritos', 'cupo_maximo', 'activa')
-    list_filter = ('nombre', 'nivel', 'activa', 'sala')
+    list_display = ('nombre', 'categoria', 'nivel', 'dias_display', 'horario',
+                    'sala', 'profesora', 'inscritos', 'cupo_maximo', 'activa')
+    list_filter = ('categoria', 'nombre', 'nivel', 'activa', 'sala')
     search_fields = ('nombre', 'descripcion', 'sala')
     list_editable = ('activa',)
     autocomplete_fields = ('profesora',)
     fieldsets = (
-        ('Identificación', {'fields': ('nombre', 'nivel', 'descripcion', 'activa')}),
+        ('Identificación', {'fields': ('nombre', 'categoria', 'nivel',
+                                       'descripcion', 'edad_minima', 'activa')}),
         ('Horario', {'fields': ('dias_semana', 'hora_inicio', 'hora_fin', 'sala')}),
         ('Capacidad y equipo', {'fields': ('cupo_maximo', 'precio_clase_suelta', 'profesora')}),
     )
@@ -264,3 +268,38 @@ class RespaldoLogAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+@admin.register(Categoria)
+class CategoriaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'slug', 'icono', 'orden', 'cuantas_clases', 'activa')
+    list_editable = ('orden', 'activa')
+    prepopulated_fields = {'slug': ('nombre',)}
+    search_fields = ('nombre', 'bajada', 'descripcion')
+
+    @admin.display(description='Clases activas')
+    def cuantas_clases(self, obj):
+        return obj.clases_activas.count()
+
+
+@admin.register(Evento)
+class EventoAdmin(admin.ModelAdmin):
+    list_display = ('titulo', 'tipo', 'fecha', 'lugar', 'destacado', 'publicado')
+    list_filter = ('tipo', 'publicado', 'destacado', 'fecha')
+    list_editable = ('destacado', 'publicado')
+    prepopulated_fields = {'slug': ('titulo',)}
+    search_fields = ('titulo', 'resumen', 'descripcion', 'lugar')
+    date_hierarchy = 'fecha'
+    fieldsets = (
+        ('Qué es', {'fields': ('titulo', 'slug', 'tipo', 'resumen', 'descripcion')}),
+        ('Cuándo y dónde', {'fields': ('fecha', 'hora', 'lugar')}),
+        ('Publicación', {'fields': ('imagen', 'enlace', 'destacado', 'publicado')}),
+    )
+
+
+@admin.register(Testimonio)
+class TestimonioAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'detalle', 'orden', 'publicado')
+    list_editable = ('orden', 'publicado')
+    list_filter = ('publicado',)
+    search_fields = ('nombre', 'detalle', 'texto')

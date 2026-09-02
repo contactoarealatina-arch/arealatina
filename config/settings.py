@@ -32,6 +32,8 @@ DJANGO_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.contrib.sitemaps',
+    'django.contrib.sites',
 ]
 
 THIRD_PARTY_APPS = [
@@ -70,6 +72,10 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+# Requerido por django.contrib.sites, que usa el mapa del sitio para
+# construir las URL absolutas.
+SITE_ID = 1
+
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
@@ -85,6 +91,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
                 'apps.web.context_processors.academia',
+                'apps.web.context_processors.areas',
                 'apps.gestion.context_processors.panel',
             ],
         },

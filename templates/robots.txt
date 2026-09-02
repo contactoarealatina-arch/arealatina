@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# El panel y los portales no tienen nada que indexar y ademas son
+# privados: mantenerlos fuera del buscador reduce la superficie expuesta.
+Disallow: /admin/
+Disallow: /gestion/
+Disallow: /portal/
+Disallow: /profesoras/
+Disallow: /asistencia/
+Disallow: /cuentas/
+
+Sitemap: https://arealatinaestudio.cl/sitemap.xml

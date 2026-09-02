@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Comunidad | Área Latina Estudio{% endblock %}
+{% block descripcion %}Talleres, juntas y experiencias especiales de Área Latina Estudio. Conecta, comparte y crece junto a otros en Puerto Montt.{% endblock %}
+
+{% block contenido %}
+
+<header class="page-header">
+    <div class="container">
+        <span class="etiqueta">Comunidad</span>
+        <h1>Conecta, comparte y crece junto a otros</h1>
+        <p>
+            Lo que pasa fuera de la clase también es parte del estudio: talleres con
+            invitados, juntas para practicar y las conversaciones que quedan después
+            de que se apaga la música.
+        </p>
+    </div>
+</header>
+
+<!-- ==================== LO QUE NOS MUEVE ==================== -->
+<section class="seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Lo que nos mueve</span>
+            <h2 class="seccion-titulo">Una sala que es de todos</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="row g-4 text-center">
+            {% for valor in valores %}
+            <div class="col-md-4 fade-in">
+                <div class="beneficio-icono">
+                    <i class="bi {{ valor.icono }}"></i>
+                </div>
+                <h3 class="h5 mb-3">{{ valor.titulo }}</h3>
+                <p>{{ valor.texto }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== PROXIMAS ACTIVIDADES ==================== -->
+<section class="seccion bg-seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Agenda</span>
+            <h2 class="seccion-titulo">Próximas actividades</h2>
+            <div class="linea-acento"></div>
+            <p class="seccion-bajada">
+                Talleres, juntas y experiencias especiales. Casi todas son abiertas:
+                no hace falta ser alumno para venir.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            {% for evento in proximos %}
+            <div class="col-md-6 col-lg-4 fade-in">
+                {% include 'web/_card_evento.html' with evento=evento %}
+            </div>
+            {% empty %}
+            <div class="col-lg-8 mx-auto">
+                <div class="vacio">
+                    <i class="bi bi-calendar-heart"></i>
+                    <h3 class="h5">No hay actividades agendadas por ahora</h3>
+                    <p>
+                        Publicamos los talleres y las juntas apenas se confirman.
+                        Síguenos en redes o escríbenos para que te avisemos.
+                    </p>
+                    <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <a href="{% url 'web:contacto' %}" class="btn btn-acento">Quiero que me avisen</a>
+                        {% if academia.instagram %}
+                            <a href="{{ academia.instagram }}" target="_blank" rel="noopener"
+                               class="btn btn-acento-outline">
+                                <i class="bi bi-instagram me-1"></i>Instagram
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== TESTIMONIOS ==================== -->
+{% if testimonios %}
+<section class="seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Testimonios</span>
+            <h2 class="seccion-titulo">Lo que dice la comunidad</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="row g-4">
+            {% for testimonio in testimonios %}
+            <div class="col-md-6 col-lg-4 fade-in">
+                <blockquote class="card-al card-testimonio" data-tilt="7">
+                    <i class="bi bi-quote comilla"></i>
+                    <p>{{ testimonio.texto }}</p>
+                    <footer>
+                        <div class="testimonio-avatar">
+                            {% if testimonio.foto %}
+                                <img src="{{ testimonio.foto.url }}" alt="{{ testimonio.nombre }}">
+                            {% else %}
+                                <i class="bi bi-person-fill"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <cite>{{ testimonio.nombre }}</cite>
+                            <span class="testimonio-detalle">{{ testimonio.detalle }}</span>
+                        </div>
+                    </footer>
+                </blockquote>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ==================== LO QUE YA PASO ==================== -->
+{% if pasados %}
+<section class="seccion bg-seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Historial</span>
+            <h2 class="seccion-titulo">Lo que ya vivimos</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="row g-4">
+            {% for evento in pasados %}
+            <div class="col-md-6 col-lg-4 fade-in">
+                {% include 'web/_card_evento.html' with evento=evento pasado=True %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ==================== REDES ==================== -->
+<section class="seccion seccion-compacta">
+    <div class="container">
+        <div class="redes-franja fade-in">
+            <div>
+                <h2 class="h4 mb-1">El día a día está en Instagram</h2>
+                <p class="mb-0 texto-suave">
+                    Ahí publicamos clases, avances y las fechas apenas se confirman.
+                </p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                {% if academia.instagram %}
+                    <a href="{{ academia.instagram }}" target="_blank" rel="noopener"
+                       class="btn btn-acento" data-iman="0.25">
+                        <i class="bi bi-instagram me-1"></i>Seguirnos
+                    </a>
+                {% endif %}
+                {% if academia.facebook %}
+                    <a href="{{ academia.facebook }}" target="_blank" rel="noopener"
+                       class="btn btn-acento-outline">
+                        <i class="bi bi-facebook me-1"></i>Facebook
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-franja">
+    <div class="container fade-in">
+        <h2>La comunidad se arma bailando</h2>
+        <p>Ven a una clase y quédate a la junta de después.</p>
+        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg" data-iman="0.3">
+            Únete ahora
+        </a>
+    </div>
+</section>
+
+{% endblock %}

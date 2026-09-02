@@ -277,8 +277,9 @@ class ClaseForm(MixinWidgets, forms.ModelForm):
     class Meta:
         model = Clase
         fields = [
-            'nombre', 'descripcion', 'nivel', 'hora_inicio', 'hora_fin',
-            'sala', 'cupo_maximo', 'precio_clase_suelta', 'profesora', 'activa',
+            'nombre', 'categoria', 'descripcion', 'nivel', 'edad_minima',
+            'hora_inicio', 'hora_fin', 'sala', 'cupo_maximo',
+            'precio_clase_suelta', 'profesora', 'activa',
         ]
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 3}),
@@ -292,6 +293,10 @@ class ClaseForm(MixinWidgets, forms.ModelForm):
         self.fields['profesora'].required = False
         self.fields['descripcion'].required = False
         self.fields['precio_clase_suelta'].required = False
+        # El area decide en que pagina del sitio sale la clase. Sin ella la
+        # clase existe pero no aparece agrupada en /clases/.
+        self.fields['categoria'].required = False
+        self.fields['edad_minima'].required = False
         if self.instance.pk:
             self.fields['dias'].initial = self.instance.dias_lista
         self.estilizar()

@@ -25,6 +25,52 @@ class DiaSemana(models.TextChoices):
     DO = 'DO', 'Domingo'
 
 
+class Categoria(TimeStampedModel):
+    """Área del estudio: Danza, Wellness, Kids & Teens, En Escena, Compañías.
+
+    Es la que decide en qué página del sitio aparece cada clase. Una sola
+    tabla alimenta /clases/ y /wellness/: si mañana el estudio abre un área
+    nueva, se crea acá y la página existe sin tocar código.
+    """
+
+    nombre = models.CharField('Nombre', max_length=50, unique=True)
+    slug = models.SlugField('Slug', max_length=60, unique=True)
+    bajada = models.CharField(
+        'Bajada',
+        max_length=140,
+        blank=True,
+        help_text='Una línea que resuma el área. Sale en la tarjeta del inicio.',
+    )
+    descripcion = models.TextField('Descripción', blank=True)
+    icono = models.CharField(
+        'Ícono',
+        max_length=40,
+        default='bi-stars',
+        help_text='Nombre de un ícono de Bootstrap Icons. Ej: bi-music-note-beamed',
+    )
+    imagen = models.ImageField(
+        'Imagen',
+        upload_to='categorias/',
+        blank=True,
+        null=True,
+        validators=[validar_foto],
+    )
+    orden = models.PositiveSmallIntegerField('Orden', default=0)
+    activa = models.BooleanField('Activa', default=True)
+
+    class Meta:
+        verbose_name = 'Categoría'
+        verbose_name_plural = 'Categorías'
+        ordering = ['orden', 'nombre']
+
+    def __str__(self):
+        return self.nombre
+
+    @property
+    def clases_activas(self):
+        return self.clases.filter(activa=True)
+
+
 class Clase(TimeStampedModel):
     """Una clase regular del estudio, con su horario y profesora a cargo."""
 
@@ -33,8 +79,14 @@ class Clase(TimeStampedModel):
         BACHATA = 'BACHATA', 'Bachata'
         REGGAETON = 'REGGAETON', 'Reggaetón'
         URBANO = 'URBANO', 'Urbano'
+        HEELS = 'HEELS', 'Heels'
         TANGO = 'TANGO', 'Tango'
         KIDS = 'KIDS', 'Kids Dance'
+        # Wellness: el cuerpo también se entrena fuera del baile.
+        PILATES = 'PILATES', 'Pilates Mat'
+        BARRE = 'BARRE', 'Barre'
+        FLEXIBILIDAD = 'FLEXIBILIDAD', 'Flexibilidad'
+        REFORMER = 'REFORMER', 'Reformer'
 
     class Nivel(models.TextChoices):
         TODOS = 'TODOS', 'Todos los niveles'
@@ -47,11 +99,31 @@ class Clase(TimeStampedModel):
         'BACHATA': '\U0001F339',
         'REGGAETON': '\U0001F525',
         'URBANO': '\U0001F3A4',
+        'HEELS': '\U0001F460',
         'TANGO': '\U0001F3B6',
         'KIDS': '\U0001F476',
+        'PILATES': '\U0001F9D8',
+        'BARRE': '\U0001FA70',
+        'FLEXIBILIDAD': '\U0001F938',
+        'REFORMER': '\U0001F4AA',
     }
 
-    nombre = models.CharField('Estilo', max_length=15, choices=Estilo.choices)
+    nombre = models.CharField('Disciplina', max_length=15, choices=Estilo.choices)
+    categoria = models.ForeignKey(
+        'Categoria',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='clases',
+        verbose_name='Área',
+        help_text='Decide en qué página del sitio aparece esta clase.',
+    )
+    edad_minima = models.PositiveSmallIntegerField(
+        'Edad mínima',
+        null=True,
+        blank=True,
+        help_text='Opcional. Para filtrar por edad en el buscador de horarios.',
+    )
     descripcion = models.TextField('Descripción', blank=True)
     nivel = models.CharField(
         'Nivel',
@@ -117,10 +189,17 @@ class Clase(TimeStampedModel):
             return nombres[0]
         return ', '.join(nombres[:-1]) + ' y ' + nombres[-1]
 
+    # Martes y miercoles empiezan igual: con una sola letra la tabla del
+    # sitio decia 'M' para los dos y no se entendia cual era.
+    ABREVIATURAS = {
+        'LU': 'Lu', 'MA': 'Ma', 'MI': 'Mi', 'JU': 'Ju',
+        'VI': 'Vi', 'SA': 'Sa', 'DO': 'Do',
+    }
+
     @property
     def dias_corto(self):
-        """'L · M · V' para las tarjetas compactas."""
-        return ' · '.join(c[0] for c in self.dias_lista)
+        """'Lu · Mi · Vi' para las tarjetas y tablas compactas."""
+        return ' · '.join(self.ABREVIATURAS[c] for c in self.dias_lista)
 
     # ------------------------------------------------------------------
     # Horario y cupo
@@ -155,15 +234,31 @@ class Plan(TimeStampedModel):
     precio_clp = models.PositiveIntegerField('Precio (CLP)')
     duracion_dias = models.PositiveSmallIntegerField('Duración (días)', default=30)
     descripcion = models.TextField('Descripción', blank=True)
+    beneficios = models.TextField(
+        'Beneficios',
+        blank=True,
+        help_text='Uno por línea. Salen como lista con check en el comparador.',
+    )
+    icono = models.CharField('Ícono', max_length=40, default='bi-person')
+    destacado = models.BooleanField(
+        'Destacado',
+        default=False,
+        help_text='Se marca como “el más elegido” en el comparador del sitio.',
+    )
+    orden = models.PositiveSmallIntegerField('Orden', default=0)
     activo = models.BooleanField('Activo', default=True)
 
     class Meta:
         verbose_name = 'Plan'
         verbose_name_plural = 'Planes'
-        ordering = ['precio_clp']
+        ordering = ['orden', 'precio_clp']
 
     def __str__(self):
         return f'{self.nombre} · ${self.precio_clp:,.0f}'.replace(',', '.')
+
+    @property
+    def beneficios_lista(self):
+        return [b.strip() for b in self.beneficios.splitlines() if b.strip()]
 
     @property
     def suscripciones_vigentes(self):
@@ -1099,3 +1194,90 @@ class RespaldoLog(models.Model):
                 return f'{tam:.1f} {unidad}'
             tam /= 1024
         return f'{tam:.1f} TB'
+
+
+class Evento(TimeStampedModel):
+    """Muestra, taller, competencia o junta del estudio.
+
+    Alimenta /en-escena/ (lo formativo que termina en escenario) y
+    /comunidad/ (lo social). El tipo decide en cuál de las dos aparece.
+    """
+
+    class Tipo(models.TextChoices):
+        MUESTRA = 'MUESTRA', 'Muestra'
+        TALLER = 'TALLER', 'Taller'
+        COMPETENCIA = 'COMPETENCIA', 'Competencia'
+        SOCIAL = 'SOCIAL', 'Social o junta'
+        OTRO = 'OTRO', 'Otro'
+
+    # Los que hablan de escenario van en /en-escena/; el resto en /comunidad/.
+    TIPOS_ESCENA = ('MUESTRA', 'COMPETENCIA')
+
+    titulo = models.CharField('Título', max_length=120)
+    slug = models.SlugField('Slug', max_length=140, unique=True)
+    tipo = models.CharField('Tipo', max_length=12, choices=Tipo.choices, default=Tipo.MUESTRA)
+    resumen = models.CharField('Resumen', max_length=200, blank=True)
+    descripcion = models.TextField('Descripción', blank=True)
+    fecha = models.DateField('Fecha')
+    hora = models.TimeField('Hora', null=True, blank=True)
+    lugar = models.CharField('Lugar', max_length=120, blank=True)
+    imagen = models.ImageField(
+        'Imagen',
+        upload_to='eventos/',
+        blank=True,
+        null=True,
+        validators=[validar_foto],
+    )
+    enlace = models.URLField('Enlace de inscripción', blank=True)
+    destacado = models.BooleanField('Destacado', default=False)
+    publicado = models.BooleanField('Publicado', default=True)
+
+    class Meta:
+        verbose_name = 'Evento'
+        verbose_name_plural = 'Eventos'
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f'{self.titulo} ({self.fecha:%d-%m-%Y})'
+
+    @property
+    def es_futuro(self):
+        return self.fecha >= timezone.localdate()
+
+    @property
+    def de_escena(self):
+        return self.tipo in self.TIPOS_ESCENA
+
+
+class Testimonio(TimeStampedModel):
+    """Opinión real de un alumno o apoderado.
+
+    Se administra desde el panel para no tener textos inventados dentro
+    del código: si no hay testimonios cargados, la sección no se muestra.
+    """
+
+    nombre = models.CharField('Nombre', max_length=80)
+    detalle = models.CharField(
+        'Detalle',
+        max_length=80,
+        blank=True,
+        help_text='Ej: Alumna de Bachata, Apoderado Kids & Teens.',
+    )
+    texto = models.TextField('Testimonio')
+    foto = models.ImageField(
+        'Foto',
+        upload_to='testimonios/',
+        blank=True,
+        null=True,
+        validators=[validar_foto],
+    )
+    orden = models.PositiveSmallIntegerField('Orden', default=0)
+    publicado = models.BooleanField('Publicado', default=True)
+
+    class Meta:
+        verbose_name = 'Testimonio'
+        verbose_name_plural = 'Testimonios'
+        ordering = ['orden', '-created_at']
+
+    def __str__(self):
+        return f'{self.nombre} — {self.detalle}' if self.detalle else self.nombre

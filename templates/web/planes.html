@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+{% load formato %}
+
+{% block titulo %}Horarios y planes | Área Latina Estudio{% endblock %}
+{% block descripcion %}Busca tu clase por día, disciplina, nivel, edad y horario. Compara los planes de Área Latina Estudio en Puerto Montt.{% endblock %}
+
+{% block contenido %}
+
+<header class="page-header">
+    <div class="container text-center">
+        <span class="etiqueta">Horarios y planes</span>
+        <h1 class="seccion-titulo">Compara, elige y reserva</h1>
+        <div class="linea-acento"></div>
+        <p class="seccion-bajada">
+            Acá está todo lo que necesitas para decidir: qué clases hay, a qué
+            hora y cuánto cuesta. Sin tener que preguntarlo por WhatsApp.
+        </p>
+    </div>
+</header>
+
+<!-- ==================== BUSCADOR DE HORARIOS ==================== -->
+<section id="horarios" class="seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Horarios</span>
+            <h2 class="seccion-titulo">Encuentra tu próxima clase</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        {% comment %}
+            Buscador por GET y no por JavaScript: así funciona en cualquier
+            equipo, el resultado se puede compartir por enlace y Google
+            puede indexar cada combinación. El envío automático al cambiar
+            un filtro es un agregado, no un requisito.
+        {% endcomment %}
+        <form method="get" action="{% url 'web:planes' %}#horarios"
+              class="buscador fade-in" id="buscadorClases">
+            <div class="buscador-campo">
+                <label for="f-dia">Día</label>
+                <select name="dia" id="f-dia" class="form-select">
+                    <option value="">Todos</option>
+                    {% for codigo, nombre in opciones.dias %}
+                        <option value="{{ codigo }}" {% if filtros.dia == codigo %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="buscador-campo">
+                <label for="f-disciplina">Disciplina</label>
+                <select name="disciplina" id="f-disciplina" class="form-select">
+                    <option value="">Todas</option>
+                    {% for codigo, nombre in opciones.disciplinas %}
+                        <option value="{{ codigo }}" {% if filtros.disciplina == codigo %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="buscador-campo">
+                <label for="f-nivel">Nivel</label>
+                <select name="nivel" id="f-nivel" class="form-select">
+                    <option value="">Todos</option>
+                    {% for codigo, nombre in opciones.niveles %}
+                        <option value="{{ codigo }}" {% if filtros.nivel == codigo %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="buscador-campo">
+                <label for="f-edad">Edad</label>
+                <select name="edad" id="f-edad" class="form-select">
+                    <option value="">Todas</option>
+                    {% for codigo, nombre in opciones.edades %}
+                        <option value="{{ codigo }}" {% if filtros.edad == codigo %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="buscador-campo">
+                <label for="f-horario">Horario</label>
+                <select name="horario" id="f-horario" class="form-select">
+                    <option value="">Todos</option>
+                    {% for codigo, nombre in opciones.tramos %}
+                        <option value="{{ codigo }}" {% if filtros.horario == codigo %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="buscador-campo">
+                <label for="f-area">Área</label>
+                <select name="area" id="f-area" class="form-select">
+                    <option value="">Todas</option>
+                    {% for area in opciones.areas %}
+                        <option value="{{ area.slug }}" {% if filtros.area == area.slug %}selected{% endif %}>{{ area.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="buscador-acciones">
+                <button type="submit" class="btn btn-acento">
+                    <i class="bi bi-search me-1"></i>Buscar
+                </button>
+                {% if filtros.hay_filtro %}
+                    <a href="{% url 'web:planes' %}#horarios" class="btn btn-acento-outline">
+                        Limpiar
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+
+        <!-- Resultados -->
+        <div class="fade-in mt-4">
+            {% if clases %}
+                <p class="resultado-cuenta">
+                    {{ clases|length }} clase{{ clases|length|pluralize }}
+                    {% if filtros.hay_filtro %}con esos filtros{% else %}en el horario regular{% endif %}
+                </p>
+
+                <div class="tabla-scroll">
+                    <table class="tabla-horario completa">
+                        <thead>
+                            <tr>
+                                <th>Horario</th>
+                                <th>Clase</th>
+                                <th>Días</th>
+                                <th>Nivel</th>
+                                <th>Sala</th>
+                                <th>Cupos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for clase in clases %}
+                            <tr>
+                                <td class="hora">{{ clase.horario }}</td>
+                                <td>
+                                    <span class="clase-emoji">{{ clase.emoji }}</span>
+                                    {{ clase.get_nombre_display }}
+                                    {% if clase.categoria %}
+                                        <small>{{ clase.categoria.nombre }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ clase.dias_display }}</td>
+                                <td><span class="badge-nivel">{{ clase.get_nivel_display }}</span></td>
+                                <td>{{ clase.sala }}</td>
+                                <td>
+                                    {% if clase.cupos_disponibles %}
+                                        <span class="cupo-ok">{{ clase.cupos_disponibles }} libres</span>
+                                    {% else %}
+                                        <span class="cupo-lleno">Sin cupo</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="vacio">
+                    <i class="bi bi-calendar-x"></i>
+                    <h3 class="h5">No hay clases con esos filtros</h3>
+                    <p>Prueba con otro día u otra disciplina, o escríbenos y vemos qué se acomoda a tus tiempos.</p>
+                    <a href="{% url 'web:planes' %}#horarios" class="btn btn-acento-outline btn-sm">
+                        Ver todos los horarios
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== COMPARADOR DE PLANES ==================== -->
+<section id="planes" class="seccion bg-seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Planes</span>
+            <h2 class="seccion-titulo">Elige el plan que va contigo</h2>
+            <div class="linea-acento"></div>
+            <p class="seccion-bajada">
+                Todos los planes son mensuales y puedes cambiar de horario según
+                el cupo. No hay matrícula ni permanencia mínima.
+            </p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            {% for plan in planes %}
+            <div class="col-md-6 col-lg-4 fade-in">
+                <article class="card-al card-plan {% if plan.destacado %}destacado{% endif %}"
+                         data-tilt="7">
+                    {% if plan.destacado %}
+                        <span class="cinta-destacado">Más elegido</span>
+                    {% endif %}
+
+                    <span class="plan-icono"><i class="bi {{ plan.icono }}"></i></span>
+                    <h3 class="h5">{{ plan.nombre }}</h3>
+
+                    <div class="plan-precio">
+                        <span class="plan-moneda">$</span>{{ plan.precio_clp|clp }}
+                    </div>
+                    <div class="plan-periodo">al mes</div>
+
+                    {% if plan.descripcion %}
+                        <p class="plan-detalle">{{ plan.descripcion }}</p>
+                    {% endif %}
+
+                    <ul class="plan-beneficios">
+                        {% for beneficio in plan.beneficios_lista %}
+                            <li><i class="bi bi-check-circle-fill"></i>{{ beneficio }}</li>
+                        {% endfor %}
+                    </ul>
+
+                    <a href="{% url 'web:contacto' %}?plan={{ plan.nombre|urlencode }}"
+                       class="btn {% if plan.destacado %}btn-acento{% else %}btn-acento-outline{% endif %} w-100 mt-auto">
+                        Quiero este plan
+                    </a>
+                </article>
+            </div>
+            {% empty %}
+            <div class="col-lg-8">
+                <div class="vacio">
+                    <i class="bi bi-tags"></i>
+                    <p class="mb-0">[Pendiente: cargar los planes desde el panel.]</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if plan_suelto %}
+        <div class="nota-suelta fade-in">
+            <i class="bi bi-ticket-perforated"></i>
+            <div>
+                <strong>¿Prefieres probar primero?</strong>
+                {{ plan_suelto.nombre }} a ${{ plan_suelto.precio_clp|clp }}.
+                {{ plan_suelto.descripcion }}
+            </div>
+            <a href="{% url 'web:contacto' %}" class="btn btn-acento-outline btn-sm">
+                Coordinar
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ==================== DUDAS ==================== -->
+<section class="seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Antes de decidir</span>
+            <h2 class="seccion-titulo">Preguntas frecuentes</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="accordion accordion-al fade-in" id="faqPlanes">
+                    {% for item in preguntas %}
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#fp{{ forloop.counter }}"
+                                    aria-expanded="false" aria-controls="fp{{ forloop.counter }}">
+                                {{ item.p }}
+                            </button>
+                        </h3>
+                        <div id="fp{{ forloop.counter }}" class="accordion-collapse collapse"
+                             data-bs-parent="#faqPlanes">
+                            <div class="accordion-body">{{ item.r }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-franja">
+    <div class="container fade-in">
+        <h2>¿Te sirve alguno de estos planes?</h2>
+        <p>Escríbenos y te dejamos inscrito para esta semana.</p>
+        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg" data-iman="0.3">
+            Únete ahora
+        </a>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ request.csp_nonce }}">
+// Mejora opcional: al cambiar un filtro se envía solo. Si el JS no corre,
+// el botón "Buscar" hace exactamente lo mismo y el buscador sigue sirviendo.
+(function () {
+    var form = document.getElementById('buscadorClases');
+    if (!form) { return; }
+    form.querySelectorAll('select').forEach(function (campo) {
+        campo.addEventListener('change', function () { form.submit(); });
+    });
+})();
+</script>
+{% endblock %}

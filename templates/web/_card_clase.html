@@ -1,0 +1,50 @@
+{% comment %}
+    Tarjeta de una clase. Se reutiliza en /clases/ y en /wellness/ para que
+    la misma clase se vea igual en las dos páginas.
+{% endcomment %}
+<article class="card-al card-clase">
+    <div class="encabezado">
+        <span class="emoji">{{ clase.emoji }}</span>
+        <div>
+            <h3>{{ clase.get_nombre_display }}</h3>
+            <span class="badge-nivel">{{ clase.get_nivel_display }}</span>
+        </div>
+    </div>
+
+    {% if clase.descripcion %}
+        <p class="mb-0">{{ clase.descripcion }}</p>
+    {% endif %}
+
+    <div class="dato-clase">
+        <i class="bi bi-calendar-week"></i>
+        <span>{{ clase.dias_display }}</span>
+    </div>
+    <div class="dato-clase">
+        <i class="bi bi-clock"></i>
+        <span>{{ clase.hora_inicio|time:"H:i" }} - {{ clase.hora_fin|time:"H:i" }} hrs</span>
+    </div>
+    <div class="dato-clase">
+        <i class="bi bi-door-open"></i>
+        <span>{{ clase.sala }}</span>
+    </div>
+    {% if clase.edad_minima %}
+    <div class="dato-clase">
+        <i class="bi bi-person-badge"></i>
+        <span>Desde los {{ clase.edad_minima }} años</span>
+    </div>
+    {% endif %}
+    <div class="dato-clase">
+        <i class="bi bi-person-workspace"></i>
+        <span>
+            {% if clase.profesora %}
+                {{ clase.profesora.get_full_name|default:clase.profesora.username }}
+            {% else %}
+                Por confirmar
+            {% endif %}
+        </span>
+    </div>
+
+    <a href="{% url 'web:contacto' %}" class="btn btn-acento-outline btn-sm mt-2 align-self-start">
+        Inscribirme
+    </a>
+</article>

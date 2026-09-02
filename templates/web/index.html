@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% load static formato %}
 
-{% block titulo %}Área Latina Estudio | Academia de baile en Puerto Montt{% endblock %}
+{% block titulo %}Área Latina Estudio | Cultura en movimiento · Puerto Montt{% endblock %}
+{% block descripcion %}Danza, wellness, formación, escena y comunidad en Puerto Montt. Un espacio para aprender, crear, moverte y conectar.{% endblock %}
 
 {% block contenido %}
 
@@ -18,37 +19,46 @@
                  alt="Área Latina Estudio" class="hero-logo" width="340" height="340">
         </div>
 
+        <span class="etiqueta hero-etiqueta">Área Latina Estudio</span>
+
         <h1 class="hero-titulo">
-            <span class="linea-titulo">Donde el ritmo</span>
-            <span class="linea-titulo destacado">te transforma</span>
+            <span class="linea-titulo">Cultura</span>
+            <span class="linea-titulo destacado">en movimiento</span>
         </h1>
 
+        <p class="hero-disciplinas">
+            Danza · Bienestar · Formación · Escena · Comunidad
+        </p>
+
         <p class="hero-bajada">
-            Academia de baile en Puerto Montt. Salsa, bachata, ritmos urbanos y mucho más,
-            para todas las edades y todos los niveles.
+            Un espacio para aprender, crear, moverte y conectar.
         </p>
 
         <div class="d-flex flex-wrap gap-3 justify-content-center">
             <a href="{% url 'web:clases' %}" class="btn btn-acento btn-lg" data-iman="0.3">
-                Ver clases
+                Conoce nuestras clases
             </a>
-            <a href="{% url 'web:contacto' %}" class="btn btn-acento-outline btn-lg" data-iman="0.3">
-                Contáctanos
+            <a href="{% url 'web:nosotros' %}" class="btn btn-acento-outline btn-lg" data-iman="0.3">
+                Descubre Área Latina
             </a>
         </div>
+
+        <p class="hero-lugar">
+            <i class="bi bi-geo-alt-fill"></i> Puerto Montt · Guillermo Gallardo 310
+        </p>
     </div>
 
-    <a href="#cinta" class="hero-flecha" aria-label="Ir al contenido">
+    <a href="#areas" class="hero-flecha" aria-label="Ir al contenido">
         <i class="bi bi-chevron-double-down"></i>
     </a>
 </section>
 
-<!-- ==================== CINTA DE ESTILOS ==================== -->
-<div id="cinta" class="cinta" aria-hidden="true">
+<!-- ==================== CINTA ==================== -->
+<div class="cinta" aria-hidden="true">
     <div class="cinta-pista">
         {% for vuelta in "12" %}
-            {% for estilo in estilos %}
-                <span class="cinta-item">{{ estilo.emoji }} {{ estilo.nombre }}</span>
+            {% for area in areas %}
+                <span class="cinta-item">{{ area.nombre }}</span>
                 <span class="cinta-sep">✦</span>
             {% endfor %}
         {% endfor %}
@@ -71,33 +81,133 @@
     </div>
 </section>
 
-<!-- ==================== ESTILOS ==================== -->
-<section id="estilos" class="seccion bg-seccion">
+<!-- ==================== SECCIONES CLAVE ==================== -->
+<section id="areas" class="seccion">
     <div class="container">
         <div class="text-center fade-in">
-            <span class="etiqueta">Nuestros estilos</span>
-            <h2 class="seccion-titulo">Elige tu ritmo</h2>
+            <span class="etiqueta">Secciones clave</span>
+            <h2 class="seccion-titulo">Mucho más que una academia</h2>
             <div class="linea-acento"></div>
             <p class="seccion-bajada">
-                Seis formas distintas de moverte. Da lo mismo si nunca has bailado:
-                empezamos desde cero y avanzamos a tu ritmo.
+                Cinco áreas que conviven en la misma sala. Puedes quedarte en una
+                o pasar por todas: la idea es justamente esa.
             </p>
         </div>
 
-        <div class="row g-4">
-            {% for estilo in estilos %}
-            <div class="col-md-6 col-lg-4 fade-in">
-                <a href="{% url 'web:clases' %}?estilo={{ estilo.slug }}"
-                   class="text-decoration-none card-enlace">
-                    <article class="card-al card-estilo" data-tilt="9">
-                        <span class="emoji">{{ estilo.emoji }}</span>
-                        <h3>{{ estilo.nombre }}</h3>
-                        <p>{{ estilo.texto }}</p>
-                        <span class="card-flecha"><i class="bi bi-arrow-right"></i></span>
-                    </article>
-                </a>
-            </div>
+        {% comment %}
+            Las áreas salen de la base de datos. Cada una lleva a la página
+            donde se puede hacer algo con ella, no a un ancla decorativa.
+        {% endcomment %}
+        <div class="areas-lista">
+            {% for area in areas %}
+            <a href="{% if area.slug == 'wellness' %}{% url 'web:wellness' %}{% elif area.slug == 'en-escena' or area.slug == 'companias' %}{% url 'web:en_escena' %}{% elif area.slug == 'kids-teens' %}{% url 'web:nosotros' %}#kids{% else %}{% url 'web:clases' %}?area={{ area.slug }}{% endif %}"
+               class="area-fila fade-in card-enlace" data-retraso="{{ forloop.counter0 }}00">
+                <span class="area-icono"><i class="bi {{ area.icono }}"></i></span>
+                <span class="area-texto">
+                    <strong>{{ area.nombre }}</strong>
+                    <span>{{ area.bajada }}</span>
+                </span>
+                {% if area.clases_activas.count %}
+                    <span class="area-cuenta">{{ area.clases_activas.count }} clase{{ area.clases_activas.count|pluralize }}</span>
+                {% endif %}
+                <span class="area-flecha"><i class="bi bi-chevron-right"></i></span>
+            </a>
             {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== HORARIOS + PLANES ==================== -->
+<section class="seccion bg-seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Horarios y planes</span>
+            <h2 class="seccion-titulo">Compara, elige y empieza</h2>
+            <div class="linea-acento"></div>
+            <p class="seccion-bajada">
+                La idea es que no tengas que preguntar todo por WhatsApp.
+                Acá está el horario y acá está el valor.
+            </p>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <!-- Próximas clases -->
+            <div class="col-lg-6 fade-in">
+                <div class="bloque-resumen">
+                    <h3 class="h5 bloque-titulo">
+                        <i class="bi bi-calendar3 texto-acento"></i>
+                        Encuentra tu próxima clase
+                    </h3>
+
+                    {% if clases_destacadas %}
+                    <div class="tabla-scroll">
+                        <table class="tabla-horario">
+                            <thead>
+                                <tr>
+                                    <th>Horario</th>
+                                    <th>Clase</th>
+                                    <th>Nivel</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for clase in clases_destacadas %}
+                                <tr>
+                                    <td class="hora">{{ clase.hora_inicio|time:"H:i" }}</td>
+                                    <td>
+                                        <span class="clase-emoji">{{ clase.emoji }}</span>
+                                        {{ clase.get_nombre_display }}
+                                        <small>{{ clase.dias_corto }}</small>
+                                    </td>
+                                    <td><span class="badge-nivel">{{ clase.get_nivel_display }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <a href="{% url 'web:planes' %}#horarios" class="btn btn-acento-outline w-100 mt-3">
+                        Ver los {{ total_clases }} horarios <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                    {% else %}
+                    <p class="texto-suave mb-0">
+                        [Pendiente: cargar las clases del estudio desde el panel.]
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Planes -->
+            <div class="col-lg-6 fade-in">
+                <div class="bloque-resumen">
+                    <h3 class="h5 bloque-titulo">
+                        <i class="bi bi-patch-check texto-acento"></i>
+                        Elige el plan que va contigo
+                    </h3>
+
+                    {% for plan in planes %}
+                    <div class="plan-fila {% if plan.destacado %}destacado{% endif %}">
+                        <span class="plan-fila-icono"><i class="bi {{ plan.icono }}"></i></span>
+                        <span class="plan-fila-texto">
+                            <strong>{{ plan.nombre }}</strong>
+                            <span>{{ plan.beneficios_lista.0 }}</span>
+                        </span>
+                        <span class="plan-fila-precio">
+                            ${{ plan.precio_clp|clp }}<small>/mes</small>
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="texto-suave mb-0">
+                        [Pendiente: cargar los planes desde el panel.]
+                    </p>
+                    {% endfor %}
+
+                    {% if planes %}
+                    <a href="{% url 'web:planes' %}" class="btn btn-acento w-100 mt-3" data-iman="0.25">
+                        Comparar los planes <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -107,20 +217,103 @@
     <div class="container">
         <div class="text-center fade-in">
             <span class="etiqueta">Por qué elegirnos</span>
-            <h2 class="seccion-titulo">¿Por qué Área Latina?</h2>
+            <h2 class="seccion-titulo">Una experiencia completa</h2>
             <div class="linea-acento"></div>
         </div>
 
         <div class="row g-4 text-center">
             {% for beneficio in beneficios %}
-            <div class="col-md-4 fade-in">
+            <div class="col-sm-6 col-lg-3 fade-in">
                 <div class="beneficio-icono">
                     <i class="bi {{ beneficio.icono }}"></i>
                 </div>
-                <h3 class="h4 mb-3">{{ beneficio.titulo }}</h3>
+                <h3 class="h5 mb-3">{{ beneficio.titulo }}</h3>
                 <p>{{ beneficio.texto }}</p>
             </div>
             {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== COMO EMPEZAR ==================== -->
+<section class="seccion bg-seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Cómo empezar</span>
+            <h2 class="seccion-titulo">Cuatro pasos y estás dentro</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="pasos">
+            {% for paso in como_empezar %}
+            <div class="paso fade-in" data-retraso="{{ forloop.counter0 }}00">
+                <span class="paso-numero">{{ forloop.counter }}</span>
+                <span class="paso-icono"><i class="bi {{ paso.icono }}"></i></span>
+                <h3 class="h6">{{ paso.titulo }}</h3>
+                <p>{{ paso.texto }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== PROXIMO EVENTO ==================== -->
+{% if proximo_evento %}
+<section class="seccion seccion-compacta">
+    <div class="container">
+        <div class="evento-franja fade-in">
+            <div class="evento-franja-fecha">
+                <span class="dia">{{ proximo_evento.fecha|date:"d" }}</span>
+                <span class="mes">{{ proximo_evento.fecha|date:"M"|upper }}</span>
+            </div>
+            <div class="evento-franja-texto">
+                <span class="etiqueta">{{ proximo_evento.get_tipo_display }}</span>
+                <h3 class="h5 mb-1">{{ proximo_evento.titulo }}</h3>
+                <p class="mb-0 texto-suave">
+                    {{ proximo_evento.resumen }}
+                    {% if proximo_evento.lugar %} · {{ proximo_evento.lugar }}{% endif %}
+                </p>
+            </div>
+            <a href="{% if proximo_evento.de_escena %}{% url 'web:en_escena' %}{% else %}{% url 'web:comunidad' %}{% endif %}"
+               class="btn btn-acento-outline btn-sm">Ver más</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ==================== LA APP ==================== -->
+<section class="seccion">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-6 fade-in">
+                <span class="etiqueta">Mi App</span>
+                <h2 class="seccion-titulo text-start">La web explica. La app acompaña.</h2>
+                <div class="linea-acento inicio"></div>
+                <p>
+                    Acá descubres, comparas y te inscribes. Una vez dentro, la app se
+                    hace cargo del día a día: tus reservas, tu plan y tus pagos en el
+                    mismo lugar.
+                </p>
+                <a href="{% url 'web:mi_app' %}" class="btn btn-acento-outline" data-iman="0.25">
+                    Conoce Mi App <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+
+            <div class="col-lg-6 fade-in">
+                <div class="canales">
+                    <div class="canal">
+                        <i class="bi bi-globe2"></i>
+                        <strong>Web</strong>
+                        <span>Descubrir, comparar, inscribirse</span>
+                    </div>
+                    <div class="canal-flecha"><i class="bi bi-arrow-right"></i></div>
+                    <div class="canal">
+                        <i class="bi bi-phone"></i>
+                        <strong>App</strong>
+                        <span>Reservar, pagar, gestionar, asistir</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -147,59 +340,17 @@
 </section>
 {% endif %}
 
-<!-- ==================== PLANES ==================== -->
-{% if planes %}
-<section class="seccion">
-    <div class="container">
-        <div class="text-center fade-in">
-            <span class="etiqueta">Planes</span>
-            <h2 class="seccion-titulo">Valores y mensualidades</h2>
-            <div class="linea-acento"></div>
-            <p class="seccion-bajada">
-                Elige el plan que se acomode a tus tiempos. Todos incluyen acceso a los
-                grupos de tu nivel y puedes cambiarte de estilo cuando quieras.
-            </p>
-        </div>
-
-        <div class="row g-4 justify-content-center">
-            {% for plan in planes %}
-            <div class="col-md-6 col-lg-3 fade-in">
-                <article class="card-al card-plan {% if forloop.counter == 3 %}destacado{% endif %}"
-                         data-tilt="7">
-                    {% if forloop.counter == 3 %}
-                        <span class="cinta-destacado">Más elegido</span>
-                    {% endif %}
-                    <h3 class="h5">{{ plan.nombre }}</h3>
-                    <div class="plan-precio">
-                        <span class="plan-moneda">$</span>{{ plan.precio_clp|clp }}
-                    </div>
-                    <div class="plan-periodo">
-                        {% if plan.duracion_dias == 1 %}
-                            por clase
-                        {% else %}
-                            cada {{ plan.duracion_dias }} días
-                        {% endif %}
-                    </div>
-                    {% if plan.descripcion %}
-                        <p class="plan-detalle">{{ plan.descripcion }}</p>
-                    {% endif %}
-                    <a href="{% url 'web:contacto' %}" class="btn btn-acento-outline btn-sm mt-auto">
-                        Quiero este plan
-                    </a>
-                </article>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-{% endif %}
-
 <!-- ==================== TESTIMONIOS ==================== -->
+{% comment %}
+    Solo si hay testimonios reales cargados en el panel. Inventar opiniones
+    de alumnos que no existen no es una opción.
+{% endcomment %}
+{% if testimonios %}
 <section class="seccion bg-seccion">
     <div class="container">
         <div class="text-center fade-in">
             <span class="etiqueta">Testimonios</span>
-            <h2 class="seccion-titulo">Lo que dicen nuestros alumnos</h2>
+            <h2 class="seccion-titulo">Lo que dice la comunidad</h2>
             <div class="linea-acento"></div>
         </div>
 
@@ -211,7 +362,11 @@
                     <p>{{ testimonio.texto }}</p>
                     <footer>
                         <div class="testimonio-avatar">
-                            <i class="bi bi-person-fill"></i>
+                            {% if testimonio.foto %}
+                                <img src="{{ testimonio.foto.url }}" alt="{{ testimonio.nombre }}">
+                            {% else %}
+                                <i class="bi bi-person-fill"></i>
+                            {% endif %}
                         </div>
                         <div>
                             <cite>{{ testimonio.nombre }}</cite>
@@ -224,6 +379,7 @@
         </div>
     </div>
 </section>
+{% endif %}
 
 <!-- ==================== PREGUNTAS FRECUENTES ==================== -->
 <section class="seccion">
@@ -262,7 +418,7 @@
 
 <!-- ==================== RESEÑAS DE GOOGLE ==================== -->
 {% if academia.google_resenas %}
-<section class="seccion seccion-compacta">
+<section class="seccion seccion-compacta bg-seccion">
     <div class="container">
         <div class="resena-franja fade-in">
             <div class="resena-franja-datos">
@@ -299,7 +455,7 @@
             para empezar esta semana.
         </p>
         <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg" data-iman="0.3">
-            Quiero inscribirme
+            Únete ahora
         </a>
     </div>
 </section>

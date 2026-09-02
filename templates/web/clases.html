@@ -1,17 +1,17 @@
 {% extends 'base.html' %}
 
-{% block titulo %}Clases y horarios | Área Latina Estudio{% endblock %}
-{% block descripcion %}Horarios de salsa, bachata, reggaetón, urbano, tango y Kids Dance en Área Latina Estudio, Puerto Montt.{% endblock %}
+{% block titulo %}Clases y disciplinas | Área Latina Estudio{% endblock %}
+{% block descripcion %}Salsa, bachata, reggaetón, urbano, heels, tango, Kids & Teens y wellness. Todas las clases de Área Latina Estudio en Puerto Montt.{% endblock %}
 
 {% block contenido %}
 
 <header class="page-header">
     <div class="container">
-        <span class="etiqueta">Horarios</span>
-        <h1>Nuestras clases</h1>
+        <span class="etiqueta">Clases</span>
+        <h1>Explora por área, nivel y objetivo</h1>
         <p>
-            Revisa los horarios vigentes y encuentra el que mejor te acomoda.
-            Si no ves tu estilo, escríbenos y te avisamos cuando abramos un grupo nuevo.
+            Cada área tiene su propia forma de mover el cuerpo. Da lo mismo si
+            nunca has bailado: se parte desde cero y se avanza a tu ritmo.
         </p>
     </div>
 </header>
@@ -19,78 +19,88 @@
 <section class="seccion">
     <div class="container">
 
-        <!-- Filtros por estilo -->
+        <!-- Filtros -->
         <div class="filtros fade-in">
             <a href="{% url 'web:clases' %}"
-               class="filtro-pill {% if not estilo_activo %}activo{% endif %}">Todas</a>
-            {% for valor, etiqueta in estilos %}
-                <a href="{% url 'web:clases' %}?estilo={{ valor }}"
-                   class="filtro-pill {% if estilo_activo == valor %}activo{% endif %}">{{ etiqueta }}</a>
+               class="filtro-pill {% if not area_activa and not disciplina_activa %}activo{% endif %}">Todas</a>
+            {% for area in areas %}
+                <a href="{% url 'web:clases' %}?area={{ area.slug }}"
+                   class="filtro-pill {% if area_activa == area.slug %}activo{% endif %}">{{ area.nombre }}</a>
             {% endfor %}
         </div>
 
-        <div class="row g-4">
-            {% for clase in clases %}
-            <div class="col-md-6 col-lg-4 fade-in">
-                <article class="card-al card-clase">
-                    <div class="encabezado">
-                        <span class="emoji">{{ clase.emoji }}</span>
-                        <div>
-                            <h3>{{ clase.get_nombre_display }}</h3>
-                            <span class="badge-nivel">{{ clase.get_nivel_display }}</span>
-                        </div>
-                    </div>
+        <div class="filtros filtros-secundarios fade-in">
+            {% for valor, etiqueta in disciplinas %}
+                <a href="{% url 'web:clases' %}?disciplina={{ valor }}"
+                   class="filtro-pill chico {% if disciplina_activa == valor %}activo{% endif %}">{{ etiqueta }}</a>
+            {% endfor %}
+        </div>
 
-                    {% if clase.descripcion %}
-                        <p class="mb-0">{{ clase.descripcion }}</p>
+        {% comment %}
+            Agrupado por área: la lista plana de clases ya no dice nada cuando
+            en la misma tabla conviven una salsa y un reformer.
+        {% endcomment %}
+        {% for grupo in por_area %}
+        <div class="grupo-area">
+            <div class="grupo-area-titulo fade-in">
+                <span class="area-icono chico"><i class="bi {{ grupo.area.icono }}"></i></span>
+                <div>
+                    <h2 class="h3 mb-0">{{ grupo.area.nombre }}</h2>
+                    {% if grupo.area.bajada %}
+                        <p class="mb-0 texto-suave">{{ grupo.area.bajada }}</p>
                     {% endif %}
-
-                    <div class="dato-clase">
-                        <i class="bi bi-calendar-week"></i>
-                        <span>{{ clase.dias_display }}</span>
-                    </div>
-                    <div class="dato-clase">
-                        <i class="bi bi-clock"></i>
-                        <span>{{ clase.hora_inicio|time:"H:i" }} - {{ clase.hora_fin|time:"H:i" }} hrs</span>
-                    </div>
-                    <div class="dato-clase">
-                        <i class="bi bi-door-open"></i>
-                        <span>{{ clase.sala }}</span>
-                    </div>
-                    <div class="dato-clase">
-                        <i class="bi bi-person-badge"></i>
-                        <span>
-                            {% if clase.profesora %}
-                                {{ clase.profesora.get_full_name|default:clase.profesora.username }}
-                            {% else %}
-                                Por confirmar
-                            {% endif %}
-                        </span>
-                    </div>
-
-                    <a href="{% url 'web:contacto' %}" class="btn btn-acento-outline btn-sm mt-2 align-self-start">
-                        Inscribirme
-                    </a>
-                </article>
-            </div>
-            {% empty %}
-            <div class="col-12">
-                <div class="card-al text-center">
-                    <i class="bi bi-music-note-beamed texto-acento" style="font-size: 2.5rem;"></i>
-                    <h3 class="h4 mt-3">Todavía no hay clases publicadas</h3>
-                    <p class="mb-4">
-                        {% if estilo_activo %}
-                            No hay clases activas de este estilo por ahora.
-                        {% else %}
-                            Estamos preparando los horarios del próximo período.
-                        {% endif %}
-                        Escríbenos y te avisamos apenas se abran.
-                    </p>
-                    <a href="{% url 'web:contacto' %}" class="btn btn-acento">Consultar horarios</a>
                 </div>
             </div>
-            {% endfor %}
+
+            <div class="row g-4">
+                {% for clase in grupo.clases %}
+                <div class="col-md-6 col-lg-4 fade-in">
+                    {% include 'web/_card_clase.html' with clase=clase %}
+                </div>
+                {% endfor %}
+            </div>
         </div>
+        {% endfor %}
+
+        {% if sin_area %}
+        <div class="grupo-area">
+            <div class="grupo-area-titulo fade-in">
+                <span class="area-icono chico"><i class="bi bi-three-dots"></i></span>
+                <h2 class="h3 mb-0">Otras clases</h2>
+            </div>
+            <div class="row g-4">
+                {% for clase in sin_area %}
+                <div class="col-md-6 col-lg-4 fade-in">
+                    {% include 'web/_card_clase.html' with clase=clase %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not por_area and not sin_area %}
+        <div class="vacio fade-in">
+            <i class="bi bi-music-note-beamed"></i>
+            <h3 class="h5">Todavía no hay clases publicadas</h3>
+            <p>
+                {% if disciplina_activa or area_activa %}
+                    No hay clases activas con ese filtro por ahora.
+                {% else %}
+                    Estamos preparando los horarios del próximo período.
+                {% endif %}
+                Escríbenos y te avisamos apenas se abran.
+            </p>
+            <a href="{% url 'web:contacto' %}" class="btn btn-acento">Consultar horarios</a>
+        </div>
+        {% endif %}
+
+        {% if por_area or sin_area %}
+        <div class="text-center mt-5 fade-in">
+            <a href="{% url 'web:planes' %}#horarios" class="btn btn-acento-outline" data-iman="0.25">
+                <i class="bi bi-funnel me-1"></i>Buscar por día, nivel y horario
+            </a>
+        </div>
+        {% endif %}
     </div>
 </section>
 

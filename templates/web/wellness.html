@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load formato %}
+
+{% block titulo %}Wellness | Área Latina Estudio{% endblock %}
+{% block descripcion %}Pilates Mat, Barre, Flexibilidad y Reformer en Puerto Montt. Bienestar integral para mente, cuerpo y hábitos en Área Latina Estudio.{% endblock %}
+
+{% block contenido %}
+
+<header class="page-header">
+    <div class="container">
+        <span class="etiqueta">Wellness</span>
+        <h1>Bienestar integral: mente, cuerpo y hábitos</h1>
+        <p>
+            No todo es coreografía. Wellness es el área donde se trabaja la base:
+            fuerza, movilidad, postura y respiración. Sirve por sí sola y también
+            hace que bailes mejor.
+        </p>
+    </div>
+</header>
+
+<!-- ==================== DISCIPLINAS ==================== -->
+<section class="seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Disciplinas</span>
+            <h2 class="seccion-titulo">Cuatro formas de entrenar el cuerpo</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3 fade-in">
+                <article class="card-al card-estilo" data-tilt="8">
+                    <span class="emoji">🧘</span>
+                    <h3>Pilates Mat</h3>
+                    <p>
+                        Trabajo de centro sobre colchoneta. Fortalece la zona media,
+                        corrige la postura y no exige experiencia previa.
+                    </p>
+                </article>
+            </div>
+            <div class="col-md-6 col-lg-3 fade-in">
+                <article class="card-al card-estilo" data-tilt="8">
+                    <span class="emoji">🩰</span>
+                    <h3>Barre</h3>
+                    <p>
+                        Ballet, pilates y tonificación en la misma clase. Repeticiones
+                        cortas en la barra, mucho control y piernas que arden.
+                    </p>
+                </article>
+            </div>
+            <div class="col-md-6 col-lg-3 fade-in">
+                <article class="card-al card-estilo" data-tilt="8">
+                    <span class="emoji">🤸</span>
+                    <h3>Flexibilidad</h3>
+                    <p>
+                        Movilidad y elongación guiada. Es la clase que más se nota
+                        cuando llevas tiempo bailando y el cuerpo pide soltura.
+                    </p>
+                </article>
+            </div>
+            <div class="col-md-6 col-lg-3 fade-in">
+                <article class="card-al card-estilo" data-tilt="8">
+                    <span class="emoji">💪</span>
+                    <h3>Reformer</h3>
+                    <p>
+                        Pilates con máquina y resistencia regulable. Grupos reducidos
+                        y trabajo personalizado según tu nivel.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== HORARIOS ==================== -->
+<section class="seccion bg-seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Horarios</span>
+            <h2 class="seccion-titulo">Clases de wellness esta semana</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="row g-4">
+            {% for clase in clases %}
+            <div class="col-md-6 col-lg-4 fade-in">
+                {% include 'web/_card_clase.html' with clase=clase %}
+            </div>
+            {% empty %}
+            <div class="col-lg-8 mx-auto">
+                <div class="vacio">
+                    <i class="bi bi-flower1"></i>
+                    <h3 class="h5">Todavía no hay horarios publicados</h3>
+                    <p>
+                        Estamos armando la grilla de wellness. Escríbenos y te
+                        avisamos apenas se abran los cupos.
+                    </p>
+                    <a href="{% url 'web:contacto' %}" class="btn btn-acento">Quiero que me avisen</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== PARA QUIEN ES ==================== -->
+<section class="seccion">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-6 fade-in">
+                <span class="etiqueta">Para quién es</span>
+                <h2 class="seccion-titulo text-start">No hay que ser bailarín</h2>
+                <div class="linea-acento inicio"></div>
+                <p>
+                    Wellness existe para dos tipos de persona: la que quiere entrenar
+                    sin subirse a una coreografía, y la que ya baila y necesita una
+                    base más firme para avanzar.
+                </p>
+                <p class="texto-suave">
+                    Los grupos son reducidos y las clases son multinivel: cada
+                    ejercicio tiene una versión más simple y una más exigente.
+                </p>
+                <a href="{% url 'web:planes' %}" class="btn btn-acento" data-iman="0.25">
+                    Ver planes y precios
+                </a>
+            </div>
+
+            <div class="col-lg-6 fade-in">
+                <ul class="lista-check">
+                    <li><i class="bi bi-check-circle-fill"></i>Empiezas sin experiencia previa</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Grupos reducidos, corrección uno a uno</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Multinivel: cada ejercicio se adapta</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Combinable con cualquier clase de danza</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Mañana y tarde, para que calce con tu semana</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== PLANES ==================== -->
+{% if planes %}
+<section class="seccion bg-seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Planes</span>
+            <h2 class="seccion-titulo">Wellness entra en el mismo plan</h2>
+            <div class="linea-acento"></div>
+            <p class="seccion-bajada">
+                No hay un plan aparte: el plan de dos cursos existe justamente para
+                combinar una disciplina de danza con una de wellness.
+            </p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            {% for plan in planes %}
+            <div class="col-md-6 col-lg-4 fade-in">
+                <article class="card-al card-plan {% if plan.destacado %}destacado{% endif %}" data-tilt="7">
+                    {% if plan.destacado %}<span class="cinta-destacado">Más elegido</span>{% endif %}
+                    <span class="plan-icono"><i class="bi {{ plan.icono }}"></i></span>
+                    <h3 class="h5">{{ plan.nombre }}</h3>
+                    <div class="plan-precio">
+                        <span class="plan-moneda">$</span>{{ plan.precio_clp|clp }}
+                    </div>
+                    <div class="plan-periodo">al mes</div>
+                    <p class="plan-detalle">{{ plan.descripcion }}</p>
+                    <a href="{% url 'web:planes' %}#planes" class="btn btn-acento-outline btn-sm mt-auto">
+                        Ver el detalle
+                    </a>
+                </article>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="cta-franja">
+    <div class="container fade-in">
+        <h2>Tu cuerpo también quiere entrenar</h2>
+        <p>Escríbenos y coordinamos una clase de prueba de wellness.</p>
+        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg" data-iman="0.3">
+            Únete ahora
+        </a>
+    </div>
+</section>
+
+{% endblock %}

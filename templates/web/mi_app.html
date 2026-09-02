@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Mi App | Área Latina Estudio{% endblock %}
+{% block descripcion %}La app de Área Latina Estudio: reserva clases, administra tu plan y revisa tus pagos desde el celular. Próximamente.{% endblock %}
+
+{% block contenido %}
+
+<header class="page-header">
+    <div class="container">
+        <span class="etiqueta">Mi App</span>
+        <h1>La web explica. La app acompaña.</h1>
+        <p>
+            Acá descubres, comparas y te inscribes. Una vez dentro, la app se hace
+            cargo del día a día: reservas, plan, pagos y novedades en el mismo lugar.
+        </p>
+        <span class="marca-pronto"><i class="bi bi-hourglass-split"></i>Próximamente</span>
+    </div>
+</header>
+
+<!-- ==================== QUE VAS A PODER HACER ==================== -->
+<section class="seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Desde la app</span>
+            <h2 class="seccion-titulo">Qué vas a poder hacer</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            {% for funcion in funciones %}
+            <div class="col-sm-6 col-lg-4 fade-in" data-retraso="{{ forloop.counter0 }}00">
+                <div class="funcion-fila">
+                    <span class="funcion-icono"><i class="bi {{ funcion.icono }}"></i></span>
+                    <span>{{ funcion.texto }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== ROL DE CADA CANAL ==================== -->
+<section class="seccion bg-seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Rol de cada canal</span>
+            <h2 class="seccion-titulo">Cada cosa en su lugar</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-6 col-lg-5 fade-in">
+                <div class="card-al canal-card">
+                    <span class="canal-icono"><i class="bi bi-globe2"></i></span>
+                    <h3 class="h5">Web</h3>
+                    <p class="mb-0">Descubrir, comparar, inscribirse.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-5 fade-in">
+                <div class="card-al canal-card">
+                    <span class="canal-icono"><i class="bi bi-phone"></i></span>
+                    <h3 class="h5">App</h3>
+                    <p class="mb-0">Reservar, pagar, gestionar, asistir.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flujo fade-in">
+            <span class="flujo-paso"><i class="bi bi-instagram"></i>Instagram</span>
+            <i class="bi bi-arrow-right flujo-flecha"></i>
+            <span class="flujo-paso"><i class="bi bi-globe2"></i>Web</span>
+            <i class="bi bi-arrow-right flujo-flecha"></i>
+            <span class="flujo-paso"><i class="bi bi-clipboard-check"></i>Plan</span>
+            <i class="bi bi-arrow-right flujo-flecha"></i>
+            <span class="flujo-paso"><i class="bi bi-phone"></i>App</span>
+            <i class="bi bi-arrow-right flujo-flecha"></i>
+            <span class="flujo-paso"><i class="bi bi-calendar-check"></i>Reserva</span>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== MIENTRAS TANTO ==================== -->
+<section class="seccion">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center fade-in">
+                <span class="etiqueta">Mientras tanto</span>
+                <h2 class="seccion-titulo">Ya puedes entrar a tu portal</h2>
+                <div class="linea-acento"></div>
+                <p>
+                    La app móvil está en desarrollo, pero el portal web ya funciona:
+                    si eres alumno o profesor del estudio, entras con las credenciales
+                    que te dio la academia y ves tus clases, tu plan y tus pagos.
+                </p>
+
+                <div class="d-flex flex-wrap gap-3 justify-content-center mt-4">
+                    {% if user.is_authenticated %}
+                        <a href="{% if user.puede_gestionar %}{% url 'gestion:dashboard' %}{% else %}{% url 'gestion:asistencia' %}{% endif %}"
+                           class="btn btn-acento btn-lg" data-iman="0.3">
+                            Ir a mi panel
+                        </a>
+                    {% else %}
+                        <a href="{% url 'usuarios:login' %}" class="btn btn-acento btn-lg" data-iman="0.3">
+                            Entrar a mi portal
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'web:contacto' %}" class="btn btn-acento-outline btn-lg" data-iman="0.3">
+                        No tengo cuenta
+                    </a>
+                </div>
+
+                <p class="texto-suave mt-4 mb-0">
+                    Te avisaremos por correo apenas la app esté disponible.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-franja">
+    <div class="container fade-in">
+        <h2>Primero la clase, después la app</h2>
+        <p>Inscríbete ahora y tu cuenta queda lista para cuando la app salga.</p>
+        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg" data-iman="0.3">
+            Únete ahora
+        </a>
+    </div>
+</section>
+
+{% endblock %}

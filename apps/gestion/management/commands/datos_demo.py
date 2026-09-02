@@ -17,7 +17,8 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from apps.asistencia.models import RegistroAsistencia
-from apps.gestion.models import Alumno, Clase, Inscripcion, Pago, Plan, Suscripcion
+from apps.gestion.models import (Alumno, Categoria, Clase, Inscripcion, Pago,
+                                 Plan, Suscripcion)
 
 User = get_user_model()
 
@@ -29,11 +30,25 @@ PROFESORAS = [
     ('matias', 'Matías', 'Vera', 'Tango'),
 ]
 
+# Nombres y precios salen de la lámina 06 del brief. El precio del Pase
+# Libre no venía en el brief: el que está acá es el que ya usaba el
+# estudio y hay que confirmarlo antes de publicar.
 PLANES = [
-    ('Plan 1 vez por semana', 25000, 30, 'Una clase semanal del estilo que elijas.'),
-    ('Plan 2 veces por semana', 38000, 30, 'Dos clases semanales, mismo o distinto estilo.'),
-    ('Plan libre', 50000, 30, 'Acceso a todas las clases del horario regular.'),
-    ('Clase suelta', 6000, 1, 'Una clase puntual, ideal para probar.'),
+    ('1 Curso', 25000, 30, 1, 'bi-person', False,
+     'Una disciplina a elección, cuatro clases al mes.',
+     '4 clases mensuales\nUna disciplina a elección\n'
+     'Cambio de horario según cupo\nAcceso a la app'),
+    ('2 Cursos', 40000, 30, 2, 'bi-people', True,
+     'Combina dos disciplinas en la misma mensualidad.',
+     '8 clases mensuales\nCombina dos disciplinas\n'
+     'Cambio de horario según cupo\nAcceso a la app'),
+    ('Pase Libre', 50000, 30, 3, 'bi-infinity', False,
+     'Experiencia completa: acceso ilimitado a todas las clases.',
+     'Acceso ilimitado a todas las clases\nTodas las disciplinas incluidas\n'
+     'Prioridad en talleres y muestras\nAcceso a la app'),
+    ('Clase suelta', 7000, 1, 9, 'bi-ticket-perforated', False,
+     'Una clase puntual, ideal para probar antes de tomar un plan.',
+     'Una clase a elección\nSin compromiso mensual'),
 ]
 
 CLASES = [
@@ -42,8 +57,13 @@ CLASES = [
     ('BACHATA', 'TODOS', 'MA,JU', time(19, 30), time(20, 30), 'Sala 1', 20, 0),
     ('REGGAETON', 'TODOS', 'MI,VI', time(20, 0), time(21, 0), 'Sala 2', 25, 1),
     ('URBANO', 'INICIAL', 'VI', time(18, 30), time(19, 30), 'Sala 2', 25, 1),
+    ('HEELS', 'TODOS', 'MA', time(20, 30), time(21, 30), 'Sala 2', 18, 1),
     ('TANGO', 'TODOS', 'JU', time(21, 0), time(22, 0), 'Sala 1', 16, 2),
     ('KIDS', 'INICIAL', 'SA', time(11, 0), time(12, 0), 'Sala 2', 18, 1),
+    ('PILATES', 'TODOS', 'LU,MI', time(18, 0), time(19, 0), 'Sala 2', 14, 0),
+    ('BARRE', 'TODOS', 'MA,JU', time(18, 0), time(19, 0), 'Sala 2', 14, 0),
+    ('FLEXIBILIDAD', 'TODOS', 'VI', time(17, 30), time(18, 30), 'Sala 2', 14, 0),
+    ('REFORMER', 'TODOS', 'MI', time(9, 0), time(10, 0), 'Sala 2', 8, 0),
 ]
 
 NOMBRES_DEMO = [
@@ -51,6 +71,21 @@ NOMBRES_DEMO = [
     'Josefa Aguilar', 'Martín Oyarzún', 'Catalina Barría', 'Vicente Millán',
     'Isidora Paredes', 'Tomás Alvarado', 'Emilia Contreras', 'Agustín Bahamonde',
 ]
+
+
+# Edad minima por disciplina. Sin esto el filtro por edad del buscador
+# no devuelve nada, porque el campo queda en nulo.
+EDAD_MINIMA = {
+    'KIDS': 4,
+}
+
+AREA_POR_DISCIPLINA = {
+    'SALSA': 'danza', 'BACHATA': 'danza', 'REGGAETON': 'danza',
+    'URBANO': 'danza', 'HEELS': 'danza', 'TANGO': 'danza',
+    'KIDS': 'kids-teens',
+    'PILATES': 'wellness', 'BARRE': 'wellness',
+    'FLEXIBILIDAD': 'wellness', 'REFORMER': 'wellness',
+}
 
 
 def rut_demo(indice):
@@ -112,20 +147,27 @@ class Command(BaseCommand):
         return profes
 
     def crear_planes(self):
-        for nombre, precio, dias, descripcion in PLANES:
+        for (nombre, precio, dias, orden, icono, destacado,
+             descripcion, beneficios) in PLANES:
             Plan.objects.get_or_create(
                 nombre=nombre,
                 defaults={'precio_clp': precio, 'duracion_dias': dias,
-                          'descripcion': descripcion},
+                          'orden': orden, 'icono': icono,
+                          'destacado': destacado, 'descripcion': descripcion,
+                          'beneficios': beneficios},
             )
         self.stdout.write(self.style.SUCCESS(f'Planes: {Plan.objects.count()}'))
 
     def crear_clases(self, profes):
+        areas = {c.slug: c for c in Categoria.objects.all()}
         for estilo, nivel, dias, inicio, fin, sala, cupo, idx in CLASES:
+            area = areas.get(AREA_POR_DISCIPLINA.get(estilo, ''))
             Clase.objects.get_or_create(
                 nombre=estilo, nivel=nivel, dias_semana=dias, hora_inicio=inicio,
                 defaults={'hora_fin': fin, 'sala': sala, 'cupo_maximo': cupo,
-                          'profesora': profes[idx], 'activa': True},
+                          'profesora': profes[idx], 'categoria': area,
+                          'edad_minima': EDAD_MINIMA.get(estilo),
+                          'activa': True},
             )
         self.stdout.write(self.style.SUCCESS(f'Clases: {Clase.objects.count()}'))
 

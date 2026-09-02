@@ -2,15 +2,18 @@
 {% load static %}
 
 {% block titulo %}Nosotros | Área Latina Estudio{% endblock %}
-{% block descripcion %}Conoce la historia, el equipo y la filosofía de Área Latina Estudio, academia de baile en Puerto Montt.{% endblock %}
+{% block descripcion %}Conoce la historia, el equipo, las áreas y la visión de Área Latina Estudio, centro integral de movimiento, bienestar y formación en Puerto Montt.{% endblock %}
 
 {% block contenido %}
 
 <header class="page-header">
     <div class="container">
         <span class="etiqueta">Quiénes somos</span>
-        <h1>Nosotros</h1>
-        <p>Una academia hecha por bailarines, para gente que quiere pasarlo bien mientras aprende.</p>
+        <h1>Un ecosistema de movimiento</h1>
+        <p>
+            No queríamos una academia tradicional. Queríamos un espacio de movimiento,
+            bienestar, formación y comunidad, todo bajo el mismo techo.
+        </p>
     </div>
 </header>
 
@@ -20,37 +23,128 @@
         <div class="row align-items-center g-5">
             <div class="col-lg-6 fade-in">
                 <span class="etiqueta">Nuestra historia</span>
-                <h2 class="seccion-titulo">Así nació Área Latina</h2>
-                <div class="linea-acento izquierda"></div>
+                <h2 class="seccion-titulo text-start">Así nació Área Latina</h2>
+                <div class="linea-acento inicio"></div>
                 <p>
                     Área Latina Estudio nació en Puerto Montt con una idea simple: que
-                    cualquier persona pudiera acercarse al baile sin miedo al ridículo y
-                    sin necesidad de experiencia previa.
+                    cualquier persona pudiera acercarse al movimiento sin miedo al
+                    ridículo y sin necesidad de experiencia previa.
                 </p>
                 <p>
-                    Lo que partió como un grupo pequeño de amigos ensayando ritmos latinos
-                    se transformó en una academia con clases regulares, talleres y
-                    presentaciones. Hoy pasan por nuestras salas niños, jóvenes y adultos
-                    que llegaron por curiosidad y se quedaron por la comunidad.
+                    Lo que partió como un grupo pequeño ensayando ritmos latinos se
+                    fue abriendo. Primero llegaron las clases regulares, después los
+                    talleres y las muestras, y con el tiempo el wellness, los grupos
+                    de Kids &amp; Teens y las compañías.
+                </p>
+                <p>
+                    Hoy pasan por estas salas niños, jóvenes y adultos que llegaron por
+                    curiosidad y se quedaron por la comunidad.
                 </p>
                 <p class="mb-0">
                     <em class="texto-acento-lite">
-                        (Texto de referencia — reemplazar por la historia real de la academia.)
+                        [Pendiente: cliente debe enviar la historia real del estudio —
+                        año de fundación, quiénes lo partieron y los hitos importantes.]
                     </em>
                 </p>
             </div>
             <div class="col-lg-6 fade-in text-center">
                 <img src="{% static 'img/logo-naranja.jpg' %}"
                      alt="Logo Área Latina Estudio"
-                     class="img-fluid rounded-4"
-                     style="max-width: 420px; box-shadow: 0 20px 50px rgba(0,0,0,.55);">
+                     class="img-fluid rounded-4 imagen-marco">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== ESTADISTICAS ==================== -->
+<section class="seccion seccion-compacta bg-seccion">
+    <div class="container">
+        <div class="row g-4 text-center">
+            {% for stat in estadisticas %}
+            <div class="col-6 col-lg-3 fade-in" data-retraso="{{ forloop.counter0 }}00">
+                <div class="stat-numero">
+                    <span data-contador="{{ stat.valor }}">0</span>{{ stat.sufijo }}
+                </div>
+                <div class="stat-etiqueta">{{ stat.etiqueta }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== LAS AREAS ==================== -->
+<section class="seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Qué hacemos</span>
+            <h2 class="seccion-titulo">Cinco áreas, un mismo lugar</h2>
+            <div class="linea-acento"></div>
+            <p class="seccion-bajada">
+                Cada área tiene su propio ritmo, pero todas se cruzan. Se puede
+                empezar en una y terminar recorriéndolas todas.
+            </p>
+        </div>
+
+        <div class="areas-lista">
+            {% for area in areas %}
+            <div class="area-fila fade-in" data-retraso="{{ forloop.counter0 }}00">
+                <span class="area-icono"><i class="bi {{ area.icono }}"></i></span>
+                <span class="area-texto">
+                    <strong>{{ area.nombre }}</strong>
+                    <span>{{ area.bajada }}</span>
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ==================== KIDS & TEENS ==================== -->
+<section id="kids" class="seccion bg-seccion">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-6 fade-in">
+                <span class="etiqueta">Kids &amp; Teens</span>
+                <h2 class="seccion-titulo text-start">Movimiento y formación desde los 4 años</h2>
+                <div class="linea-acento inicio"></div>
+                <p>
+                    Las clases de niños y adolescentes no son una versión reducida de
+                    las de adultos. Se trabaja coordinación, ritmo y expresión con la
+                    exigencia que corresponde a cada edad, y siempre en grupo.
+                </p>
+                <p class="texto-suave">
+                    Los grupos se dividen por edad, no por nivel: a los 6 años no se
+                    aprende igual que a los 14, y mezclarlos no le sirve a nadie.
+                </p>
+                <a href="{% url 'web:contacto' %}" class="btn btn-acento" data-iman="0.25">
+                    Consultar por Kids &amp; Teens
+                </a>
+            </div>
+
+            <div class="col-lg-6 fade-in">
+                {% if clases_kids %}
+                    <div class="row g-3">
+                        {% for clase in clases_kids %}
+                        <div class="col-12">
+                            {% include 'web/_card_clase.html' with clase=clase %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <ul class="lista-check">
+                        <li><i class="bi bi-check-circle-fill"></i>Desde los 4 años, sin experiencia previa</li>
+                        <li><i class="bi bi-check-circle-fill"></i>Grupos separados por edad</li>
+                        <li><i class="bi bi-check-circle-fill"></i>Coordinación, ritmo y trabajo en grupo</li>
+                        <li><i class="bi bi-check-circle-fill"></i>Muestra al final de cada ciclo</li>
+                    </ul>
+                {% endif %}
             </div>
         </div>
     </div>
 </section>
 
 <!-- ==================== EQUIPO ==================== -->
-<section class="seccion bg-seccion">
+<section class="seccion">
     <div class="container">
         <div class="text-center fade-in">
             <span class="etiqueta">El equipo</span>
@@ -69,32 +163,71 @@
                     <div class="profe-foto">
                         <i class="bi bi-person"></i>
                     </div>
-                    <h3 class="h4 mb-1">{{ profe.nombre }}</h3>
+                    <h3 class="h5 mb-1">{{ profe.nombre }}</h3>
                     <div class="profe-especialidad">{{ profe.especialidad }}</div>
                     <p class="mb-0">{{ profe.bio }}</p>
                 </article>
             </div>
             {% endfor %}
         </div>
+
+        <p class="text-center texto-suave mt-4 mb-0">
+            <em>[Pendiente: cliente debe enviar nombres, fotos y biografías reales del equipo.]</em>
+        </p>
     </div>
 </section>
 
-<!-- ==================== VALORES ==================== -->
+<!-- ==================== VISION ==================== -->
+<section class="seccion bg-seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Visión</span>
+            <h2 class="seccion-titulo">Hacia dónde vamos</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="row g-4 text-center">
+            {% for valor in valores %}
+            <div class="col-md-4 fade-in">
+                <div class="beneficio-icono">
+                    <i class="bi {{ valor.icono }}"></i>
+                </div>
+                <h3 class="h5 mb-3">{{ valor.titulo }}</h3>
+                <p>{{ valor.texto }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="row justify-content-center mt-5">
+            <div class="col-lg-8">
+                <blockquote class="card-al cita-vision fade-in">
+                    <i class="bi bi-quote comilla"></i>
+                    <p class="mb-0">
+                        No queremos una academia tradicional. Queremos un ecosistema de
+                        movimiento, bienestar, formación y comunidad.
+                    </p>
+                </blockquote>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== POR QUE ELEGIRNOS ==================== -->
 <section class="seccion">
     <div class="container">
         <div class="text-center fade-in">
-            <span class="etiqueta">Filosofía</span>
-            <h2 class="seccion-titulo">En qué creemos</h2>
+            <span class="etiqueta">Por qué elegirnos</span>
+            <h2 class="seccion-titulo">Lo que te vas a encontrar</h2>
             <div class="linea-acento"></div>
         </div>
 
         <div class="row g-4 text-center">
             {% for beneficio in beneficios %}
-            <div class="col-md-4 fade-in">
+            <div class="col-sm-6 col-lg-3 fade-in">
                 <div class="beneficio-icono">
                     <i class="bi {{ beneficio.icono }}"></i>
                 </div>
-                <h3 class="h4 mb-3">{{ beneficio.titulo }}</h3>
+                <h3 class="h5 mb-3">{{ beneficio.titulo }}</h3>
                 <p>{{ beneficio.texto }}</p>
             </div>
             {% endfor %}
@@ -106,7 +239,9 @@
     <div class="container fade-in">
         <h2>Ven a conocernos</h2>
         <p>La mejor forma de saber si esto es para ti es venir a una clase.</p>
-        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg">Agendar mi visita</a>
+        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg" data-iman="0.3">
+            Agendar mi visita
+        </a>
     </div>
 </section>
 
