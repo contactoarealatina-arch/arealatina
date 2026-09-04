@@ -10,8 +10,9 @@ vive dentro del inicio.
 """
 from django.contrib import messages
 from django.shortcuts import redirect, render
+from django.utils import timezone
 
-from apps.gestion.models import Categoria, Clase, Foto, Plan, Testimonio
+from apps.gestion.models import Categoria, Clase, Evento, Foto, Plan, Testimonio
 
 from .forms import ContactoForm
 
@@ -176,6 +177,12 @@ def index(request):
         'beneficios': BENEFICIOS,
         'estadisticas': ESTADISTICAS,
         'fotos': Foto.objects.filter(publicada=True),
+        # Solo lo que todavia no pasa. Una fecha vencida en portada es
+        # peor que no tener agenda, y nadie se acuerda de borrarla.
+        'eventos': Evento.objects.filter(
+            publicado=True,
+            fecha__gte=timezone.localdate(),
+        )[:3],
         'testimonios': Testimonio.objects.filter(publicado=True)[:3],
         'preguntas': PREGUNTAS,
     }))

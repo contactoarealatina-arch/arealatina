@@ -2903,3 +2903,134 @@ html[data-nivel="bajo"] .entrando { animation: none; }
     .pilar-card:hover { transform: none; }
     .pilar-card:hover::after { transform: none; }
 }
+
+/* --------------------------------------------------------------------------
+   Pista de que el bloque se abre
+   -------------------------------------------------------------------------- */
+/* Los dos pilares parten cerrados, así que hay que decir que se abren.
+   El texto lo dice y el rebote de la flecha lo señala: sin las dos cosas
+   la página parece dos tarjetas muertas. */
+.pilar-cerrar { display: none; }
+
+.pilar-cabecera[aria-expanded="true"] .pilar-abrir { display: none; }
+.pilar-cabecera[aria-expanded="true"] .pilar-cerrar { display: inline; }
+
+.pilar-boton {
+    white-space: nowrap;
+}
+
+@keyframes al-rebote {
+    0%, 60%, 100% { transform: translateY(0); }
+    75%           { transform: translateY(4px); }
+    88%           { transform: translateY(1px); }
+}
+
+.pilar-cabecera[aria-expanded="false"] .bi-chevron-down {
+    animation: al-rebote 2.4s ease-in-out infinite;
+}
+
+/* El botón respira mientras está cerrado: llama el ojo sin gritar. */
+@keyframes al-respira {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.45); }
+    50%      { box-shadow: 0 0 0 8px rgba(255, 87, 34, 0); }
+}
+
+.pilar-cabecera[aria-expanded="false"] .pilar-boton {
+    animation: al-respira 2.4s ease-in-out infinite;
+}
+
+/* Al pasar el cursor la pista sobra: ya se entendió que es pulsable. */
+.pilar-cabecera:hover .bi-chevron-down,
+.pilar-cabecera:hover .pilar-boton {
+    animation: none;
+}
+
+@media (max-width: 767.98px) {
+    /* "Despliega para ver" no cabe en un celular sin partir el botón. */
+    .solo-ancho { display: none; }
+    .pilar-boton { white-space: normal; }
+}
+
+/* --------------------------------------------------------------------------
+   Próximas fechas
+   -------------------------------------------------------------------------- */
+.eventos-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+.evento-fila {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.15rem 1.35rem;
+    border-radius: var(--radio);
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--borde-card);
+}
+
+.evento-fecha {
+    flex-shrink: 0;
+    width: 62px;
+    padding: 0.5rem 0;
+    text-align: center;
+    border-radius: 12px;
+    background-color: rgba(255, 87, 34, 0.1);
+    border: 1px solid rgba(255, 87, 34, 0.3);
+}
+
+.evento-fecha .dia {
+    display: block;
+    font-family: var(--font-titulo);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--color-accent);
+}
+
+.evento-fecha .mes {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+}
+
+.evento-texto {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.evento-texto .badge-nivel { align-self: flex-start; }
+
+.evento-texto strong {
+    font-family: var(--font-titulo);
+    font-size: 1.1rem;
+}
+
+.evento-texto > span:last-child {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.evento-fila .btn { flex-shrink: 0; }
+
+@media (max-width: 575.98px) {
+    .evento-fila { flex-direction: column; text-align: center; }
+    .evento-texto { align-items: center; }
+    .evento-texto .badge-nivel { align-self: center; }
+    .evento-fila .btn { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pilar-cabecera[aria-expanded="false"] .bi-chevron-down,
+    .pilar-cabecera[aria-expanded="false"] .pilar-boton {
+        animation: none;
+    }
+}

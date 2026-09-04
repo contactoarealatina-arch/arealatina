@@ -33,7 +33,7 @@
                 <button type="button" class="pilar-cabecera {{ bloque.pilar.slug }}"
                         data-bs-toggle="collapse"
                         data-bs-target="#detalle-{{ bloque.pilar.slug }}"
-                        aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                        aria-expanded="false"
                         aria-controls="detalle-{{ bloque.pilar.slug }}">
                     <span class="pilar-icono"><i class="bi {{ bloque.pilar.icono }}"></i></span>
 
@@ -51,16 +51,25 @@
                         <span class="pilar-cuenta">
                             {{ bloque.clases|length }} clase{{ bloque.clases|length|pluralize }}
                         </span>
-                        <span class="btn btn-acento btn-sm">
-                            Ver clases y planes
+                        <span class="btn btn-acento btn-sm pilar-boton">
+                            <span class="pilar-abrir">
+                                <span class="solo-ancho">Despliega para ver </span>las
+                                clases y planes
+                            </span>
+                            <span class="pilar-cerrar">Cerrar</span>
                             <i class="bi bi-chevron-down ms-1"></i>
                         </span>
                     </span>
                 </button>
 
                 <!-- Detalle -->
+                {% comment %}
+                    Los dos parten cerrados. Antes el primero venía abierto
+                    y quien llegaba a la página veía una tabla larga sin
+                    entender que el segundo bloque también se abría.
+                {% endcomment %}
                 <div id="detalle-{{ bloque.pilar.slug }}"
-                     class="collapse {% if forloop.first %}show{% endif %} pilar-detalle">
+                     class="collapse pilar-detalle">
 
                     <!-- Horarios -->
                     <h3 class="h5 bloque-titulo">
@@ -218,6 +227,21 @@
 {% endblock %}
 
 {% block extra_js %}
+<script nonce="{{ request.csp_nonce }}">
+// Un bloque a la vez. Con los dos abiertos vuelve el muro de tablas.
+(function () {
+    document.querySelectorAll('.pilar-detalle.collapse').forEach(function (panel) {
+        panel.addEventListener('show.bs.collapse', function () {
+            document.querySelectorAll('.pilar-detalle.collapse.show').forEach(function (otro) {
+                if (otro !== panel) {
+                    bootstrap.Collapse.getOrCreateInstance(otro).hide();
+                }
+            });
+        });
+    });
+})();
+</script>
+
 <script nonce="{{ request.csp_nonce }}">
 // Si alguien llega con /clases/#bienestar, se abre ese bloque y se cierra
 // el otro. Sin esto el enlace del pie deja al visitante mirando el bloque

@@ -1201,6 +1201,54 @@ class RespaldoLog(models.Model):
         return f'{tam:.1f} TB'
 
 
+class Evento(TimeStampedModel):
+    """Muestra, taller, competencia o junta del estudio.
+
+    No tiene página propia: las fechas publicadas salen en una franja del
+    inicio, y si no hay ninguna futura la franja no aparece. Es a
+    propósito — una página de eventos vacía se ve peor que no tenerla, y
+    el estudio publica fechas de vez en cuando, no todas las semanas.
+    """
+
+    class Tipo(models.TextChoices):
+        MUESTRA = 'MUESTRA', 'Muestra'
+        TALLER = 'TALLER', 'Taller'
+        COMPETENCIA = 'COMPETENCIA', 'Competencia'
+        SOCIAL = 'SOCIAL', 'Social o junta'
+        OTRO = 'OTRO', 'Otro'
+
+    titulo = models.CharField('Título', max_length=120)
+    tipo = models.CharField('Tipo', max_length=12, choices=Tipo.choices,
+                            default=Tipo.MUESTRA)
+    resumen = models.CharField(
+        'Resumen',
+        max_length=200,
+        blank=True,
+        help_text='Una línea. Es lo que se lee en el inicio.',
+    )
+    fecha = models.DateField('Fecha')
+    hora = models.TimeField('Hora', null=True, blank=True)
+    lugar = models.CharField('Lugar', max_length=120, blank=True)
+    enlace = models.URLField(
+        'Enlace',
+        blank=True,
+        help_text='Opcional. Inscripción, entradas o el post de Instagram.',
+    )
+    publicado = models.BooleanField('Publicado', default=True)
+
+    class Meta:
+        verbose_name = 'Evento'
+        verbose_name_plural = 'Eventos'
+        ordering = ['fecha']
+
+    def __str__(self):
+        return f'{self.titulo} ({self.fecha:%d-%m-%Y})'
+
+    @property
+    def es_futuro(self):
+        return self.fecha >= timezone.localdate()
+
+
 class Testimonio(TimeStampedModel):
     """Opinión real de un alumno o apoderado.
 

@@ -13,6 +13,7 @@ from .models import (
     CorreoEnviado,
     Inscripcion,
     NotaInterna,
+    Evento,
     Foto,
     Pago,
     Plan,
@@ -296,3 +297,21 @@ class FotoAdmin(admin.ModelAdmin):
     list_editable = ('orden', 'publicada')
     list_filter = ('publicada',)
     search_fields = ('titulo',)
+
+
+@admin.register(Evento)
+class EventoAdmin(admin.ModelAdmin):
+    list_display = ('titulo', 'tipo', 'fecha', 'lugar', 'publicado')
+    list_filter = ('tipo', 'publicado', 'fecha')
+    list_editable = ('publicado',)
+    search_fields = ('titulo', 'resumen', 'lugar')
+    date_hierarchy = 'fecha'
+    fieldsets = (
+        ('Qué es', {'fields': ('titulo', 'tipo', 'resumen')}),
+        ('Cuándo y dónde', {'fields': ('fecha', 'hora', 'lugar')}),
+        ('Publicación', {
+            'fields': ('enlace', 'publicado'),
+            'description': 'Las fechas futuras y publicadas salen en el inicio. '
+                           'Las pasadas dejan de mostrarse solas.',
+        }),
+    )

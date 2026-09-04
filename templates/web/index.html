@@ -96,12 +96,58 @@
     </div>
 </section>
 
+<!-- ==================== PRÓXIMAS FECHAS ==================== -->
+{% comment %}
+    Solo si el estudio publicó alguna fecha que todavía no pasa. Si no hay
+    ninguna, la sección no existe: una agenda vacía en portada da la
+    sensación de que el lugar está muerto.
+{% endcomment %}
+{% if eventos %}
+<section class="seccion seccion-compacta bg-seccion">
+    <div class="container">
+        <div class="text-center fade-in">
+            <span class="etiqueta">Agenda</span>
+            <h2 class="seccion-titulo">Próximas fechas</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="eventos-lista">
+            {% for evento in eventos %}
+            <div class="evento-fila fade-in" data-retraso="{{ forloop.counter0 }}00">
+                <span class="evento-fecha">
+                    <span class="dia">{{ evento.fecha|date:"d" }}</span>
+                    <span class="mes">{{ evento.fecha|date:"M"|upper }}</span>
+                </span>
+                <span class="evento-texto">
+                    <span class="badge-nivel">{{ evento.get_tipo_display }}</span>
+                    <strong>{{ evento.titulo }}</strong>
+                    <span>
+                        {{ evento.resumen }}
+                        {% if evento.hora %} · {{ evento.hora|time:"H:i" }} hrs{% endif %}
+                        {% if evento.lugar %} · {{ evento.lugar }}{% endif %}
+                    </span>
+                </span>
+                {% if evento.enlace %}
+                    <a href="{{ evento.enlace }}" target="_blank" rel="noopener"
+                       class="btn btn-acento-outline btn-sm">Más info</a>
+                {% else %}
+                    <a href="{% url 'web:contacto' %}" class="btn btn-acento-outline btn-sm">
+                        Quiero ir
+                    </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
 <!-- ==================== QUIENES SOMOS ==================== -->
 {% comment %}
     Lo que antes era la página /nosotros/. Vive acá porque nadie entraba
     a leerla y es justo lo que hace que alguien se decida.
 {% endcomment %}
-<section id="nosotros" class="seccion bg-seccion">
+<section id="nosotros" class="seccion {% if not eventos %}bg-seccion{% endif %}">
     <div class="container">
         <div class="row align-items-center g-5">
             <div class="col-lg-6 fade-in">
