@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0D0D0D">
     <title>{% block titulo %}Área Latina Estudio | Cultura en movimiento · Puerto Montt{% endblock %}</title>
-    <meta name="description" content="{% block descripcion %}Danza, wellness, formación, escena y comunidad en Puerto Montt. Un espacio para aprender, crear, moverte y conectar.{% endblock %}">
+    <meta name="description" content="{% block descripcion %}Baile urbano y bienestar en Puerto Montt. Salsa, bachata, reggaetón, pilates, barre y más, para todos los niveles.{% endblock %}">
 
     {% comment %}
         Open Graph: cuando alguien pega el enlace en WhatsApp o Instagram,
@@ -19,7 +19,7 @@
     <meta property="og:locale" content="es_CL">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:title" content="{{ og_titulo|default:'Área Latina Estudio | Cultura en movimiento' }}">
-    <meta property="og:description" content="{{ og_descripcion|default:'Danza, wellness, formación, escena y comunidad en Puerto Montt. Un espacio para aprender, crear, moverte y conectar.' }}">
+    <meta property="og:description" content="{{ og_descripcion|default:'Baile urbano y bienestar en Puerto Montt. Salsa, bachata, reggaetón, pilates, barre y más, para todos los niveles.' }}">
     <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo-naranja.jpg' %}">
     <meta name="twitter:card" content="summary_large_image">
 
@@ -58,9 +58,10 @@
 
         <div class="collapse navbar-collapse" id="menuPrincipal">
             {% comment %}
-                Siete secciones: el estudio ya no vende solo clases de baile,
-                y cada área del brief necesita su propia entrada. En pantallas
-                chicas el menú se despliega, así que no compite por el ancho.
+                Tres secciones. Antes eran siete y el visitante tenía que
+                elegir por dónde entrar antes de saber qué ofrece el
+                estudio. Ahora el inicio lo cuenta todo y el menú solo
+                separa lo que ya sabe que quiere.
             {% endcomment %}
             <ul class="navbar-nav mx-auto">
                 <li class="nav-item">
@@ -72,24 +73,8 @@
                        href="{% url 'web:clases' %}">Clases</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if seccion == 'planes' %}activo{% endif %}"
-                       href="{% url 'web:planes' %}">Planes</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if seccion == 'wellness' %}activo{% endif %}"
-                       href="{% url 'web:wellness' %}">Wellness</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if seccion == 'en-escena' %}activo{% endif %}"
-                       href="{% url 'web:en_escena' %}">En Escena</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if seccion == 'comunidad' %}activo{% endif %}"
-                       href="{% url 'web:comunidad' %}">Comunidad</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if seccion == 'nosotros' %}activo{% endif %}"
-                       href="{% url 'web:nosotros' %}">Nosotros</a>
+                    <a class="nav-link {% if seccion == 'contacto' %}activo{% endif %}"
+                       href="{% url 'web:contacto' %}">Contacto</a>
                 </li>
             </ul>
 
@@ -104,10 +89,7 @@
                         <i class="bi bi-person-circle"></i><span>Entrar</span>
                     </a>
                 {% endif %}
-                <a href="{% url 'web:planes' %}#horarios" class="btn btn-acento-outline btn-sm">
-                    Ver horarios
-                </a>
-                <a href="{% url 'web:contacto' %}" class="btn btn-acento btn-sm" data-iman="0.3">
+                <a href="{% url 'web:contacto' %}" class="btn btn-acento" data-iman="0.3">
                     Únete ahora
                 </a>
             </div>
@@ -139,8 +121,8 @@
             <div class="col-lg-4">
                 <img src="{% static 'img/logo-naranja.jpg' %}" alt="Área Latina Estudio" class="footer-logo">
                 <p class="mb-0">
-                    Cultura en movimiento. Danza, bienestar, formación, escena y
-                    comunidad en un mismo lugar, en Puerto Montt.
+                    Cultura en movimiento. Baile urbano y bienestar en un mismo
+                    lugar, en Puerto Montt.
                 </p>
                 <div class="redes">
                     {% if academia.instagram %}
@@ -182,26 +164,22 @@
                 <h5>Navegación</h5>
                 <ul>
                     <li><a href="{% url 'web:index' %}">Inicio</a></li>
-                    <li><a href="{% url 'web:clases' %}">Clases</a></li>
-                    <li><a href="{% url 'web:planes' %}">Planes y horarios</a></li>
-                    <li><a href="{% url 'web:wellness' %}">Wellness</a></li>
-                    <li><a href="{% url 'web:en_escena' %}">En Escena</a></li>
-                    <li><a href="{% url 'web:comunidad' %}">Comunidad</a></li>
-                    <li><a href="{% url 'web:nosotros' %}">Nosotros</a></li>
-                    <li><a href="{% url 'web:mi_espacio' %}">Mi espacio</a></li>
+                    <li><a href="{% url 'web:index' %}#nosotros">Quiénes somos</a></li>
+                    <li><a href="{% url 'web:clases' %}">Clases y planes</a></li>
                     <li><a href="{% url 'web:contacto' %}">Contacto</a></li>
+                    <li><a href="{% url 'web:mi_espacio' %}">Mi espacio</a></li>
                 </ul>
             </div>
 
             <div class="col-6 col-lg-2">
-                <h5>Áreas</h5>
+                <h5>Qué hacemos</h5>
                 {% comment %}
-                    Salen de la base de datos: si el estudio abre un área
-                    nueva, aparece acá sin tocar la plantilla.
+                    Salen de la base de datos: si el estudio suma un pilar,
+                    aparece acá sin tocar la plantilla.
                 {% endcomment %}
                 <ul>
                     {% for area in areas_footer %}
-                        <li><a href="{% url 'web:clases' %}?area={{ area.slug }}">{{ area.nombre }}</a></li>
+                        <li><a href="{% url 'web:clases' %}#{{ area.slug }}">{{ area.nombre }}</a></li>
                     {% endfor %}
                 </ul>
             </div>
@@ -287,7 +265,7 @@
   "@context": "https://schema.org",
   "@type": "SportsActivityLocation",
   "name": "{{ academia.nombre }}",
-  "description": "Danza, wellness, formación, escena y comunidad en Puerto Montt.",
+  "description": "Baile urbano y bienestar en Puerto Montt. Salsa, bachata, reggaetón, pilates, barre y más.",
   "url": "{{ request.scheme }}://{{ request.get_host }}/",
   "image": "{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo-naranja.jpg' %}",
   "email": "{{ academia.email }}",

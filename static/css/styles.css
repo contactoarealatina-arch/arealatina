@@ -47,6 +47,9 @@
 
 html {
     scroll-behavior: smooth;
+    /* El navbar es fijo: sin esto, saltar a un ancla deja el titulo
+       escondido debajo de la barra. */
+    scroll-padding-top: calc(var(--navbar-alto) + 16px);
 }
 
 body {
@@ -2140,105 +2143,6 @@ html[data-nivel="bajo"] .entrando { animation: none; }
 .seccion-titulo.text-start { margin-left: 0; }
 
 /* --------------------------------------------------------------------------
-   Áreas del estudio (lámina 05)
-   -------------------------------------------------------------------------- */
-.areas-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-    max-width: 860px;
-    margin: 0 auto;
-}
-
-.area-fila {
-    display: flex;
-    align-items: center;
-    gap: 1.1rem;
-    padding: 1.15rem 1.35rem;
-    border-radius: var(--radio);
-    background-color: var(--color-bg-card);
-    border: 1px solid var(--borde-card);
-    text-decoration: none;
-    color: inherit;
-    transition: transform 0.3s ease, border-color 0.3s ease,
-                background-color 0.3s ease;
-}
-
-a.area-fila:hover {
-    transform: translateX(6px);
-    border-color: var(--borde-card-hover);
-    background-color: var(--card-hover);
-}
-
-.area-icono {
-    flex-shrink: 0;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: var(--color-accent);
-    background: radial-gradient(circle, rgba(255, 87, 34, 0.16), transparent 70%);
-    box-shadow: var(--glow-naranja);
-}
-
-.area-icono.chico {
-    width: 44px;
-    height: 44px;
-    font-size: 1.15rem;
-}
-
-.area-texto {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-}
-
-.area-texto strong {
-    font-family: var(--font-titulo);
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-}
-
-.area-texto > span {
-    font-size: 0.92rem;
-    color: var(--color-text-muted);
-}
-
-.area-cuenta {
-    flex-shrink: 0;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--color-accent-lite);
-    padding: 0.3rem 0.7rem;
-    border-radius: 50px;
-    border: 1px solid rgba(255, 87, 34, 0.3);
-    white-space: nowrap;
-}
-
-.area-flecha {
-    flex-shrink: 0;
-    color: var(--color-accent);
-    font-size: 1.2rem;
-    transition: transform 0.3s ease;
-}
-
-a.area-fila:hover .area-flecha { transform: translateX(4px); }
-
-@media (max-width: 575.98px) {
-    .area-fila { padding: 1rem; gap: 0.85rem; }
-    .area-icono { width: 46px; height: 46px; font-size: 1.2rem; }
-    .area-texto strong { font-size: 1rem; }
-    .area-cuenta { display: none; }
-}
-
-/* --------------------------------------------------------------------------
    Bloques de resumen del inicio (horarios + planes)
    -------------------------------------------------------------------------- */
 .bloque-resumen {
@@ -2336,72 +2240,6 @@ a.area-fila:hover .area-flecha { transform: translateX(4px); }
 }
 
 /* --------------------------------------------------------------------------
-   Filas de plan (resumen del inicio)
-   -------------------------------------------------------------------------- */
-.plan-fila {
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-    padding: 0.9rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.plan-fila:last-of-type { border-bottom: none; }
-
-.plan-fila.destacado {
-    background: linear-gradient(90deg, rgba(255, 87, 34, 0.08), transparent);
-    border-radius: 10px;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    margin: 0 -0.75rem;
-}
-
-.plan-fila-icono {
-    flex-shrink: 0;
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.15rem;
-    color: var(--color-accent);
-    background-color: rgba(255, 87, 34, 0.1);
-}
-
-.plan-fila-texto {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.plan-fila-texto strong {
-    font-family: var(--font-titulo);
-    font-size: 1rem;
-}
-
-.plan-fila-texto span {
-    font-size: 0.83rem;
-    color: var(--color-text-muted);
-}
-
-.plan-fila-precio {
-    flex-shrink: 0;
-    font-family: var(--font-titulo);
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: var(--color-accent);
-    white-space: nowrap;
-}
-
-.plan-fila-precio small {
-    font-size: 0.7rem;
-    font-weight: 500;
-    color: var(--color-text-muted);
-}
-
-/* --------------------------------------------------------------------------
    Comparador de planes
    -------------------------------------------------------------------------- */
 .plan-icono {
@@ -2469,62 +2307,6 @@ a.area-fila:hover .area-flecha { transform: translateX(4px); }
 
 @media (max-width: 575.98px) {
     .nota-suelta { flex-direction: column; text-align: center; }
-}
-
-/* --------------------------------------------------------------------------
-   Buscador de horarios
-   -------------------------------------------------------------------------- */
-.buscador {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 1rem;
-    padding: 1.5rem;
-    border-radius: var(--radio);
-    background-color: var(--color-bg-card);
-    border: 1px solid var(--borde-card);
-}
-
-.buscador-campo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    min-width: 0;
-}
-
-.buscador-campo label {
-    font-family: var(--font-titulo);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-text-muted);
-}
-
-.buscador-acciones {
-    display: flex;
-    align-items: flex-end;
-    gap: 0.5rem;
-    grid-column: 1 / -1;
-}
-
-.buscador-acciones .btn { flex: 1 1 auto; }
-
-@media (min-width: 992px) {
-    .buscador-acciones {
-        grid-column: auto;
-        flex-direction: column;
-        align-items: stretch;
-    }
-}
-
-.resultado-cuenta {
-    font-family: var(--font-titulo);
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--color-text-muted);
-    margin-bottom: 0.75rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -2644,115 +2426,6 @@ a.area-fila:hover .area-flecha { transform: translateX(4px); }
     color: var(--color-accent);
     flex-shrink: 0;
     margin-top: 0.15rem;
-}
-
-/* --------------------------------------------------------------------------
-   Clases agrupadas por área
-   -------------------------------------------------------------------------- */
-.grupo-area { margin-bottom: 3.5rem; }
-.grupo-area:last-child { margin-bottom: 0; }
-
-.grupo-area-titulo {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.75rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.grupo-area-titulo h2 {
-    font-family: var(--font-titulo);
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-}
-
-.filtros-secundarios { margin-top: -0.5rem; margin-bottom: 2.5rem; }
-
-.filtro-pill.chico {
-    font-size: 0.78rem;
-    padding: 0.35rem 0.85rem;
-}
-
-/* --------------------------------------------------------------------------
-   Eventos
-   -------------------------------------------------------------------------- */
-.card-evento {
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-    padding: 0;
-    overflow: hidden;
-}
-
-.card-evento > *:not(.evento-imagen) {
-    margin-left: 1.75rem;
-    margin-right: 1.75rem;
-}
-
-.card-evento > *:first-child:not(.evento-imagen) { margin-top: 1.75rem; }
-.card-evento > *:last-child { margin-bottom: 1.75rem; }
-
-.card-evento.pasado { opacity: 0.72; }
-
-.evento-imagen {
-    width: 100%;
-    height: 170px;
-    object-fit: cover;
-    display: block;
-}
-
-.evento-cabecera {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-}
-
-.evento-fecha,
-.evento-franja-fecha {
-    flex-shrink: 0;
-    width: 62px;
-    padding: 0.5rem 0;
-    text-align: center;
-    border-radius: 12px;
-    background-color: rgba(255, 87, 34, 0.1);
-    border: 1px solid rgba(255, 87, 34, 0.3);
-}
-
-.evento-fecha .dia,
-.evento-franja-fecha .dia {
-    display: block;
-    font-family: var(--font-titulo);
-    font-size: 1.5rem;
-    font-weight: 800;
-    line-height: 1;
-    color: var(--color-accent);
-}
-
-.evento-fecha .mes,
-.evento-franja-fecha .mes {
-    display: block;
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    color: var(--color-text-muted);
-}
-
-.evento-franja {
-    display: flex;
-    align-items: center;
-    gap: 1.35rem;
-    padding: 1.35rem 1.6rem;
-    border-radius: var(--radio);
-    background-color: var(--color-bg-card);
-    border: 1px solid var(--borde-card);
-}
-
-.evento-franja-texto { flex: 1; min-width: 0; }
-.evento-franja-texto .etiqueta { margin-bottom: 0.35rem; }
-
-@media (max-width: 767.98px) {
-    .evento-franja { flex-direction: column; text-align: center; }
 }
 
 /* --------------------------------------------------------------------------
@@ -2976,4 +2649,257 @@ a.area-fila:hover .area-flecha { transform: translateX(4px); }
 
     .tabla-horario tbody td,
     .tabla-horario thead th { border-color: #CCCCCC; }
+}
+
+/* ==========================================================================
+   LOS DOS PILARES
+   Baile Urbano y Bienestar. Reemplazan a las cinco áreas: dos bloques
+   grandes que se despliegan, en vez de una página por área.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Tarjeta del inicio
+   -------------------------------------------------------------------------- */
+.pilar-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 2.5rem 2rem;
+    border-radius: var(--radio);
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--borde-card);
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease,
+                background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Halo de fondo: da peso a la tarjeta sin necesitar una foto, que es lo
+   que todavía no tenemos. Cuando lleguen las fotos del estudio, va acá. */
+.pilar-card::after {
+    content: '';
+    position: absolute;
+    right: -60px;
+    bottom: -60px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 87, 34, 0.14), transparent 70%);
+    pointer-events: none;
+    transition: transform 0.4s ease;
+}
+
+.pilar-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--borde-card-hover);
+    background-color: var(--card-hover);
+    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.55);
+}
+
+.pilar-card:hover::after { transform: scale(1.25); }
+
+.pilar-card h3 {
+    font-family: var(--font-titulo);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.6rem;
+}
+
+.pilar-card p {
+    color: var(--color-text-muted);
+    margin-bottom: 1.75rem;
+}
+
+.pilar-pie {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--borde-card);
+}
+
+.pilar-flecha {
+    font-family: var(--font-titulo);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-accent);
+    white-space: nowrap;
+}
+
+.pilar-card:hover .pilar-flecha i { transform: translateX(4px); }
+.pilar-flecha i { transition: transform 0.3s ease; }
+
+.pilar-cuenta {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-accent-lite);
+    padding: 0.3rem 0.75rem;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 87, 34, 0.3);
+    white-space: nowrap;
+}
+
+.pilar-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 76px;
+    height: 76px;
+    margin-bottom: 1.25rem;
+    border-radius: 50%;
+    font-size: 1.9rem;
+    color: var(--color-accent);
+    background: radial-gradient(circle, rgba(255, 87, 34, 0.16), transparent 70%);
+    box-shadow: var(--glow-naranja);
+    flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Bloque desplegable de /clases/
+   -------------------------------------------------------------------------- */
+.pilares-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.pilar-bloque {
+    border-radius: var(--radio);
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--borde-card);
+    overflow: hidden;
+}
+
+/* Es un <button> para que se abra con Enter y con la barra espaciadora,
+   no solo con el mouse. Por eso hay que apagarle el estilo de botón. */
+.pilar-cabecera {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    padding: 2rem;
+    background: none;
+    border: none;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.pilar-cabecera:hover { background-color: var(--card-hover); }
+
+.pilar-cabecera:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -4px;
+}
+
+.pilar-cabecera .pilar-icono { margin-bottom: 0; }
+
+.pilar-texto {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.pilar-titulo {
+    font-family: var(--font-titulo);
+    font-size: clamp(1.35rem, 3.5vw, 1.9rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 1.15;
+}
+
+.pilar-bajada {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+}
+
+.pilar-disciplinas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+}
+
+.chip {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    padding: 0.25rem 0.65rem;
+    border-radius: 50px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-border);
+}
+
+.pilar-accion {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+/* La flecha del botón gira al abrir: el estado del bloque se ve sin
+   tener que leer el texto. */
+.pilar-cabecera .bi-chevron-down {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.pilar-cabecera[aria-expanded="true"] .bi-chevron-down {
+    transform: rotate(180deg);
+}
+
+.pilar-detalle {
+    padding: 0 2rem 2.5rem;
+    border-top: 1px solid var(--borde-card);
+}
+
+.pilar-detalle.abierto { padding-top: 2rem; }
+.pilar-detalle.collapse.show,
+.pilar-detalle.collapsing { padding-top: 2rem; }
+
+.pilar-detalle .bloque-titulo { margin-bottom: 1.25rem; }
+.pilar-detalle .nota-suelta { margin-top: 2rem; }
+
+@media (max-width: 767.98px) {
+    .pilar-cabecera {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.5rem;
+    }
+    .pilar-accion {
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .pilar-detalle { padding: 0 1.25rem 2rem; }
+    .pilar-detalle.collapse.show,
+    .pilar-detalle.collapsing { padding-top: 1.5rem; }
+    .pilar-card { padding: 2rem 1.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pilar-card,
+    .pilar-card::after,
+    .pilar-flecha i,
+    .pilar-cabecera .bi-chevron-down {
+        transition: none;
+    }
+    .pilar-card:hover { transform: none; }
+    .pilar-card:hover::after { transform: none; }
 }

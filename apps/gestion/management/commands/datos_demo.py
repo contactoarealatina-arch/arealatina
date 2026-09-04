@@ -79,12 +79,15 @@ EDAD_MINIMA = {
     'KIDS': 4,
 }
 
+# Los dos pilares del estudio. Kids Dance va en Baile Urbano: es una
+# clase de baile y con dos pilares no hay donde mas ponerla.
 AREA_POR_DISCIPLINA = {
-    'SALSA': 'danza', 'BACHATA': 'danza', 'REGGAETON': 'danza',
-    'URBANO': 'danza', 'HEELS': 'danza', 'TANGO': 'danza',
-    'KIDS': 'kids-teens',
-    'PILATES': 'wellness', 'BARRE': 'wellness',
-    'FLEXIBILIDAD': 'wellness', 'REFORMER': 'wellness',
+    'SALSA': 'baile-urbano', 'BACHATA': 'baile-urbano',
+    'REGGAETON': 'baile-urbano', 'URBANO': 'baile-urbano',
+    'HEELS': 'baile-urbano', 'TANGO': 'baile-urbano',
+    'KIDS': 'baile-urbano',
+    'PILATES': 'bienestar', 'BARRE': 'bienestar',
+    'FLEXIBILIDAD': 'bienestar', 'REFORMER': 'bienestar',
 }
 
 

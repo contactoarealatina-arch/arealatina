@@ -1,17 +1,18 @@
 {% extends 'base.html' %}
+{% load formato %}
 
-{% block titulo %}Clases y disciplinas | Área Latina Estudio{% endblock %}
-{% block descripcion %}Salsa, bachata, reggaetón, urbano, heels, tango, Kids & Teens y wellness. Todas las clases de Área Latina Estudio en Puerto Montt.{% endblock %}
+{% block titulo %}Clases y planes | Área Latina Estudio{% endblock %}
+{% block descripcion %}Nuestras dos áreas: Baile Urbano y Bienestar. Mira los horarios, los niveles y los planes de cada una, en Puerto Montt.{% endblock %}
 
 {% block contenido %}
 
 <header class="page-header">
     <div class="container">
-        <span class="etiqueta">Clases</span>
-        <h1>Explora por área, nivel y objetivo</h1>
+        <span class="etiqueta">Clases y planes</span>
+        <h1>Elige por dónde partir</h1>
         <p>
-            Cada área tiene su propia forma de mover el cuerpo. Da lo mismo si
-            nunca has bailado: se parte desde cero y se avanza a tu ritmo.
+            Dos áreas, un mismo estudio. Abre la que te interese y mira los
+            horarios, los niveles y cuánto cuesta.
         </p>
     </div>
 </header>
@@ -19,86 +20,186 @@
 <section class="seccion">
     <div class="container">
 
-        <!-- Filtros -->
-        <div class="filtros fade-in">
-            <a href="{% url 'web:clases' %}"
-               class="filtro-pill {% if not area_activa and not disciplina_activa %}activo{% endif %}">Todas</a>
-            {% for area in areas %}
-                <a href="{% url 'web:clases' %}?area={{ area.slug }}"
-                   class="filtro-pill {% if area_activa == area.slug %}activo{% endif %}">{{ area.nombre }}</a>
-            {% endfor %}
-        </div>
+        {% comment %}
+            Acordeón y no modal: el contenido queda en el HTML desde el
+            principio, así Google lo indexa, funciona sin JavaScript y el
+            enlace /clases/#bienestar abre el bloque correcto.
+        {% endcomment %}
+        <div class="pilares-lista">
+            {% for bloque in pilares %}
+            <article id="{{ bloque.pilar.slug }}" class="pilar-bloque fade-in">
 
-        <div class="filtros filtros-secundarios fade-in">
-            {% for valor, etiqueta in disciplinas %}
-                <a href="{% url 'web:clases' %}?disciplina={{ valor }}"
-                   class="filtro-pill chico {% if disciplina_activa == valor %}activo{% endif %}">{{ etiqueta }}</a>
+                <!-- Tarjeta grande -->
+                <button type="button" class="pilar-cabecera {{ bloque.pilar.slug }}"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#detalle-{{ bloque.pilar.slug }}"
+                        aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                        aria-controls="detalle-{{ bloque.pilar.slug }}">
+                    <span class="pilar-icono"><i class="bi {{ bloque.pilar.icono }}"></i></span>
+
+                    <span class="pilar-texto">
+                        <span class="pilar-titulo">{{ bloque.pilar.nombre }}</span>
+                        <span class="pilar-bajada">{{ bloque.pilar.bajada }}</span>
+                        <span class="pilar-disciplinas">
+                            {% for disciplina in bloque.disciplinas %}
+                                <span class="chip">{{ disciplina }}</span>
+                            {% endfor %}
+                        </span>
+                    </span>
+
+                    <span class="pilar-accion">
+                        <span class="pilar-cuenta">
+                            {{ bloque.clases|length }} clase{{ bloque.clases|length|pluralize }}
+                        </span>
+                        <span class="btn btn-acento btn-sm">
+                            Ver clases y planes
+                            <i class="bi bi-chevron-down ms-1"></i>
+                        </span>
+                    </span>
+                </button>
+
+                <!-- Detalle -->
+                <div id="detalle-{{ bloque.pilar.slug }}"
+                     class="collapse {% if forloop.first %}show{% endif %} pilar-detalle">
+
+                    <!-- Horarios -->
+                    <h3 class="h5 bloque-titulo">
+                        <i class="bi bi-calendar3 texto-acento"></i>
+                        Horarios de {{ bloque.pilar.nombre }}
+                    </h3>
+
+                    <div class="tabla-scroll">
+                        <table class="tabla-horario completa">
+                            <thead>
+                                <tr>
+                                    <th>Horario</th>
+                                    <th>Clase</th>
+                                    <th>Días</th>
+                                    <th>Nivel</th>
+                                    <th>Profesor/a</th>
+                                    <th>Cupos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for clase in bloque.clases %}
+                                <tr>
+                                    <td class="hora">{{ clase.horario }}</td>
+                                    <td>
+                                        <span class="clase-emoji">{{ clase.emoji }}</span>
+                                        {{ clase.get_nombre_display }}
+                                        {% if clase.edad_minima %}
+                                            <small>Desde los {{ clase.edad_minima }} años</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ clase.dias_display }}</td>
+                                    <td><span class="badge-nivel">{{ clase.get_nivel_display }}</span></td>
+                                    <td>
+                                        {% if clase.profesora %}
+                                            {{ clase.profesora.get_full_name|default:clase.profesora.username }}
+                                        {% else %}
+                                            Por confirmar
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if clase.cupos_disponibles %}
+                                            <span class="cupo-ok">{{ clase.cupos_disponibles }} libres</span>
+                                        {% else %}
+                                            <span class="cupo-lleno">Sin cupo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Planes -->
+                    <h3 class="h5 bloque-titulo mt-5">
+                        <i class="bi bi-patch-check texto-acento"></i>
+                        Planes
+                    </h3>
+                    <p class="texto-suave">
+                        Los planes valen para cualquier disciplina del estudio: puedes
+                        combinar baile y bienestar dentro del mismo plan.
+                    </p>
+
+                    <div class="row g-4 justify-content-center">
+                        {% for plan in bloque.planes %}
+                        <div class="col-md-6 col-lg-4">
+                            <article class="card-al card-plan {% if plan.destacado %}destacado{% endif %}">
+                                {% if plan.destacado %}
+                                    <span class="cinta-destacado">Más elegido</span>
+                                {% endif %}
+
+                                <span class="plan-icono"><i class="bi {{ plan.icono }}"></i></span>
+                                <h4 class="h5">{{ plan.nombre }}</h4>
+
+                                <div class="plan-precio">
+                                    <span class="plan-moneda">$</span>{{ plan.precio_clp|clp }}
+                                </div>
+                                <div class="plan-periodo">al mes</div>
+
+                                <ul class="plan-beneficios">
+                                    {% for beneficio in plan.beneficios_lista %}
+                                        <li><i class="bi bi-check-circle-fill"></i>{{ beneficio }}</li>
+                                    {% endfor %}
+                                </ul>
+
+                                <a href="{% url 'web:contacto' %}?plan={{ plan.nombre|urlencode }}"
+                                   class="btn {% if plan.destacado %}btn-acento{% else %}btn-acento-outline{% endif %} w-100 mt-auto">
+                                    Inscribirme
+                                </a>
+                            </article>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if bloque.suelta %}
+                    <div class="nota-suelta">
+                        <i class="bi bi-ticket-perforated"></i>
+                        <div>
+                            <strong>¿Prefieres probar primero?</strong>
+                            {{ bloque.suelta.nombre }} a ${{ bloque.suelta.precio_clp|clp }}.
+                            {{ bloque.suelta.descripcion }}
+                        </div>
+                        <a href="{% url 'web:contacto' %}" class="btn btn-acento-outline btn-sm">
+                            Coordinar
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </article>
+            {% empty %}
+            <div class="vacio">
+                <i class="bi bi-music-note-beamed"></i>
+                <h2 class="h5">Todavía no hay clases publicadas</h2>
+                <p>
+                    Estamos preparando los horarios del próximo período.
+                    Escríbenos y te avisamos apenas se abran.
+                </p>
+                <a href="{% url 'web:contacto' %}" class="btn btn-acento">Consultar horarios</a>
+            </div>
             {% endfor %}
         </div>
 
         {% comment %}
-            Agrupado por área: la lista plana de clases ya no dice nada cuando
-            en la misma tabla conviven una salsa y un reformer.
+            Red de seguridad: una clase sin pilar asignado no desaparecería
+            del sitio sin que nadie lo note.
         {% endcomment %}
-        {% for grupo in por_area %}
-        <div class="grupo-area">
-            <div class="grupo-area-titulo fade-in">
-                <span class="area-icono chico"><i class="bi {{ grupo.area.icono }}"></i></span>
-                <div>
-                    <h2 class="h3 mb-0">{{ grupo.area.nombre }}</h2>
-                    {% if grupo.area.bajada %}
-                        <p class="mb-0 texto-suave">{{ grupo.area.bajada }}</p>
-                    {% endif %}
+        {% if sin_pilar %}
+        <div class="pilar-bloque fade-in mt-4">
+            <div class="pilar-detalle abierto">
+                <h3 class="h5 bloque-titulo">
+                    <i class="bi bi-three-dots texto-acento"></i>Otras clases
+                </h3>
+                <div class="row g-4">
+                    {% for clase in sin_pilar %}
+                    <div class="col-md-6 col-lg-4">
+                        {% include 'web/_card_clase.html' with clase=clase %}
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-
-            <div class="row g-4">
-                {% for clase in grupo.clases %}
-                <div class="col-md-6 col-lg-4 fade-in">
-                    {% include 'web/_card_clase.html' with clase=clase %}
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endfor %}
-
-        {% if sin_area %}
-        <div class="grupo-area">
-            <div class="grupo-area-titulo fade-in">
-                <span class="area-icono chico"><i class="bi bi-three-dots"></i></span>
-                <h2 class="h3 mb-0">Otras clases</h2>
-            </div>
-            <div class="row g-4">
-                {% for clase in sin_area %}
-                <div class="col-md-6 col-lg-4 fade-in">
-                    {% include 'web/_card_clase.html' with clase=clase %}
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        {% if not por_area and not sin_area %}
-        <div class="vacio fade-in">
-            <i class="bi bi-music-note-beamed"></i>
-            <h3 class="h5">Todavía no hay clases publicadas</h3>
-            <p>
-                {% if disciplina_activa or area_activa %}
-                    No hay clases activas con ese filtro por ahora.
-                {% else %}
-                    Estamos preparando los horarios del próximo período.
-                {% endif %}
-                Escríbenos y te avisamos apenas se abran.
-            </p>
-            <a href="{% url 'web:contacto' %}" class="btn btn-acento">Consultar horarios</a>
-        </div>
-        {% endif %}
-
-        {% if por_area or sin_area %}
-        <div class="text-center mt-5 fade-in">
-            <a href="{% url 'web:planes' %}#horarios" class="btn btn-acento-outline" data-iman="0.25">
-                <i class="bi bi-funnel me-1"></i>Buscar por día, nivel y horario
-            </a>
         </div>
         {% endif %}
     </div>
@@ -108,8 +209,34 @@
     <div class="container fade-in">
         <h2>¿No encuentras tu horario?</h2>
         <p>Cuéntanos qué días puedes y buscamos la mejor alternativa para ti.</p>
-        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg">Escríbenos</a>
+        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg" data-iman="0.3">
+            Escríbenos
+        </a>
     </div>
 </section>
 
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ request.csp_nonce }}">
+// Si alguien llega con /clases/#bienestar, se abre ese bloque y se cierra
+// el otro. Sin esto el enlace del pie deja al visitante mirando el bloque
+// equivocado ya desplegado.
+(function () {
+    var slug = (window.location.hash || '').replace('#', '');
+    if (!slug) { return; }
+
+    var destino = document.getElementById('detalle-' + slug);
+    if (!destino) { return; }
+
+    document.querySelectorAll('.pilar-detalle.collapse').forEach(function (panel) {
+        var abrir = panel === destino;
+        panel.classList.toggle('show', abrir);
+        var boton = document.querySelector('[data-bs-target="#' + panel.id + '"]');
+        if (boton) { boton.setAttribute('aria-expanded', abrir ? 'true' : 'false'); }
+    });
+
+    document.getElementById(slug).scrollIntoView();
+})();
+</script>
 {% endblock %}

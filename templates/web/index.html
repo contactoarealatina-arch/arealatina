@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
-{% load static formato %}
+{% load static %}
 
-{% block titulo %}Área Latina Estudio | Cultura en movimiento · Puerto Montt{% endblock %}
-{% block descripcion %}Danza, wellness, formación, escena y comunidad en Puerto Montt. Un espacio para aprender, crear, moverte y conectar.{% endblock %}
+{% block titulo %}Área Latina Estudio | Baile urbano y bienestar en Puerto Montt{% endblock %}
+{% block descripcion %}Baile urbano y bienestar en Puerto Montt. Salsa, bachata, reggaetón, pilates, barre y más, para todos los niveles.{% endblock %}
 
 {% block contenido %}
 
@@ -27,18 +27,18 @@
         </h1>
 
         <p class="hero-disciplinas">
-            Danza · Bienestar · Formación · Escena · Comunidad
+            Baile Urbano · Bienestar
         </p>
 
         <p class="hero-bajada">
-            Un espacio para aprender, crear, moverte y conectar.
+            Un espacio para aprender, moverte y conectar.
         </p>
 
         <div class="d-flex flex-wrap gap-3 justify-content-center">
             <a href="{% url 'web:clases' %}" class="btn btn-acento btn-lg" data-iman="0.3">
                 Conoce nuestras clases
             </a>
-            <a href="{% url 'web:nosotros' %}" class="btn btn-acento-outline btn-lg" data-iman="0.3">
+            <a href="#nosotros" class="btn btn-acento-outline btn-lg" data-iman="0.3">
                 Descubre Área Latina
             </a>
         </div>
@@ -48,296 +48,121 @@
         </p>
     </div>
 
-    <a href="#areas" class="hero-flecha" aria-label="Ir al contenido">
+    <a href="#pilares" class="hero-flecha" aria-label="Ir al contenido">
         <i class="bi bi-chevron-double-down"></i>
     </a>
 </section>
 
-<!-- ==================== CINTA ==================== -->
-<div class="cinta" aria-hidden="true">
-    <div class="cinta-pista">
-        {% for vuelta in "12" %}
-            {% for area in areas %}
-                <span class="cinta-item">{{ area.nombre }}</span>
-                <span class="cinta-sep">✦</span>
-            {% endfor %}
-        {% endfor %}
-    </div>
-</div>
-
-<!-- ==================== ESTADISTICAS ==================== -->
-<section class="seccion seccion-compacta">
+<!-- ==================== LOS DOS PILARES ==================== -->
+{% comment %}
+    Dos tarjetas y nada más. Antes acá había cinco áreas y quien llegaba
+    tenía que leerlas todas para entender qué es el estudio.
+{% endcomment %}
+<section id="pilares" class="seccion">
     <div class="container">
-        <div class="row g-4 text-center">
-            {% for stat in estadisticas %}
-            <div class="col-6 col-lg-3 fade-in" data-retraso="{{ forloop.counter0 }}00">
-                <div class="stat-numero">
-                    <span data-contador="{{ stat.valor }}">0</span>{{ stat.sufijo }}
+        <div class="text-center fade-in">
+            <span class="etiqueta">Qué hacemos</span>
+            <h2 class="seccion-titulo">Dos formas de moverte</h2>
+            <div class="linea-acento"></div>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            {% for bloque in pilares %}
+            <div class="col-md-6 fade-in">
+                <a href="{% url 'web:clases' %}#{{ bloque.pilar.slug }}"
+                   class="pilar-card card-enlace {{ bloque.pilar.slug }}">
+                    <span class="pilar-icono"><i class="bi {{ bloque.pilar.icono }}"></i></span>
+                    <h3>{{ bloque.pilar.nombre }}</h3>
+                    <p>{{ bloque.pilar.bajada }}</p>
+                    <span class="pilar-pie">
+                        <span class="pilar-cuenta">
+                            {{ bloque.clases|length }} clase{{ bloque.clases|length|pluralize }}
+                        </span>
+                        <span class="pilar-flecha">
+                            Ver clases y planes <i class="bi bi-arrow-right"></i>
+                        </span>
+                    </span>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-lg-8">
+                <div class="vacio">
+                    <i class="bi bi-music-note-beamed"></i>
+                    <p class="mb-0">[Pendiente: cargar las clases del estudio desde el panel.]</p>
                 </div>
-                <div class="stat-etiqueta">{{ stat.etiqueta }}</div>
             </div>
             {% endfor %}
         </div>
     </div>
 </section>
 
-<!-- ==================== SECCIONES CLAVE ==================== -->
-<section id="areas" class="seccion">
+<!-- ==================== QUIENES SOMOS ==================== -->
+{% comment %}
+    Lo que antes era la página /nosotros/. Vive acá porque nadie entraba
+    a leerla y es justo lo que hace que alguien se decida.
+{% endcomment %}
+<section id="nosotros" class="seccion bg-seccion">
     <div class="container">
-        <div class="text-center fade-in">
-            <span class="etiqueta">Secciones clave</span>
-            <h2 class="seccion-titulo">Mucho más que una academia</h2>
-            <div class="linea-acento"></div>
-            <p class="seccion-bajada">
-                Cinco áreas que conviven en la misma sala. Puedes quedarte en una
-                o pasar por todas: la idea es justamente esa.
-            </p>
-        </div>
-
-        {% comment %}
-            Las áreas salen de la base de datos. Cada una lleva a la página
-            donde se puede hacer algo con ella, no a un ancla decorativa.
-        {% endcomment %}
-        <div class="areas-lista">
-            {% for area in areas %}
-            <a href="{% if area.slug == 'wellness' %}{% url 'web:wellness' %}{% elif area.slug == 'en-escena' or area.slug == 'companias' %}{% url 'web:en_escena' %}{% elif area.slug == 'kids-teens' %}{% url 'web:nosotros' %}#kids{% else %}{% url 'web:clases' %}?area={{ area.slug }}{% endif %}"
-               class="area-fila fade-in card-enlace" data-retraso="{{ forloop.counter0 }}00">
-                <span class="area-icono"><i class="bi {{ area.icono }}"></i></span>
-                <span class="area-texto">
-                    <strong>{{ area.nombre }}</strong>
-                    <span>{{ area.bajada }}</span>
-                </span>
-                {% if area.clases_activas.count %}
-                    <span class="area-cuenta">{{ area.clases_activas.count }} clase{{ area.clases_activas.count|pluralize }}</span>
-                {% endif %}
-                <span class="area-flecha"><i class="bi bi-chevron-right"></i></span>
-            </a>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-<!-- ==================== HORARIOS + PLANES ==================== -->
-<section class="seccion bg-seccion">
-    <div class="container">
-        <div class="text-center fade-in">
-            <span class="etiqueta">Horarios y planes</span>
-            <h2 class="seccion-titulo">Compara, elige y empieza</h2>
-            <div class="linea-acento"></div>
-            <p class="seccion-bajada">
-                La idea es que no tengas que preguntar todo por WhatsApp.
-                Acá está el horario y acá está el valor.
-            </p>
-        </div>
-
-        <div class="row g-4 align-items-start">
-            <!-- Próximas clases -->
+        <div class="row align-items-center g-5">
             <div class="col-lg-6 fade-in">
-                <div class="bloque-resumen">
-                    <h3 class="h5 bloque-titulo">
-                        <i class="bi bi-calendar3 texto-acento"></i>
-                        Encuentra tu próxima clase
-                    </h3>
-
-                    {% if clases_destacadas %}
-                    <div class="tabla-scroll">
-                        <table class="tabla-horario">
-                            <thead>
-                                <tr>
-                                    <th>Horario</th>
-                                    <th>Clase</th>
-                                    <th>Nivel</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for clase in clases_destacadas %}
-                                <tr>
-                                    <td class="hora">{{ clase.hora_inicio|time:"H:i" }}</td>
-                                    <td>
-                                        <span class="clase-emoji">{{ clase.emoji }}</span>
-                                        {{ clase.get_nombre_display }}
-                                        <small>{{ clase.dias_corto }}</small>
-                                    </td>
-                                    <td><span class="badge-nivel">{{ clase.get_nivel_display }}</span></td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <a href="{% url 'web:planes' %}#horarios" class="btn btn-acento-outline w-100 mt-3">
-                        Ver los {{ total_clases }} horarios <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                    {% else %}
-                    <p class="texto-suave mb-0">
-                        [Pendiente: cargar las clases del estudio desde el panel.]
-                    </p>
-                    {% endif %}
-                </div>
+                <span class="etiqueta">Quiénes somos</span>
+                <h2 class="seccion-titulo text-start">Un espacio donde caben todos</h2>
+                <div class="linea-acento inicio"></div>
+                <p>
+                    Área Latina Estudio nació en Puerto Montt con una idea simple:
+                    que cualquier persona pudiera acercarse al movimiento sin miedo
+                    al ridículo y sin necesidad de experiencia previa.
+                </p>
+                <p>
+                    Hoy trabajamos en dos frentes. El baile urbano, donde se aprende
+                    a moverse y a soltarse en grupo. Y el bienestar, donde se trabaja
+                    la base: fuerza, movilidad y postura. Los dos se pueden combinar,
+                    y es lo que más recomendamos.
+                </p>
+                <p class="mb-0">
+                    <em class="texto-acento-lite">
+                        [Pendiente: cliente debe enviar la historia real del estudio —
+                        año de fundación, quiénes lo partieron y los hitos importantes.]
+                    </em>
+                </p>
             </div>
 
-            <!-- Planes -->
             <div class="col-lg-6 fade-in">
-                <div class="bloque-resumen">
-                    <h3 class="h5 bloque-titulo">
-                        <i class="bi bi-patch-check texto-acento"></i>
-                        Elige el plan que va contigo
-                    </h3>
-
-                    {% for plan in planes %}
-                    <div class="plan-fila {% if plan.destacado %}destacado{% endif %}">
-                        <span class="plan-fila-icono"><i class="bi {{ plan.icono }}"></i></span>
-                        <span class="plan-fila-texto">
-                            <strong>{{ plan.nombre }}</strong>
-                            <span>{{ plan.beneficios_lista.0 }}</span>
-                        </span>
-                        <span class="plan-fila-precio">
-                            ${{ plan.precio_clp|clp }}<small>/mes</small>
-                        </span>
+                <div class="row g-4 text-center">
+                    {% for stat in estadisticas %}
+                    <div class="col-6">
+                        <div class="stat-numero">
+                            <span data-contador="{{ stat.valor }}">0</span>{{ stat.sufijo }}
+                        </div>
+                        <div class="stat-etiqueta">{{ stat.etiqueta }}</div>
                     </div>
-                    {% empty %}
-                    <p class="texto-suave mb-0">
-                        [Pendiente: cargar los planes desde el panel.]
-                    </p>
                     {% endfor %}
-
-                    {% if planes %}
-                    <a href="{% url 'web:planes' %}" class="btn btn-acento w-100 mt-3" data-iman="0.25">
-                        Comparar los planes <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                    {% endif %}
                 </div>
             </div>
         </div>
-    </div>
-</section>
 
-<!-- ==================== POR QUE AREA LATINA ==================== -->
-<section class="seccion">
-    <div class="container">
-        <div class="text-center fade-in">
-            <span class="etiqueta">Por qué elegirnos</span>
-            <h2 class="seccion-titulo">Una experiencia completa</h2>
-            <div class="linea-acento"></div>
-        </div>
-
-        <div class="row g-4 text-center">
+        <div class="row g-4 text-center mt-4">
             {% for beneficio in beneficios %}
-            <div class="col-sm-6 col-lg-3 fade-in">
+            <div class="col-md-4 fade-in">
                 <div class="beneficio-icono">
                     <i class="bi {{ beneficio.icono }}"></i>
                 </div>
                 <h3 class="h5 mb-3">{{ beneficio.titulo }}</h3>
-                <p>{{ beneficio.texto }}</p>
+                <p class="mb-0">{{ beneficio.texto }}</p>
             </div>
             {% endfor %}
         </div>
     </div>
 </section>
 
-<!-- ==================== COMO EMPEZAR ==================== -->
-<section class="seccion bg-seccion">
-    <div class="container">
-        <div class="text-center fade-in">
-            <span class="etiqueta">Cómo empezar</span>
-            <h2 class="seccion-titulo">Cuatro pasos y estás dentro</h2>
-            <div class="linea-acento"></div>
-        </div>
-
-        <div class="pasos">
-            {% for paso in como_empezar %}
-            <div class="paso fade-in" data-retraso="{{ forloop.counter0 }}00">
-                <span class="paso-numero">{{ forloop.counter }}</span>
-                <span class="paso-icono"><i class="bi {{ paso.icono }}"></i></span>
-                <h3 class="h6">{{ paso.titulo }}</h3>
-                <p>{{ paso.texto }}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-<!-- ==================== PROXIMO EVENTO ==================== -->
-{% if proximo_evento %}
-<section class="seccion seccion-compacta">
-    <div class="container">
-        <div class="evento-franja fade-in">
-            <div class="evento-franja-fecha">
-                <span class="dia">{{ proximo_evento.fecha|date:"d" }}</span>
-                <span class="mes">{{ proximo_evento.fecha|date:"M"|upper }}</span>
-            </div>
-            <div class="evento-franja-texto">
-                <span class="etiqueta">{{ proximo_evento.get_tipo_display }}</span>
-                <h3 class="h5 mb-1">{{ proximo_evento.titulo }}</h3>
-                <p class="mb-0 texto-suave">
-                    {{ proximo_evento.resumen }}
-                    {% if proximo_evento.lugar %} · {{ proximo_evento.lugar }}{% endif %}
-                </p>
-            </div>
-            <a href="{% if proximo_evento.de_escena %}{% url 'web:en_escena' %}{% else %}{% url 'web:comunidad' %}{% endif %}"
-               class="btn btn-acento-outline btn-sm">Ver más</a>
-        </div>
-    </div>
-</section>
-{% endif %}
-
-<!-- ==================== MI ESPACIO ==================== -->
+<!-- ==================== FOTOS ==================== -->
 {% comment %}
-    Antes acá iba la app, que todavía no existe. El portal sí existe y
-    estaba escondido detrás del icono "Entrar" del menú: esta sección es
-    la que lo pone a la vista.
+    Las fotos las sube el equipo desde el panel. Si no hay ninguna
+    publicada, la sección no aparece: un mosaico de marcos vacíos se ve
+    peor que no tener galería.
 {% endcomment %}
+{% if fotos %}
 <section class="seccion">
-    <div class="container">
-        <div class="row g-5 align-items-center">
-            <div class="col-lg-6 fade-in">
-                <span class="etiqueta">Mi espacio</span>
-                <h2 class="seccion-titulo text-start">¿Ya eres parte? Entra a tu espacio</h2>
-                <div class="linea-acento inicio"></div>
-                <p>
-                    Acá descubres, comparas y te inscribes. Una vez dentro, tu
-                    cuenta se hace cargo del día a día: tus clases, tu plan y tus
-                    pagos en un solo lugar, desde el celular.
-                </p>
-
-                <div class="d-flex flex-wrap gap-3 mt-4">
-                    {% if user.is_authenticated %}
-                        <a href="{% if user.puede_gestionar %}{% url 'gestion:dashboard' %}{% else %}{% url 'gestion:asistencia' %}{% endif %}"
-                           class="btn btn-acento" data-iman="0.25">
-                            Ir a mi panel
-                        </a>
-                    {% else %}
-                        <a href="{% url 'usuarios:login' %}" class="btn btn-acento" data-iman="0.25">
-                            Iniciar sesión
-                        </a>
-                    {% endif %}
-                    <a href="{% url 'web:mi_espacio' %}" class="btn btn-acento-outline">
-                        Ver qué incluye <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-lg-6 fade-in">
-                <div class="canales">
-                    <div class="canal">
-                        <i class="bi bi-person-arms-up"></i>
-                        <strong>Alumnos</strong>
-                        <span>Tus clases, tu plan y tus pagos</span>
-                    </div>
-                    <div class="canal">
-                        <i class="bi bi-clipboard-check"></i>
-                        <strong>Profesores</strong>
-                        <span>Tus clases y pasar lista</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ==================== GALERIA ==================== -->
-{% if galeria %}
-<section class="seccion bg-seccion">
     <div class="container">
         <div class="text-center fade-in">
             <span class="etiqueta">La sala por dentro</span>
@@ -346,10 +171,10 @@
         </div>
 
         <div class="galeria">
-            {% for item in galeria %}
+            {% for foto in fotos %}
             <figure class="galeria-item fade-in" data-tilt="6">
-                <img src="{% static item.imagen %}" alt="{{ item.titulo }}" loading="lazy">
-                <figcaption>{{ item.titulo }}</figcaption>
+                <img src="{{ foto.imagen.url }}" alt="{{ foto.titulo }}" loading="lazy">
+                <figcaption>{{ foto.titulo }}</figcaption>
             </figure>
             {% endfor %}
         </div>
@@ -359,11 +184,11 @@
 
 <!-- ==================== TESTIMONIOS ==================== -->
 {% comment %}
-    Solo si hay testimonios reales cargados en el panel. Inventar opiniones
-    de alumnos que no existen no es una opción.
+    Solo si hay testimonios reales cargados en el panel. Inventar
+    opiniones de alumnos que no existen no es una opción.
 {% endcomment %}
 {% if testimonios %}
-<section class="seccion bg-seccion">
+<section class="seccion {% if not fotos %}bg-seccion{% endif %}">
     <div class="container">
         <div class="text-center fade-in">
             <span class="etiqueta">Testimonios</span>
@@ -393,6 +218,36 @@
                 </blockquote>
             </div>
             {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- ==================== RESEÑAS DE GOOGLE ==================== -->
+{% if academia.google_resenas %}
+<section class="seccion seccion-compacta bg-seccion">
+    <div class="container">
+        <div class="resena-franja fade-in">
+            <div class="resena-franja-datos">
+                <div class="resena-estrellas" aria-hidden="true">
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                </div>
+                <div>
+                    <strong>{{ academia.google_rating }} en Google</strong>
+                    {% if academia.google_total_resenas %}
+                        <span>Basado en {{ academia.google_total_resenas }} reseña{{ academia.google_total_resenas|pluralize }}</span>
+                    {% else %}
+                        <span>Sé parte de nuestras reseñas</span>
+                    {% endif %}
+                </div>
+            </div>
+            <a href="{{ academia.google_resenas }}" target="_blank" rel="noopener"
+               class="btn-resena" data-iman="0.25">
+                <i class="bi bi-google"></i>
+                <span>Danos tu opinión</span>
+            </a>
         </div>
     </div>
 </section>
@@ -428,40 +283,30 @@
                     </div>
                     {% endfor %}
                 </div>
-            </div>
-        </div>
-    </div>
-</section>
 
-<!-- ==================== RESEÑAS DE GOOGLE ==================== -->
-{% if academia.google_resenas %}
-<section class="seccion seccion-compacta bg-seccion">
-    <div class="container">
-        <div class="resena-franja fade-in">
-            <div class="resena-franja-datos">
-                <div class="resena-estrellas" aria-hidden="true">
-                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                    <i class="bi bi-star-fill"></i>
-                </div>
-                <div>
-                    <strong>{{ academia.google_rating }} en Google</strong>
-                    {% if academia.google_total_resenas %}
-                        <span>Basado en {{ academia.google_total_resenas }} reseña{{ academia.google_total_resenas|pluralize }}</span>
+                {% comment %}
+                    El acceso al portal queda como una línea al final y no
+                    como sección propia: solo le sirve a quien ya es parte.
+                {% endcomment %}
+                <div class="nota-suelta fade-in mt-4">
+                    <i class="bi bi-person-circle"></i>
+                    <div>
+                        <strong>¿Ya eres alumno o profesor?</strong>
+                        Entra a tu espacio y revisa tus clases, tu plan y tus pagos.
+                    </div>
+                    {% if user.is_authenticated %}
+                        <a href="{% if user.puede_gestionar %}{% url 'gestion:dashboard' %}{% else %}{% url 'gestion:asistencia' %}{% endif %}"
+                           class="btn btn-acento-outline btn-sm">Mi panel</a>
                     {% else %}
-                        <span>Sé parte de nuestras reseñas</span>
+                        <a href="{% url 'web:mi_espacio' %}" class="btn btn-acento-outline btn-sm">
+                            Mi espacio
+                        </a>
                     {% endif %}
                 </div>
             </div>
-            <a href="{{ academia.google_resenas }}" target="_blank" rel="noopener"
-               class="btn-resena" data-iman="0.25">
-                <i class="bi bi-google"></i>
-                <span>Danos tu opinión</span>
-            </a>
         </div>
     </div>
 </section>
-{% endif %}
 
 <!-- ==================== CTA FINAL ==================== -->
 <section class="cta-franja">

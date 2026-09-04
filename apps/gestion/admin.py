@@ -13,7 +13,7 @@ from .models import (
     CorreoEnviado,
     Inscripcion,
     NotaInterna,
-    Evento,
+    Foto,
     Pago,
     Plan,
     Suscripcion,
@@ -282,24 +282,17 @@ class CategoriaAdmin(admin.ModelAdmin):
         return obj.clases_activas.count()
 
 
-@admin.register(Evento)
-class EventoAdmin(admin.ModelAdmin):
-    list_display = ('titulo', 'tipo', 'fecha', 'lugar', 'destacado', 'publicado')
-    list_filter = ('tipo', 'publicado', 'destacado', 'fecha')
-    list_editable = ('destacado', 'publicado')
-    prepopulated_fields = {'slug': ('titulo',)}
-    search_fields = ('titulo', 'resumen', 'descripcion', 'lugar')
-    date_hierarchy = 'fecha'
-    fieldsets = (
-        ('Qué es', {'fields': ('titulo', 'slug', 'tipo', 'resumen', 'descripcion')}),
-        ('Cuándo y dónde', {'fields': ('fecha', 'hora', 'lugar')}),
-        ('Publicación', {'fields': ('imagen', 'enlace', 'destacado', 'publicado')}),
-    )
-
-
 @admin.register(Testimonio)
 class TestimonioAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'detalle', 'orden', 'publicado')
     list_editable = ('orden', 'publicado')
     list_filter = ('publicado',)
     search_fields = ('nombre', 'detalle', 'texto')
+
+
+@admin.register(Foto)
+class FotoAdmin(admin.ModelAdmin):
+    list_display = ('titulo', 'orden', 'publicada', 'created_at')
+    list_editable = ('orden', 'publicada')
+    list_filter = ('publicada',)
+    search_fields = ('titulo',)

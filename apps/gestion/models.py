@@ -26,11 +26,15 @@ class DiaSemana(models.TextChoices):
 
 
 class Categoria(TimeStampedModel):
-    """Área del estudio: Danza, Wellness, Kids & Teens, En Escena, Compañías.
+    """Pilar del estudio: Baile Urbano o Bienestar.
 
-    Es la que decide en qué página del sitio aparece cada clase. Una sola
-    tabla alimenta /clases/ y /wellness/: si mañana el estudio abre un área
-    nueva, se crea acá y la página existe sin tocar código.
+    Antes eran cinco áreas y el sitio tenía una página por cada una. El
+    estudio decidió contar solo dos cosas, así que ahora los dos pilares
+    conviven en /clases/ y cada uno despliega sus clases y sus planes.
+
+    Sigue siendo una tabla y no una lista fija en el código: si el estudio
+    algún día suma un tercer pilar, se crea acá y la página lo muestra sin
+    tocar la plantilla.
     """
 
     nombre = models.CharField('Nombre', max_length=50, unique=True)
@@ -59,8 +63,8 @@ class Categoria(TimeStampedModel):
     activa = models.BooleanField('Activa', default=True)
 
     class Meta:
-        verbose_name = 'Categoría'
-        verbose_name_plural = 'Categorías'
+        verbose_name = 'Pilar'
+        verbose_name_plural = 'Pilares'
         ordering = ['orden', 'nombre']
 
     def __str__(self):
@@ -115,8 +119,9 @@ class Clase(TimeStampedModel):
         null=True,
         blank=True,
         related_name='clases',
-        verbose_name='Área',
-        help_text='Decide en qué página del sitio aparece esta clase.',
+        verbose_name='Pilar',
+        help_text='Baile Urbano o Bienestar. Decide bajo qué bloque sale '
+                  'esta clase en el sitio.',
     )
     edad_minima = models.PositiveSmallIntegerField(
         'Edad mínima',
@@ -1196,59 +1201,6 @@ class RespaldoLog(models.Model):
         return f'{tam:.1f} TB'
 
 
-class Evento(TimeStampedModel):
-    """Muestra, taller, competencia o junta del estudio.
-
-    Alimenta /en-escena/ (lo formativo que termina en escenario) y
-    /comunidad/ (lo social). El tipo decide en cuál de las dos aparece.
-    """
-
-    class Tipo(models.TextChoices):
-        MUESTRA = 'MUESTRA', 'Muestra'
-        TALLER = 'TALLER', 'Taller'
-        COMPETENCIA = 'COMPETENCIA', 'Competencia'
-        SOCIAL = 'SOCIAL', 'Social o junta'
-        OTRO = 'OTRO', 'Otro'
-
-    # Los que hablan de escenario van en /en-escena/; el resto en /comunidad/.
-    TIPOS_ESCENA = ('MUESTRA', 'COMPETENCIA')
-
-    titulo = models.CharField('Título', max_length=120)
-    slug = models.SlugField('Slug', max_length=140, unique=True)
-    tipo = models.CharField('Tipo', max_length=12, choices=Tipo.choices, default=Tipo.MUESTRA)
-    resumen = models.CharField('Resumen', max_length=200, blank=True)
-    descripcion = models.TextField('Descripción', blank=True)
-    fecha = models.DateField('Fecha')
-    hora = models.TimeField('Hora', null=True, blank=True)
-    lugar = models.CharField('Lugar', max_length=120, blank=True)
-    imagen = models.ImageField(
-        'Imagen',
-        upload_to='eventos/',
-        blank=True,
-        null=True,
-        validators=[validar_foto],
-    )
-    enlace = models.URLField('Enlace de inscripción', blank=True)
-    destacado = models.BooleanField('Destacado', default=False)
-    publicado = models.BooleanField('Publicado', default=True)
-
-    class Meta:
-        verbose_name = 'Evento'
-        verbose_name_plural = 'Eventos'
-        ordering = ['-fecha']
-
-    def __str__(self):
-        return f'{self.titulo} ({self.fecha:%d-%m-%Y})'
-
-    @property
-    def es_futuro(self):
-        return self.fecha >= timezone.localdate()
-
-    @property
-    def de_escena(self):
-        return self.tipo in self.TIPOS_ESCENA
-
-
 class Testimonio(TimeStampedModel):
     """Opinión real de un alumno o apoderado.
 
@@ -1281,3 +1233,37 @@ class Testimonio(TimeStampedModel):
 
     def __str__(self):
         return f'{self.nombre} — {self.detalle}' if self.detalle else self.nombre
+
+
+class Foto(TimeStampedModel):
+    """Foto del estudio para la galería del inicio.
+
+    Antes la galería era una lista escrita a mano dentro de views.py, así
+    que sumar una foto obligaba a tocar código y desplegar. Acá el equipo
+    las sube desde el panel.
+
+    Si no hay ninguna publicada, la sección no se muestra: un mosaico de
+    marcos vacíos se ve peor que no tener galería.
+    """
+
+    imagen = models.ImageField(
+        'Imagen',
+        upload_to='galeria/',
+        validators=[validar_foto],
+    )
+    titulo = models.CharField(
+        'Título',
+        max_length=100,
+        help_text='Describe la foto. Lo leen los buscadores y quien no '
+                  'puede ver la imagen.',
+    )
+    orden = models.PositiveSmallIntegerField('Orden', default=0)
+    publicada = models.BooleanField('Publicada', default=True)
+
+    class Meta:
+        verbose_name = 'Foto'
+        verbose_name_plural = 'Fotos'
+        ordering = ['orden', '-created_at']
+
+    def __str__(self):
+        return self.titulo
