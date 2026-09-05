@@ -1142,3 +1142,54 @@ a:hover { color: var(--al-orange-lite); }
 
 .g-tabla td.num,
 .g-tabla th.num { text-align: right; }
+
+/* --------------------------------------------------------------------------
+   Métodos de pago
+   -------------------------------------------------------------------------- */
+.g-metodos { display: flex; flex-direction: column; gap: 1.15rem; }
+
+.g-metodo-cabeza {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.4rem;
+}
+
+.g-metodo-nombre {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.g-metodo-nombre i { color: var(--al-orange); }
+
+.g-metodo-monto {
+    font-family: var(--font-titulo);
+    font-weight: 700;
+    color: var(--al-verde);
+    white-space: nowrap;
+}
+
+.g-metodo-pie {
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--al-muted);
+}
+
+/* Altura fija: sin esto Chart.js crece sin límite dentro de un flex. */
+.g-grafico-torta {
+    position: relative;
+    height: 240px;
+}
+
+/* Cabecera de tarjeta con acción a la derecha (exportar, filtrar). */
+.g-card-cabeza {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.1rem;
+}

@@ -1,0 +1,214 @@
+{% extends 'gestion/base_gestion.html' %}
+{% load formato %}
+
+{% block titulo %}Histórico por curso | Área Latina Estudio{% endblock %}
+{% block encabezado %}Histórico por curso o plan{% endblock %}
+
+{% block contenido %}
+
+{% comment %}
+    Histórico de verdad: incluye a quien ya no está inscrito y a los
+    alumnos dados de baja. Mostrar solo los activos daría una cifra de
+    recaudación más baja que la real.
+{% endcomment %}
+
+<!-- ==================== FILTROS ==================== -->
+<form method="get" class="g-card mb-4" id="filtroPorCurso">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <div class="g-campo mb-0">
+                <label for="f-tipo">Ver por</label>
+                <select name="tipo" id="f-tipo" class="g-input">
+                    <option value="clase" {% if tipo == 'clase' %}selected{% endif %}>Curso</option>
+                    <option value="plan" {% if tipo == 'plan' %}selected{% endif %}>Plan</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="g-campo mb-0">
+                <label for="f-id">{% if tipo == 'clase' %}Curso{% else %}Plan{% endif %}</label>
+                <select name="id" id="f-id" class="g-input">
+                    <option value="">Elige uno…</option>
+                    {% if tipo == 'clase' %}
+                        {% for clase in clases %}
+                            <option value="{{ clase.pk }}"
+                                    {% if objeto_id == clase.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ clase.get_nombre_display }} · {{ clase.get_nivel_display }}
+                                ({{ clase.horario }}){% if not clase.activa %} — inactiva{% endif %}
+                            </option>
+                        {% endfor %}
+                    {% else %}
+                        {% for plan in planes %}
+                            <option value="{{ plan.pk }}"
+                                    {% if objeto_id == plan.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ plan.nombre }} — ${{ plan.precio_clp|clp }}{% if not plan.activo %} — inactivo{% endif %}
+                            </option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <div class="g-campo mb-0">
+                <label for="f-rango">Período</label>
+                <select name="rango" id="f-rango" class="g-input">
+                    {% for valor, etiqueta in rangos %}
+                        <option value="{{ valor }}" {% if rango == valor %}selected{% endif %}>
+                            {{ etiqueta }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit" class="g-btn g-btn-primario w-100">
+                <i class="bi bi-search me-1"></i>Ver
+            </button>
+        </div>
+    </div>
+</form>
+
+{% if objeto %}
+    <!-- ==================== TOTALES ==================== -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="g-metrica exito">
+                <div class="g-metrica-etiqueta"><i class="bi bi-cash-stack"></i> Recaudado</div>
+                <div class="g-metrica-valor">${{ total|clp }}</div>
+                <div class="g-metrica-pie">
+                    {{ cuantos_pagos }} pago{{ cuantos_pagos|pluralize }}
+                    {% if rango == 'todo' %}en total{% else %}en el período{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="g-metrica">
+                <div class="g-metrica-etiqueta"><i class="bi bi-people"></i> Han pasado</div>
+                <div class="g-metrica-valor">{{ filas|length }}</div>
+                <div class="g-metrica-pie">alumnos en total, histórico</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="g-metrica">
+                <div class="g-metrica-etiqueta"><i class="bi bi-person-check"></i> Siguen activos</div>
+                <div class="g-metrica-valor">{{ activos }}</div>
+                <div class="g-metrica-pie">de los que han pasado</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ALUMNOS ==================== -->
+    <div class="g-card">
+        <div class="g-card-cabeza">
+            <h2 class="g-card-titulo mb-0">
+                {% if tipo == 'clase' %}{{ objeto.get_nombre_display }}{% else %}{{ objeto.nombre }}{% endif %}
+            </h2>
+            {% if filas %}
+                <a href="{% url 'gestion:por_curso_exportar' %}?tipo={{ tipo }}&id={{ objeto_id }}&rango={{ rango }}"
+                   class="g-btn g-btn-outline g-btn-sm">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Exportar a Excel
+                </a>
+            {% endif %}
+        </div>
+
+        {% if filas %}
+        <div class="g-tabla-envoltura">
+            <table class="g-tabla">
+                <thead>
+                    <tr>
+                        <th>Alumno</th>
+                        <th>RUT</th>
+                        <th>Estado</th>
+                        <th>Ingresó</th>
+                        <th class="num">Pagos</th>
+                        <th class="num">Aportado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fila in filas %}
+                    <tr>
+                        <td>
+                            {% if fila.alumno.eliminado %}
+                                {{ fila.alumno.nombre_completo }}
+                                <small class="g-tenue">Eliminado</small>
+                            {% else %}
+                                <a href="{% url 'gestion:alumno_detalle' fila.alumno.pk %}">
+                                    {{ fila.alumno.nombre_completo }}
+                                </a>
+                            {% endif %}
+                        </td>
+                        <td class="g-muted">{{ fila.alumno.rut }}</td>
+                        <td>
+                            {% if fila.activo %}
+                                <span class="g-badge g-badge-verde">Activo</span>
+                            {% else %}
+                                <span class="g-badge g-badge-gris">
+                                    {{ fila.alumno.get_estado_display }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="g-muted g-nowrap">{{ fila.alumno.fecha_ingreso|date:"d/m/Y" }}</td>
+                        <td class="num g-muted">{{ fila.pagos }}</td>
+                        <td class="num"><strong>${{ fila.monto|clp }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if tipo == 'clase' %}
+        <p class="g-ayuda mt-3">
+            <i class="bi bi-info-circle me-1"></i>
+            Un curso no recibe pagos directos: el alumno paga un plan que le
+            da acceso. Lo que se suma acá es todo lo que pagó cada persona
+            que ha estado inscrita en este curso, no solo la parte
+            correspondiente a él.
+        </p>
+        {% endif %}
+        {% else %}
+        <div class="g-vacio">
+            <i class="bi bi-inbox"></i>
+            <h3>Nadie ha pasado por aquí todavía</h3>
+            <p>
+                No hay alumnos inscritos en
+                {% if tipo == 'clase' %}este curso{% else %}este plan{% endif %},
+                ni en el histórico.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+{% else %}
+    <div class="g-vacio">
+        <i class="bi bi-graph-up"></i>
+        <h3>Elige un curso o un plan</h3>
+        <p>
+            Verás quién ha pasado por él desde que existe y cuánto ha
+            recaudado, incluyendo a los alumnos que ya no están.
+        </p>
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ request.csp_nonce }}">
+// Al cambiar entre curso y plan hay que recargar: la lista de opciones
+// del segundo selector depende de esa elección.
+(function () {
+    var tipo = document.getElementById('f-tipo');
+    var form = document.getElementById('filtroPorCurso');
+    if (!tipo || !form) { return; }
+
+    tipo.addEventListener('change', function () {
+        // Se limpia la selección anterior: un id de clase no significa
+        // nada en la lista de planes.
+        var id = document.getElementById('f-id');
+        if (id) { id.value = ''; }
+        form.submit();
+    });
+})();
+</script>
+{% endblock %}

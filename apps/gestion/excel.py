@@ -270,3 +270,38 @@ def exportar_historial_profesora(filas, titulo_mes):
     _formato_filas(hoja)
     _ajustar(hoja)
     return _guardar(libro)
+
+
+# ---------------------------------------------------------------------------
+# Histórico por curso o plan
+# ---------------------------------------------------------------------------
+def exportar_por_curso(datos, nombre):
+    """Los alumnos que han pasado por un curso o plan, con su aporte."""
+    libro, hoja = _nueva_hoja('Historico', [
+        'Alumno', 'RUT', 'Estado', 'Email', 'Teléfono',
+        'Ingreso', 'Pagos', 'Total aportado (CLP)',
+    ])
+
+    for fila in datos['filas']:
+        alumno = fila['alumno']
+        hoja.append([
+            alumno.nombre_completo,
+            alumno.rut,
+            'Activo' if fila['activo'] else alumno.get_estado_display(),
+            alumno.email,
+            alumno.telefono,
+            alumno.fecha_ingreso,
+            fila['pagos'],
+            fila['monto'],
+        ])
+
+    # Una fila de cierre: el total suelto en la pantalla se pierde al
+    # exportar, y es justo el dato que el estudio va a mirar primero.
+    hoja.append([])
+    hoja.append(['TOTAL', '', '', '', '', '', datos['cuantos_pagos'], datos['total']])
+    for celda in hoja[hoja.max_row]:
+        celda.font = FUENTE_TITULO
+
+    _formato_filas(hoja)
+    _ajustar(hoja)
+    return _guardar(libro)

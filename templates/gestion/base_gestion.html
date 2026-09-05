@@ -78,6 +78,10 @@
         </a>
 
         <div class="g-nav-grupo">Configuración</div>
+        <a href="{% url 'gestion:por_curso' %}"
+           class="g-nav-item {% if activo == 'por_curso' %}activo{% endif %}">
+            <i class="bi bi-graph-up"></i><span>Por curso</span>
+        </a>
         <a href="{% url 'gestion:reportes' %}"
            class="g-nav-item {% if activo == 'reportes' %}activo{% endif %}">
             <i class="bi bi-file-earmark-arrow-down"></i><span>Reportes</span>

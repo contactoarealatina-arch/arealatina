@@ -35,6 +35,72 @@
     </div>
 </div>
 
+<!-- ==================== CÓMO PAGA LA GENTE ==================== -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">Cobrado por método de pago</h2>
+
+            {% if por_metodo.filas %}
+                {% comment %}
+                    Responde a los filtros de abajo: si el admin filtra por
+                    un mes, estas cifras son las de ese mes.
+                {% endcomment %}
+                <div class="g-metodos">
+                    {% for fila in por_metodo.filas %}
+                    <div class="g-metodo">
+                        <div class="g-metodo-cabeza">
+                            <span class="g-metodo-nombre">
+                                {% if fila.codigo == 'EFECTIVO' %}<i class="bi bi-cash"></i>
+                                {% elif fila.codigo == 'TRANSFERENCIA' %}<i class="bi bi-bank"></i>
+                                {% else %}<i class="bi bi-credit-card"></i>{% endif %}
+                                {{ fila.metodo }}
+                            </span>
+                            <span class="g-metodo-monto">${{ fila.monto|clp }}</span>
+                        </div>
+                        <div class="g-progreso">
+                            <div class="g-progreso-relleno" style="width: {{ fila.porcentaje }}%"></div>
+                        </div>
+                        <div class="g-metodo-pie">
+                            {{ fila.porcentaje }}% · {{ fila.cuantos }} pago{{ fila.cuantos|pluralize }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <p class="g-ayuda mt-3">
+                    Solo cuenta lo efectivamente pagado. Lo pendiente no suma
+                    acá porque todavía no está en caja.
+                </p>
+            {% else %}
+                <p class="g-muted mb-0">
+                    No hay pagos cobrados con los filtros actuales.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">Distribución de {{ grafico_metodos.mes }}</h2>
+
+            {% if grafico_metodos.datos %}
+                <div class="g-grafico-torta">
+                    <canvas id="graficoMetodos"></canvas>
+                </div>
+                <p class="g-ayuda mt-2">
+                    El gráfico es siempre del mes actual, no cambia con los
+                    filtros de la tabla.
+                </p>
+            {% else %}
+                <p class="g-muted mb-0">
+                    Todavía no hay pagos cobrados este mes.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
 <form method="get" class="g-barra">
     <div class="g-buscador">
         <i class="bi bi-search"></i>
@@ -147,4 +213,49 @@
 </div>
 {% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+{{ grafico_metodos|json_script:"datosMetodos" }}
+<script nonce="{{ request.csp_nonce }}">
+// Torta de métodos de pago del mes. Si Chart.js no cargó, la tarjeta de
+// la izquierda ya dio la misma información en texto y barras.
+(function () {
+    var lienzo = document.getElementById('graficoMetodos');
+    var crudo = document.getElementById('datosMetodos');
+    if (!lienzo || !crudo || !window.Chart) { return; }
+
+    var datos = JSON.parse(crudo.textContent);
+    if (!datos.datos || !datos.datos.length) { return; }
+
+    new Chart(lienzo, {
+        type: 'doughnut',
+        data: {
+            labels: datos.etiquetas,
+            datasets: [{
+                data: datos.datos,
+                backgroundColor: ['#FF5722', '#4CAF50', '#FFC107', '#42A5F5', '#AB47BC'],
+                borderColor: '#222222',
+                borderWidth: 2,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: function (ctx) {
+                            var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+                            var pct = total ? Math.round(ctx.parsed / total * 100) : 0;
+                            return ctx.label + ': $' + ctx.parsed.toLocaleString('es-CL') + ' (' + pct + '%)';
+                        },
+                    },
+                },
+            },
+        },
+    });
+})();
+</script>
 {% endblock %}

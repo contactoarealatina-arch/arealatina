@@ -48,6 +48,9 @@ urlpatterns = [
     # Módulo 7 — Reportes
     path('asistencia/resumen/', views.asistencia_resumen,
          name='asistencia_resumen'),
+    path('reportes/por-curso/', views.por_curso, name='por_curso'),
+    path('reportes/por-curso/exportar/', views.por_curso_exportar,
+         name='por_curso_exportar'),
     path('reportes/', views.reportes, name='reportes'),
     path('reportes/<slug:slug>/', views.reporte_descargar, name='reporte_descargar'),
 

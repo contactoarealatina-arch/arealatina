@@ -63,8 +63,21 @@
                 <h2 class="g-card-titulo">Capacidad y equipo</h2>
                 {% include 'gestion/_campo.html' with campo=form.cupo_maximo %}
                 {% include 'gestion/_campo.html' with campo=form.profesora %}
-                {% include 'gestion/_campo.html' with campo=form.precio_clase_suelta %}
                 {% include 'gestion/_campo.html' with campo=form.activa %}
+            </div>
+
+            <div class="g-card mb-3">
+                <h2 class="g-card-titulo">Cómo se paga</h2>
+                {% include 'gestion/_campo.html' with campo=form.modalidad_pago %}
+
+                {% comment %}
+                    El precio suelto solo se muestra si la modalidad lo
+                    admite. Si el JS no corre, el campo queda visible y el
+                    formulario valida igual en el servidor.
+                {% endcomment %}
+                <div id="bloqueSuelta">
+                    {% include 'gestion/_campo.html' with campo=form.precio_clase_suelta %}
+                </div>
             </div>
 
             <div class="g-banner g-banner-info">
@@ -85,4 +98,24 @@
     </div>
 </form>
 
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ request.csp_nonce }}">
+// El precio suelto solo tiene sentido si la clase se puede pagar así.
+(function () {
+    var modalidad = document.getElementById('id_modalidad_pago');
+    var bloque = document.getElementById('bloqueSuelta');
+    if (!modalidad || !bloque) { return; }
+
+    function refrescar() {
+        var admite = modalidad.value === 'SOLO_CLASE_SUELTA'
+                  || modalidad.value === 'AMBAS';
+        bloque.hidden = !admite;
+    }
+
+    modalidad.addEventListener('change', refrescar);
+    refrescar();
+})();
+</script>
 {% endblock %}

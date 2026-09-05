@@ -48,6 +48,62 @@ def _pagos_filtrados(request):
     return qs
 
 
+def _por_metodo(qs):
+    """Cuánto se cobró con cada método, dentro del filtro actual.
+
+    Solo cuenta lo efectivamente pagado: sumar lo pendiente daría una
+    cifra que el estudio no tiene en el bolsillo.
+    """
+    cobrados = qs.filter(estado=Pago.Estado.PAGADO)
+    total = cobrados.aggregate(t=Sum('monto_clp'))['t'] or 0
+
+    filas = []
+    etiquetas = dict(Pago.Metodo.choices)
+    resumen = (
+        cobrados.values('metodo')
+        .annotate(monto=Sum('monto_clp'), cuantos=Count('id'))
+        .order_by('-monto')
+    )
+    for fila in resumen:
+        monto = fila['monto'] or 0
+        filas.append({
+            'metodo': etiquetas.get(fila['metodo'], fila['metodo']),
+            'codigo': fila['metodo'],
+            'monto': monto,
+            'cuantos': fila['cuantos'],
+            'porcentaje': round(monto / total * 100) if total else 0,
+        })
+    return {'filas': filas, 'total': total}
+
+
+def _grafico_metodos():
+    """Distribución del mes actual, para el gráfico de torta.
+
+    Va sin filtros a propósito: el gráfico responde siempre la misma
+    pregunta —cómo paga la gente este mes— y no cambia según lo que el
+    admin esté buscando en la tabla.
+    """
+    hoy = timezone.localdate()
+    inicio, fin = servicios.rango_mes(hoy)
+
+    etiquetas = dict(Pago.Metodo.choices)
+    resumen = (
+        Pago.objects.filter(
+            estado=Pago.Estado.PAGADO,
+            fecha_pago__gte=inicio,
+            fecha_pago__lte=fin,
+        )
+        .values('metodo')
+        .annotate(monto=Sum('monto_clp'))
+        .order_by('-monto')
+    )
+    return {
+        'etiquetas': [etiquetas.get(f['metodo'], f['metodo']) for f in resumen],
+        'datos': [f['monto'] or 0 for f in resumen],
+        'mes': servicios.nombre_mes(hoy).capitalize(),
+    }
+
+
 @gestion_requerida
 def pagos(request):
     qs = _pagos_filtrados(request)
@@ -74,6 +130,8 @@ def pagos(request):
     return render(request, 'gestion/pagos/listado.html', {
         'activo': 'pagos',
         'pagina': pagina,
+        'por_metodo': _por_metodo(qs),
+        'grafico_metodos': _grafico_metodos(),
         'total': paginador.count,
         'total_cobrado': totales['cobrado'] or 0,
         'total_pendiente': totales['pendiente'] or 0,

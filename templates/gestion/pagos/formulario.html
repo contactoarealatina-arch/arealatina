@@ -45,6 +45,14 @@
                 <div class="row g-3">
                     <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.concepto %}</div>
                     <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.monto_clp %}</div>
+
+                    {% comment %}
+                        Solo aparece cuando el concepto es «clase suelta».
+                        Al elegir la clase, el monto se llena con su precio.
+                    {% endcomment %}
+                    <div class="col-12" id="bloqueClaseSuelta" hidden>
+                        {% include 'gestion/_campo.html' with campo=form.clase_suelta %}
+                    </div>
                     <div class="col-12">{% include 'gestion/_campo.html' with campo=form.detalle %}</div>
                     <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.metodo %}</div>
                     <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.numero_comprobante %}</div>
@@ -67,6 +75,38 @@
 {% endblock %}
 
 {% block extra_js %}
+<script nonce="{{ request.csp_nonce }}">
+// Cobro por clase suelta: se elige la clase y el monto se llena con su
+// precio. Como en la inscripción, si el admin escribe otra cifra el
+// autocompletado se apaga y no vuelve a pisarla.
+(function () {
+    var concepto = document.getElementById('id_concepto');
+    var bloque = document.getElementById('bloqueClaseSuelta');
+    var selector = document.getElementById('id_clase_suelta');
+    var monto = document.getElementById('id_monto_clp');
+    if (!concepto || !bloque || !selector || !monto) { return; }
+
+    var automatico = !monto.value;
+
+    function refrescar() {
+        bloque.hidden = concepto.value !== 'CLASE_SUELTA';
+    }
+
+    concepto.addEventListener('change', refrescar);
+
+    selector.addEventListener('change', function () {
+        if (!automatico) { return; }
+        var opcion = selector.options[selector.selectedIndex];
+        var precio = opcion && opcion.getAttribute('data-precio');
+        if (precio) { monto.value = precio; }
+    });
+
+    monto.addEventListener('input', function () { automatico = false; });
+
+    refrescar();
+})();
+</script>
+
 <script nonce="{{ request.csp_nonce }}">
 // El campo de búsqueda solo ayuda a encontrar al alumno; el valor real
 // sigue viajando en el select del formulario.

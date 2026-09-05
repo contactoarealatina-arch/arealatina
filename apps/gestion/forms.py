@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from .validadores import redimensionar_foto
 from .models import (
+    ModalidadPago,
     Alumno,
     Clase,
     ConfiguracionAlertas,
@@ -302,7 +303,7 @@ class ClaseForm(MixinWidgets, forms.ModelForm):
         fields = [
             'nombre', 'categoria', 'descripcion', 'nivel', 'edad_minima',
             'hora_inicio', 'hora_fin', 'sala', 'cupo_maximo',
-            'precio_clase_suelta', 'profesora', 'activa',
+            'modalidad_pago', 'precio_clase_suelta', 'profesora', 'activa',
         ]
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 3}),
@@ -320,6 +321,9 @@ class ClaseForm(MixinWidgets, forms.ModelForm):
         # clase existe pero no aparece agrupada en /clases/.
         self.fields['categoria'].required = False
         self.fields['edad_minima'].required = False
+        # El precio suelto solo aplica si la clase lo admite; la
+        # validacion cruzada esta en clean().
+        self.fields['precio_clase_suelta'].required = False
         if self.instance.pk:
             self.fields['dias'].initial = self.instance.dias_lista
         self.estilizar()
@@ -329,6 +333,17 @@ class ClaseForm(MixinWidgets, forms.ModelForm):
         inicio, fin = datos.get('hora_inicio'), datos.get('hora_fin')
         if inicio and fin and fin <= inicio:
             self.add_error('hora_fin', 'La hora de término debe ser posterior al inicio.')
+
+        # Si la clase se puede pagar suelta, hace falta saber cuánto vale:
+        # sin precio el sistema no puede autocompletar nada y el admin
+        # vuelve a tener que acordarse de memoria.
+        modalidad = datos.get('modalidad_pago')
+        if modalidad in ('SOLO_CLASE_SUELTA', 'AMBAS') and not datos.get('precio_clase_suelta'):
+            self.add_error(
+                'precio_clase_suelta',
+                'Indica cuánto cuesta la clase suelta, o cambia la modalidad '
+                'a solo mensualidad.',
+            )
         return datos
 
     def save(self, commit=True):
@@ -363,7 +378,33 @@ class PlanForm(MixinWidgets, forms.ModelForm):
 # ---------------------------------------------------------------------------
 # Pago
 # ---------------------------------------------------------------------------
+class SelectClasesSueltas(forms.Select):
+    """Cada clase lleva su precio suelto como atributo del <option>."""
+
+    def create_option(self, name, value, *args, **kwargs):
+        opcion = super().create_option(name, value, *args, **kwargs)
+        clase = getattr(value, 'instance', None)
+        if clase is not None and clase.precio_clase_suelta:
+            opcion['attrs']['data-precio'] = clase.precio_clase_suelta
+        return opcion
+
+
 class PagoForm(MixinWidgets, forms.ModelForm):
+    """Registro de un pago.
+
+    Cuando el concepto es «clase suelta» aparece un selector con las
+    clases que admiten esa modalidad, y el monto se llena con su precio.
+    El campo no se guarda en el pago: solo sirve para autocompletar y
+    para dejar dicho en la nota de qué clase se trata.
+    """
+
+    clase_suelta = forms.ModelChoiceField(
+        queryset=Clase.objects.none(),
+        required=False,
+        label='¿Qué clase?',
+        empty_label='Elige la clase…',
+    )
+
     class Meta:
         model = Pago
         fields = [
@@ -383,12 +424,34 @@ class PagoForm(MixinWidgets, forms.ModelForm):
         self.fields['detalle'].required = False
         self.fields['numero_comprobante'].required = False
         self.fields['nota_interna'].required = False
+
+        # Solo las clases que el estudio marcó como pagables sueltas, y
+        # solo las que tienen precio: sin precio no hay nada que
+        # autocompletar.
+        self.fields['clase_suelta'].queryset = Clase.objects.filter(
+            activa=True,
+            modalidad_pago__in=[
+                ModalidadPago.SOLO_CLASE_SUELTA,
+                ModalidadPago.AMBAS,
+            ],
+            precio_clase_suelta__isnull=False,
+        )
+        # data-precio: lo lee el JS para llenar el monto al vuelo.
+        self.fields['clase_suelta'].widget = SelectClasesSueltas(
+            choices=self.fields['clase_suelta'].widget.choices,
+        )
         self.estilizar()
 
     def clean(self):
         datos = super().clean()
         if datos.get('concepto') == Pago.Concepto.OTRO and not datos.get('detalle'):
             self.add_error('detalle', 'Describe el concepto cuando eliges "Otro".')
+
+        # La clase queda anotada en el detalle: el pago no guarda a qué
+        # clase corresponde, y sin esto se perdería el dato.
+        clase = datos.get('clase_suelta')
+        if datos.get('concepto') == Pago.Concepto.CLASE_SUELTA and clase and not datos.get('detalle'):
+            datos['detalle'] = f'{clase.get_nombre_display()} · {clase.horario}'
         return datos
 
 

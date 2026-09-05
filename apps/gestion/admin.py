@@ -51,7 +51,7 @@ class NotaInternaInline(admin.TabularInline):
 class ClaseAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'categoria', 'nivel', 'dias_display', 'horario',
                     'sala', 'profesora', 'inscritos', 'cupo_maximo', 'activa')
-    list_filter = ('categoria', 'nombre', 'nivel', 'activa', 'sala')
+    list_filter = ('categoria', 'nombre', 'nivel', 'modalidad_pago', 'activa', 'sala')
     search_fields = ('nombre', 'descripcion', 'sala')
     list_editable = ('activa',)
     autocomplete_fields = ('profesora',)
@@ -59,7 +59,8 @@ class ClaseAdmin(admin.ModelAdmin):
         ('Identificación', {'fields': ('nombre', 'categoria', 'nivel',
                                        'descripcion', 'edad_minima', 'activa')}),
         ('Horario', {'fields': ('dias_semana', 'hora_inicio', 'hora_fin', 'sala')}),
-        ('Capacidad y equipo', {'fields': ('cupo_maximo', 'precio_clase_suelta', 'profesora')}),
+        ('Capacidad y equipo', {'fields': ('cupo_maximo', 'profesora')}),
+        ('Cómo se paga', {'fields': ('modalidad_pago', 'precio_clase_suelta')}),
     )
 
     @admin.display(description='Días')

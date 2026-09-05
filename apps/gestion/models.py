@@ -75,6 +75,19 @@ class Categoria(TimeStampedModel):
         return self.clases.filter(activa=True)
 
 
+class ModalidadPago(models.TextChoices):
+    """Cómo se puede pagar una clase.
+
+    No todas se cobran igual: un taller puntual se paga suelto y un curso
+    regular por mensualidad. Tenerlo en la clase evita que el admin tenga
+    que acordarse de cuál es cuál al momento de cobrar.
+    """
+
+    SOLO_MENSUALIDAD = 'SOLO_MENSUALIDAD', 'Solo por mensualidad'
+    SOLO_CLASE_SUELTA = 'SOLO_CLASE_SUELTA', 'Solo por clase suelta'
+    AMBAS = 'AMBAS', 'Mensualidad o clase suelta'
+
+
 class Clase(TimeStampedModel):
     """Una clase regular del estudio, con su horario y profesora a cargo."""
 
@@ -145,11 +158,20 @@ class Clase(TimeStampedModel):
     hora_fin = models.TimeField('Hora de término')
     sala = models.CharField('Sala', max_length=50, default='Sala 1')
     cupo_maximo = models.PositiveSmallIntegerField('Cupo máximo', default=20)
+    modalidad_pago = models.CharField(
+        'Cómo se paga',
+        max_length=20,
+        choices=ModalidadPago.choices,
+        default=ModalidadPago.SOLO_MENSUALIDAD,
+        help_text='Decide qué opciones se ofrecen al registrar un pago '
+                  'de esta clase.',
+    )
     precio_clase_suelta = models.PositiveIntegerField(
-        'Precio clase suelta (CLP)',
+        'Precio por clase suelta (CLP)',
         null=True,
         blank=True,
-        help_text='Opcional. Para cobrar esta clase por separado.',
+        help_text='Solo si la clase admite pago suelto. Se usa para '
+                  'autocompletar el monto al cobrar.',
     )
     activa = models.BooleanField('Activa', default=True)
 
@@ -230,6 +252,20 @@ class Clase(TimeStampedModel):
     @property
     def emoji(self):
         return self.EMOJIS.get(self.nombre, '\U0001F3B5')
+
+    @property
+    def admite_suelta(self):
+        return self.modalidad_pago in (
+            ModalidadPago.SOLO_CLASE_SUELTA,
+            ModalidadPago.AMBAS,
+        )
+
+    @property
+    def admite_mensualidad(self):
+        return self.modalidad_pago in (
+            ModalidadPago.SOLO_MENSUALIDAD,
+            ModalidadPago.AMBAS,
+        )
 
 
 class Plan(TimeStampedModel):
