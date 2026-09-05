@@ -6,7 +6,7 @@
     <div class="encabezado">
         <span class="emoji">{{ clase.emoji }}</span>
         <div>
-            <h3>{{ clase.get_nombre_display }}</h3>
+            <h3>{{ clase.nombre }}</h3>
             <span class="badge-nivel">{{ clase.get_nivel_display }}</span>
         </div>
     </div>
@@ -27,10 +27,10 @@
         <i class="bi bi-door-open"></i>
         <span>{{ clase.sala }}</span>
     </div>
-    {% if clase.edad_minima %}
+    {% if clase.publico == 'KIDS' %}
     <div class="dato-clase">
         <i class="bi bi-person-badge"></i>
-        <span>Desde los {{ clase.edad_minima }} años</span>
+        <span>{{ clase.get_publico_display }}</span>
     </div>
     {% endif %}
     <div class="dato-clase">

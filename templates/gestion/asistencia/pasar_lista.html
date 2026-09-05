@@ -4,7 +4,7 @@
 {% block encabezado %}Pasar lista{% endblock %}
 {% block subtitulo %}
     {% if clase %}
-        <div class="g-subtitulo">{{ clase.get_nombre_display }} · {{ fecha|date:"l d \d\e F" }}</div>
+        <div class="g-subtitulo">{{ clase.nombre }} · {{ fecha|date:"l d \d\e F" }}</div>
     {% endif %}
 {% endblock %}
 
@@ -19,7 +19,7 @@
                 <option value="">Elige una clase...</option>
                 {% for c in clases %}
                     <option value="{{ c.pk }}" {% if clase and clase.pk == c.pk %}selected{% endif %}>
-                        {{ c.get_nombre_display }} · {{ c.get_nivel_display }} · {{ c.dias_corto }} {{ c.horario }}
+                        {{ c.nombre }} · {{ c.get_nivel_display }} · {{ c.dias_corto }} {{ c.horario }}
                     </option>
                 {% endfor %}
             </select>

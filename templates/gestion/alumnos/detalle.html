@@ -143,7 +143,7 @@
                     <i class="bi bi-music-note-beamed"></i>
                     <span class="g-dato-valor">
                         <a href="{% url 'gestion:clase_detalle' inscripcion.clase.pk %}">
-                            {{ inscripcion.clase.get_nombre_display }}
+                            {{ inscripcion.clase.nombre }}
                         </a>
                         <div class="g-muted" style="font-size:.78rem">
                             {{ inscripcion.clase.dias_display }} · {{ inscripcion.clase.horario }}
@@ -303,7 +303,20 @@
                             <td>{{ pago.concepto_display }}</td>
                             <td class="num" data-orden="{{ pago.monto_clp }}">${{ pago.monto_clp|clp }}</td>
                             <td class="g-muted">{{ pago.get_metodo_display }}</td>
-                            <td class="g-muted">{{ pago.numero_comprobante|default:"—" }}</td>
+                            <td class="g-muted">
+                                {{ pago.numero_comprobante|default:"—" }}
+                                {% comment %}
+                                    La boleta se abre en otra pestaña: quien
+                                    la busca casi siempre la quiere ver o
+                                    descargar, no navegar a otra página.
+                                {% endcomment %}
+                                {% if pago.boleta %}
+                                    <a href="{{ pago.boleta.url }}" target="_blank" rel="noopener"
+                                       class="g-enlace-boleta" title="Ver la boleta">
+                                        <i class="bi bi-paperclip"></i> Boleta
+                                    </a>
+                                {% endif %}
+                            </td>
                             <td>
                                 <span class="g-badge {% if pago.estado == 'PAGADO' %}g-badge-verde{% elif pago.estado == 'PENDIENTE' %}g-badge-amarillo{% else %}g-badge-rojo{% endif %}">
                                     {{ pago.get_estado_display }}
@@ -358,7 +371,7 @@
                     {% for registro in asistencias %}
                         <tr>
                             <td class="g-nowrap">{{ registro.fecha|date:"d/m/Y" }}</td>
-                            <td>{{ registro.clase.get_nombre_display }}</td>
+                            <td>{{ registro.clase.nombre }}</td>
                             <td>
                                 <span class="g-badge {% if registro.estado == 'PRESENTE' %}g-badge-verde{% elif registro.estado == 'JUSTIFICADO' %}g-badge-amarillo{% else %}g-badge-rojo{% endif %}">
                                     {{ registro.get_estado_display }}

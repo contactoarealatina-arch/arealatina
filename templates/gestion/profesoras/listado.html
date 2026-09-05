@@ -32,24 +32,50 @@
                 </div>
             </div>
 
-            <div class="g-clase-dato mb-1"><i class="bi bi-envelope"></i>{{ profesora.email|default:"—" }}</div>
+            <div class="g-clase-dato mb-1"><i class="bi bi-envelope-at"></i>{{ profesora.correo_institucional|default:profesora.username }}</div>
+            <div class="g-clase-dato mb-1"><i class="bi bi-envelope"></i>{{ profesora.correo_personal|default:"—" }}</div>
             <div class="g-clase-dato mb-1"><i class="bi bi-telephone"></i>{{ profesora.telefono|default:"—" }}</div>
             <div class="g-clase-dato mb-2"><i class="bi bi-person-vcard"></i>{{ profesora.rut|default:"—" }}</div>
 
             <div class="d-flex flex-wrap gap-1 mb-3">
                 {% for clase in profesora.clases_dictadas.all %}
-                    <span class="g-badge g-badge-naranja">{{ clase.get_nombre_display }}</span>
+                    <span class="g-badge g-badge-naranja">{{ clase.nombre }}</span>
                 {% empty %}
                     <span class="g-badge g-badge-gris">Sin clases asignadas</span>
                 {% endfor %}
             </div>
 
-            <div class="d-flex gap-2 mt-auto">
+            {% if not profesora.is_active %}
+                <span class="g-badge g-badge-gris mb-2 align-self-start">Dada de baja</span>
+            {% endif %}
+
+            {% comment %}
+                Dar de baja le quita el acceso al instante y conserva su
+                historial. Eliminar solo si nunca tuvo clases ni pasó lista.
+            {% endcomment %}
+            <div class="d-flex gap-2 mt-auto flex-wrap">
                 <a href="{% url 'gestion:profesora_detalle' profesora.pk %}" class="g-btn g-btn-outline g-btn-sm">Ver</a>
                 <a href="{% url 'gestion:profesora_editar' profesora.pk %}" class="g-btn g-btn-neutro g-btn-sm">Editar</a>
-                {% if not profesora.is_active %}
-                    <span class="g-badge g-badge-gris ms-auto align-self-center">Inactiva</span>
-                {% endif %}
+
+                <form method="post" action="{% url 'gestion:profesora_alternar' profesora.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="g-btn g-btn-neutro g-btn-sm">
+                        {% if profesora.is_active %}
+                            <i class="bi bi-person-dash me-1"></i>Dar de baja
+                        {% else %}
+                            <i class="bi bi-person-check me-1"></i>Reactivar
+                        {% endif %}
+                    </button>
+                </form>
+
+                <form method="post" action="{% url 'gestion:profesora_eliminar' profesora.pk %}"
+                      class="d-inline ms-auto"
+                      data-confirmar="¿Eliminar a esta profesora? No se puede deshacer.">
+                    {% csrf_token %}
+                    <button type="submit" class="g-btn g-btn-peligro g-btn-sm" title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
             </div>
         </div>
     </div>

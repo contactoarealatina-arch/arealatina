@@ -113,3 +113,58 @@ def clase_detalle(request, pk):
         'historial': historial,
         'nombre_mes': servicios.nombre_mes(timezone.localdate()),
     })
+
+
+@gestion_requerida
+def clase_alternar(request, pk):
+    """Oculta o muestra una clase sin borrarla."""
+    if request.method != 'POST':
+        return redirect('gestion:clases')
+
+    clase = get_object_or_404(Clase, pk=pk)
+    clase.activa = not clase.activa
+    clase.save(update_fields=['activa', 'updated_at'])
+
+    verbo = 'Mostró' if clase.activa else 'Ocultó'
+    registrar(request, AuditLog.Accion.EDITAR, clase, f'{verbo} la clase {clase}')
+    messages.success(
+        request,
+        f'Clase {"visible de nuevo" if clase.activa else "oculta"}. '
+        f'{"Ya aparece" if clase.activa else "Deja de aparecer"} en el sitio '
+        f'y al inscribir alumnos.',
+    )
+    return redirect('gestion:clases')
+
+
+@gestion_requerida
+def clase_eliminar(request, pk):
+    """Borra la clase, pero solo si no arrastra historial.
+
+    Si tiene alumnos inscritos o asistencia registrada, borrarla perdería
+    ese historial para siempre. En ese caso se ofrece ocultarla, que hace
+    lo mismo de cara al día a día sin destruir nada.
+    """
+    if request.method != 'POST':
+        return redirect('gestion:clases')
+
+    clase = get_object_or_404(Clase, pk=pk)
+
+    inscritos = clase.inscripciones.count()
+    asistencias = RegistroAsistencia.objects.filter(clase=clase).count()
+
+    if inscritos or asistencias:
+        messages.error(
+            request,
+            f'No se puede eliminar «{clase}»: tiene {inscritos} '
+            f'inscripción{"es" if inscritos != 1 else ""} y {asistencias} '
+            f'registro{"s" if asistencias != 1 else ""} de asistencia. '
+            f'Ocúltala en vez de borrarla: desaparece del sitio y del '
+            f'formulario, pero el historial se conserva.',
+        )
+        return redirect('gestion:clases')
+
+    nombre = str(clase)
+    registrar(request, AuditLog.Accion.ELIMINAR, clase, f'Eliminó la clase {nombre}')
+    clase.delete()
+    messages.success(request, f'Clase «{nombre}» eliminada.')
+    return redirect('gestion:clases')

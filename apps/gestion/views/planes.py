@@ -71,3 +71,33 @@ def plan_alternar(request, pk):
               f'{"Activó" if plan.activo else "Desactivó"} el plan {plan.nombre}')
     messages.success(request, f'Plan {"activado" if plan.activo else "desactivado"}.')
     return redirect('gestion:planes')
+
+
+@gestion_requerida
+def plan_eliminar(request, pk):
+    """Borra un plan, solo si nadie lo contrató nunca.
+
+    Con suscripciones colgando, borrarlo dejaría pagos apuntando a un plan
+    que no existe y el histórico por plan quedaría en blanco.
+    """
+    if request.method != 'POST':
+        return redirect('gestion:planes')
+
+    plan = get_object_or_404(Plan, pk=pk)
+    contratos = plan.suscripciones.count()
+
+    if contratos:
+        messages.error(
+            request,
+            f'No se puede eliminar «{plan.nombre}»: {contratos} '
+            f'suscripción{"es" if contratos != 1 else ""} lo '
+            f'{"han" if contratos != 1 else "ha"} usado. Ocúltalo: deja de '
+            f'ofrecerse a los alumnos nuevos y el histórico se conserva.',
+        )
+        return redirect('gestion:planes')
+
+    nombre = plan.nombre
+    registrar(request, AuditLog.Accion.ELIMINAR, plan, f'Eliminó el plan {nombre}')
+    plan.delete()
+    messages.success(request, f'Plan «{nombre}» eliminado.')
+    return redirect('gestion:planes')

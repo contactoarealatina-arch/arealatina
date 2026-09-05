@@ -38,7 +38,7 @@
         <option value="">Todas las clases</option>
         {% for clase in clases %}
             <option value="{{ clase.pk }}" {% if filtros.clase == clase.pk|stringformat:"s" %}selected{% endif %}>
-                {{ clase.get_nombre_display }} · {{ clase.get_nivel_display }}
+                {{ clase.nombre }} · {{ clase.get_nivel_display }}
             </option>
         {% endfor %}
     </select>
@@ -112,7 +112,7 @@
                     <td class="g-muted g-nowrap">{{ alumno.rut }}</td>
                     <td class="g-muted">
                         {% for inscripcion in alumno.inscripciones.all %}
-                            <span class="g-badge g-badge-gris">{{ inscripcion.clase.get_nombre_display }}</span>
+                            <span class="g-badge g-badge-gris">{{ inscripcion.clase.nombre }}</span>
                         {% empty %}—{% endfor %}
                     </td>
                     <td class="g-muted">

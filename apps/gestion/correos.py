@@ -238,14 +238,16 @@ def enviar_bienvenida_profesora(profesora, enlace_activacion=''):
     """Se manda cuando la administración le crea la cuenta."""
     if not _configurado():
         return False, 'SMTP sin configurar.'
-    if not profesora.email:
+    if not profesora.correo_de_contacto:
         return False, 'La profesora no tiene email registrado.'
 
     from .models import Clase
 
     return _enviar(
         tipo=CorreoEnviado.Tipo.BIENV_PROFE,
-        destinatarios=[profesora.email],
+        # Al correo personal: el del estudio es identidad de acceso, no
+        # una casilla que reciba mensajes.
+        destinatarios=[profesora.correo_de_contacto],
         asunto=f'Bienvenida al equipo, {profesora.nombre_corto} — Área Latina',
         plantilla='bienvenida_profesora',
         contexto={
@@ -266,13 +268,15 @@ def enviar_recordatorio_profesora(profesora, clases_hoy, fecha):
 
     Mandar uno por clase sería spam para quien dicta tres seguidas.
     """
-    if not _configurado() or not profesora.email or not clases_hoy:
+    if not _configurado() or not profesora.correo_de_contacto or not clases_hoy:
         return False, 'Sin datos para enviar.'
 
     cantidad = len(clases_hoy)
     return _enviar(
         tipo=CorreoEnviado.Tipo.REC_PROFE,
-        destinatarios=[profesora.email],
+        # Al correo personal: el del estudio es identidad de acceso, no
+        # una casilla que reciba mensajes.
+        destinatarios=[profesora.correo_de_contacto],
         asunto=f'Hoy tienes {cantidad} clase{"s" if cantidad != 1 else ""} — Área Latina',
         plantilla='recordatorio_profesora',
         contexto={
@@ -344,7 +348,7 @@ def enviar_recordatorio_clase(alumno, clase, fecha):
     return _enviar(
         tipo=CorreoEnviado.Tipo.RECORDATORIO_CLASE,
         destinatarios=[alumno.email],
-        asunto=f'Mañana tienes {clase.get_nombre_display()} a las {clase.hora_inicio:%H:%M} — Área Latina',
+        asunto=f'Mañana tienes {clase.nombre} a las {clase.hora_inicio:%H:%M} — Área Latina',
         plantilla='recordatorio_clase',
         contexto={
             'alumno': alumno,
@@ -403,7 +407,7 @@ def enviar_confirmacion_asistencia(confirmacion):
     return _enviar(
         tipo=CorreoEnviado.Tipo.CONFIRMACION,
         destinatarios=[alumno.email],
-        asunto=f'Asistencia confirmada · {confirmacion.clase.get_nombre_display()} '
+        asunto=f'Asistencia confirmada · {confirmacion.clase.nombre} '
                f'{confirmacion.fecha:%d/%m}',
         plantilla='confirmacion_asistencia',
         contexto={

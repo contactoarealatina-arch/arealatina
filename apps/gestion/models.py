@@ -10,7 +10,7 @@ from encrypted_model_fields.fields import EncryptedCharField, EncryptedTextField
 
 from apps.usuarios.models import TimeStampedModel
 
-from .validadores import validar_foto
+from .validadores import validar_documento, validar_foto
 
 
 class DiaSemana(models.TextChoices):
@@ -75,6 +75,62 @@ class Categoria(TimeStampedModel):
         return self.clases.filter(activa=True)
 
 
+class Disciplina(TimeStampedModel):
+    """Catálogo de disciplinas: salsa, bachata, pilates, lo que sea.
+
+    Antes eran una lista fija dentro del código, así que abrir un ritmo
+    nuevo obligaba a tocar el modelo y desplegar. Ahora el estudio las
+    crea desde el panel, o escribe una nueva directamente al crear la
+    clase y el catálogo la aprende sola.
+    """
+
+    nombre = models.CharField('Nombre', max_length=60, unique=True)
+    emoji = models.CharField(
+        'Emoji',
+        max_length=8,
+        blank=True,
+        help_text='Opcional. Sale junto al nombre en el sitio y en el panel.',
+    )
+    orden = models.PositiveSmallIntegerField('Orden', default=0)
+    activa = models.BooleanField(
+        'Sugerir al crear clases',
+        default=True,
+        help_text='Si se apaga, deja de aparecer en las sugerencias, pero '
+                  'las clases que ya la usan no cambian.',
+    )
+
+    class Meta:
+        verbose_name = 'Disciplina'
+        verbose_name_plural = 'Disciplinas'
+        ordering = ['orden', 'nombre']
+
+    def __str__(self):
+        return f'{self.emoji} {self.nombre}'.strip()
+
+    @classmethod
+    def aprender(cls, nombre):
+        """Suma al catálogo una disciplina escrita a mano, si es nueva."""
+        nombre = (nombre or '').strip()
+        if not nombre:
+            return None
+        objeto, _ = cls.objects.get_or_create(
+            nombre__iexact=nombre,
+            defaults={'nombre': nombre, 'orden': 99},
+        )
+        return objeto
+
+
+class Publico(models.TextChoices):
+    """Para quién es la clase. Dos opciones a propósito.
+
+    Antes era una edad mínima en años y nadie la llenaba: al final el
+    estudio solo distingue entre las clases de niños y el resto.
+    """
+
+    TODAS = 'TODAS', 'Cualquier edad'
+    KIDS = 'KIDS', 'Kids & Teens'
+
+
 class ModalidadPago(models.TextChoices):
     """Cómo se puede pagar una clase.
 
@@ -91,41 +147,13 @@ class ModalidadPago(models.TextChoices):
 class Clase(TimeStampedModel):
     """Una clase regular del estudio, con su horario y profesora a cargo."""
 
-    class Estilo(models.TextChoices):
-        SALSA = 'SALSA', 'Salsa'
-        BACHATA = 'BACHATA', 'Bachata'
-        REGGAETON = 'REGGAETON', 'Reggaetón'
-        URBANO = 'URBANO', 'Urbano'
-        HEELS = 'HEELS', 'Heels'
-        TANGO = 'TANGO', 'Tango'
-        KIDS = 'KIDS', 'Kids Dance'
-        # Wellness: el cuerpo también se entrena fuera del baile.
-        PILATES = 'PILATES', 'Pilates Mat'
-        BARRE = 'BARRE', 'Barre'
-        FLEXIBILIDAD = 'FLEXIBILIDAD', 'Flexibilidad'
-        REFORMER = 'REFORMER', 'Reformer'
-
     class Nivel(models.TextChoices):
         TODOS = 'TODOS', 'Todos los niveles'
         INICIAL = 'INICIAL', 'Principiante'
         INTERMEDIO = 'INTERMEDIO', 'Intermedio'
         AVANZADO = 'AVANZADO', 'Avanzado'
 
-    EMOJIS = {
-        'SALSA': '\U0001F483',
-        'BACHATA': '\U0001F339',
-        'REGGAETON': '\U0001F525',
-        'URBANO': '\U0001F3A4',
-        'HEELS': '\U0001F460',
-        'TANGO': '\U0001F3B6',
-        'KIDS': '\U0001F476',
-        'PILATES': '\U0001F9D8',
-        'BARRE': '\U0001FA70',
-        'FLEXIBILIDAD': '\U0001F938',
-        'REFORMER': '\U0001F4AA',
-    }
-
-    nombre = models.CharField('Disciplina', max_length=15, choices=Estilo.choices)
+    nombre = models.CharField('Disciplina', max_length=60)
     categoria = models.ForeignKey(
         'Categoria',
         on_delete=models.SET_NULL,
@@ -136,11 +164,13 @@ class Clase(TimeStampedModel):
         help_text='Baile Urbano o Bienestar. Decide bajo qué bloque sale '
                   'esta clase en el sitio.',
     )
-    edad_minima = models.PositiveSmallIntegerField(
-        'Edad mínima',
-        null=True,
-        blank=True,
-        help_text='Opcional. Para filtrar por edad en el buscador de horarios.',
+    publico = models.CharField(
+        'Para quién es',
+        max_length=10,
+        choices=Publico.choices,
+        default=Publico.TODAS,
+        help_text='Dos opciones y nada más: o es para niños y adolescentes, '
+                  'o entra cualquiera.',
     )
     descripcion = models.TextField('Descripción', blank=True)
     nivel = models.CharField(
@@ -191,7 +221,7 @@ class Clase(TimeStampedModel):
         ordering = ['nombre', 'hora_inicio']
 
     def __str__(self):
-        return f'{self.get_nombre_display()} · {self.get_nivel_display()} ({self.dias_display})'
+        return f'{self.nombre} · {self.get_nivel_display()} ({self.dias_display})'
 
     def get_absolute_url(self):
         return reverse('gestion:clase_detalle', args=[self.pk])
@@ -251,7 +281,11 @@ class Clase(TimeStampedModel):
 
     @property
     def emoji(self):
-        return self.EMOJIS.get(self.nombre, '\U0001F3B5')
+        """El emoji de su disciplina, o una nota musical si no tiene."""
+        catalogo = Disciplina.objects.filter(nombre__iexact=self.nombre).first()
+        if catalogo and catalogo.emoji:
+            return catalogo.emoji
+        return '\U0001F3B5'
 
     @property
     def admite_suelta(self):
@@ -275,6 +309,22 @@ class Plan(TimeStampedModel):
     precio_clp = models.PositiveIntegerField('Precio (CLP)')
     duracion_dias = models.PositiveSmallIntegerField('Duración (días)', default=30)
     descripcion = models.TextField('Descripción', blank=True)
+    clases_incluidas = models.PositiveSmallIntegerField(
+        'Clases que incluye',
+        null=True,
+        blank=True,
+        help_text='Cuántas clases distintas cubre el plan. Déjalo vacío si '
+                  'es ilimitado (pase libre). Se usa para avisar cuando el '
+                  'alumno marca más clases de las que el plan cubre.',
+    )
+    pilares = models.ManyToManyField(
+        'Categoria',
+        blank=True,
+        related_name='planes',
+        verbose_name='Pilares que cubre',
+        help_text='Déjalo vacío para que sirva en todo el estudio. Marca '
+                  'los dos si el plan permite combinar baile y bienestar.',
+    )
     beneficios = models.TextField(
         'Beneficios',
         blank=True,
@@ -300,6 +350,18 @@ class Plan(TimeStampedModel):
     @property
     def beneficios_lista(self):
         return [b.strip() for b in self.beneficios.splitlines() if b.strip()]
+
+    @property
+    def es_ilimitado(self):
+        return self.clases_incluidas is None
+
+    @property
+    def cobertura(self):
+        """'Baile Urbano', 'Bienestar' o 'Todo el estudio'."""
+        nombres = list(self.pilares.values_list('nombre', flat=True))
+        if not nombres:
+            return 'Todo el estudio'
+        return ' y '.join(nombres)
 
     @property
     def suscripciones_vigentes(self):
@@ -669,6 +731,14 @@ class Pago(TimeStampedModel):
         max_length=15,
         choices=Metodo.choices,
         default=Metodo.EFECTIVO,
+    )
+    boleta = models.FileField(
+        'Boleta o comprobante',
+        upload_to='boletas/%Y/%m/',
+        blank=True,
+        null=True,
+        validators=[validar_documento],
+        help_text='PDF o imagen. Queda guardada en la ficha del alumno.',
     )
     numero_comprobante = models.CharField('N° de comprobante', max_length=50, blank=True)
     pago_matricula = models.BooleanField('Es pago de matrícula', default=False)

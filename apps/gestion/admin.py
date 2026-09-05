@@ -6,6 +6,7 @@ from .models import (
     AuditLog,
     BrechaSeguridad,
     Categoria,
+    Disciplina,
     RespaldoLog,
     SolicitudARCO,
     Clase,
@@ -59,7 +60,7 @@ class ClaseAdmin(admin.ModelAdmin):
     autocomplete_fields = ('profesora',)
     fieldsets = (
         ('Identificación', {'fields': ('nombre', 'categoria', 'nivel',
-                                       'descripcion', 'edad_minima', 'activa')}),
+                                       'descripcion', 'publico', 'activa')}),
         ('Horario', {'fields': ('dias_semana', 'hora_inicio', 'hora_fin', 'sala')}),
         ('Capacidad y equipo', {'fields': ('cupo_maximo', 'profesora')}),
         ('Cómo se paga', {'fields': ('modalidad_pago', 'precio_clase_suelta')}),
@@ -365,3 +366,16 @@ class AceptacionTerminosAdmin(admin.ModelAdmin):
         if obj.alumno:
             return obj.alumno.nombre_completo
         return obj.usuario.get_full_name() if obj.usuario else '—'
+
+
+@admin.register(Disciplina)
+class DisciplinaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'emoji', 'orden', 'activa', 'cuantas_clases')
+    list_editable = ('emoji', 'orden', 'activa')
+    search_fields = ('nombre',)
+    ordering = ('orden', 'nombre')
+
+    @admin.display(description='Clases')
+    def cuantas_clases(self, obj):
+        from .models import Clase
+        return Clase.objects.filter(nombre__iexact=obj.nombre).count()

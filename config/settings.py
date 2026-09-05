@@ -69,7 +69,9 @@ MIDDLEWARE = [
 # Axes primero: intercepta el intento antes de que Django valide la clave.
 AUTHENTICATION_BACKENDS = [
     'axes.backends.AxesStandaloneBackend',
-    'django.contrib.auth.backends.ModelBackend',
+    # Deja entrar con el correo ademas del nombre de usuario. Las
+    # profesoras usan su correo del estudio; el resto sigue igual.
+    'apps.usuarios.backends.CorreoOUsuarioBackend',
 ]
 
 # Requerido por django.contrib.sites, que usa el mapa del sitio para
@@ -333,6 +335,12 @@ LOGGING = {
 
 # Direccion publica del sitio, para los enlaces de los correos.
 SITIO_URL = env('SITIO_URL', default='http://localhost:8000')
+
+# Dominio de la identidad interna de las profesoras. Ojo: es solo el
+# nombre con el que entran al sistema, NO una casilla de correo. Las
+# casillas reales las da un proveedor (Zoho, Google Workspace) y hay que
+# contratarlas aparte.
+DOMINIO_PROFESORAS = env('DOMINIO_PROFESORAS', default='arealatina.cl')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

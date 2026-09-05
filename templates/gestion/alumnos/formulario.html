@@ -197,6 +197,17 @@
 
         <div class="g-card mb-3" data-vencimiento>
             <h2 class="g-card-titulo">Plan contratado</h2>
+
+            {% comment %}
+                Aviso en vivo cuando las clases marcadas no calzan con el
+                plan. No bloquea: el estudio puede tener un acuerdo puntual,
+                y el servidor también lo deja pasar.
+            {% endcomment %}
+            <div class="g-aviso aviso mb-3" id="avisoClases" hidden>
+                <i class="bi bi-exclamation-triangle"></i>
+                <div id="avisoClasesTexto"></div>
+            </div>
+
             {% if form_plan.fields.plan.queryset %}
                 <div class="row g-2 mb-3" data-opciones>
                     {% for opcion in form_plan.plan %}
@@ -326,6 +337,36 @@
 {{ duraciones_planes|json_script:"duracionesPlanes" }}
 
 <script nonce="{{ request.csp_nonce }}">
+// Avisa cuando el plan elegido no cubre todas las clases marcadas.
+(function () {
+    var aviso = document.getElementById('avisoClases');
+    var texto = document.getElementById('avisoClasesTexto');
+    if (!aviso || !texto) { return; }
+
+    function revisar() {
+        var marcadas = document.querySelectorAll('input[name="clases"]:checked').length;
+        var plan = document.querySelector('input[name="plan"]:checked');
+        if (!plan || !marcadas) { aviso.hidden = true; return; }
+
+        var cubre = plan.getAttribute('data-clases');
+        // Sin atributo = plan ilimitado, nunca se queda corto.
+        if (cubre === null || marcadas <= parseInt(cubre, 10)) {
+            aviso.hidden = true;
+            return;
+        }
+
+        texto.innerHTML = 'Marcaste <strong>' + marcadas + ' clases</strong> y «'
+            + (plan.getAttribute('data-nombre') || 'este plan') + '» cubre <strong>'
+            + cubre + '</strong>. Puedes guardarlo igual si hay un acuerdo, '
+            + 'pero revisa si corresponde otro plan.';
+        aviso.hidden = false;
+    }
+
+    document.querySelectorAll('input[name="clases"], input[name="plan"]')
+        .forEach(function (campo) { campo.addEventListener('change', revisar); });
+    revisar();
+})();
+
 // Autocompleta el monto con el precio del plan elegido.
 //
 // Es un punto de partida, no un candado: si el admin escribe otra cifra

@@ -85,7 +85,7 @@
                 <div class="p-sesion {% if item.paso %}pasada{% endif %}">
                     <span class="p-sesion-hora">{{ item.clase.hora_inicio|time:"H:i" }}</span>
                     <span class="p-sesion-datos">
-                        <strong>{{ item.clase.emoji }} {{ item.clase.get_nombre_display }}</strong>
+                        <strong>{{ item.clase.emoji }} {{ item.clase.nombre }}</strong>
                         <span>
                             {{ item.clase.hora_inicio|time:"H:i" }}–{{ item.clase.hora_fin|time:"H:i" }}
                             · {{ item.clase.sala }}

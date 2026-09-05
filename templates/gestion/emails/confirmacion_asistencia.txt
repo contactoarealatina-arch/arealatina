@@ -3,7 +3,7 @@ AREA LATINA ESTUDIO - Asistencia confirmada
 
 Perfecto {{ alumno.primer_nombre }}, te esperamos.
 
-Clase: {{ clase.get_nombre_display }}
+Clase: {{ clase.nombre }}
 Dia:   {{ fecha|date:"l d" }} de {{ fecha|date:"F" }}
 Hora:  {{ clase.hora_inicio|time:"H:i" }} hrs
 Sala:  {{ clase.sala }}

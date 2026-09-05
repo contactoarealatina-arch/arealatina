@@ -150,7 +150,7 @@ def por_curso_exportar(request):
         return redirect('gestion:por_curso')
 
     nombre = (
-        datos['objeto'].get_nombre_display()
+        datos['objeto'].nombre
         if datos['tipo'] == 'clase' else datos['objeto'].nombre
     )
     respuesta = HttpResponse(

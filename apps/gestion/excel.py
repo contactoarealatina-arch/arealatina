@@ -72,7 +72,7 @@ def exportar_alumnos(alumnos):
             alumno.telefono,
             alumno.email,
             alumno.fecha_ingreso,
-            ', '.join(i.clase.get_nombre_display() for i in alumno.inscripciones.all()),
+            ', '.join(i.clase.nombre for i in alumno.inscripciones.all()),
             suscripcion.plan.nombre if suscripcion else '',
             suscripcion.fecha_vencimiento if suscripcion else '',
             alumno.estado_pago_display,
@@ -145,7 +145,7 @@ def exportar_asistencia(registros):
     for registro in registros:
         hoja.append([
             registro.fecha,
-            registro.clase.get_nombre_display(),
+            registro.clase.nombre,
             registro.clase.get_nivel_display(),
             registro.alumno.nombre_completo,
             registro.alumno.rut,
@@ -238,7 +238,7 @@ def exportar_historial_profesora(filas, titulo_mes):
         clase = fila['clase']
         hoja.append([
             fila['fecha'],
-            clase.get_nombre_display(),
+            clase.nombre,
             clase.get_nivel_display(),
             clase.profesora.get_full_name() if clase.profesora else 'Sin asignar',
             fila['presentes'],

@@ -158,7 +158,8 @@ def pago_nuevo(request):
         inicial['alumno'] = alumno_id
 
     if request.method == 'POST':
-        form = PagoForm(request.POST)
+        # request.FILES: sin esto la boleta adjunta se pierde en silencio.
+        form = PagoForm(request.POST, request.FILES)
         if form.is_valid():
             pago = form.save(commit=False)
             pago.registrado_por = request.user

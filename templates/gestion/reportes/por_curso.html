@@ -34,7 +34,7 @@
                         {% for clase in clases %}
                             <option value="{{ clase.pk }}"
                                     {% if objeto_id == clase.pk|stringformat:"s" %}selected{% endif %}>
-                                {{ clase.get_nombre_display }} · {{ clase.get_nivel_display }}
+                                {{ clase.nombre }} · {{ clase.get_nivel_display }}
                                 ({{ clase.horario }}){% if not clase.activa %} — inactiva{% endif %}
                             </option>
                         {% endfor %}
@@ -104,7 +104,7 @@
     <div class="g-card">
         <div class="g-card-cabeza">
             <h2 class="g-card-titulo mb-0">
-                {% if tipo == 'clase' %}{{ objeto.get_nombre_display }}{% else %}{{ objeto.nombre }}{% endif %}
+                {% if tipo == 'clase' %}{{ objeto.nombre }}{% else %}{{ objeto.nombre }}{% endif %}
             </h2>
             {% if filas %}
                 <a href="{% url 'gestion:por_curso_exportar' %}?tipo={{ tipo }}&id={{ objeto_id }}&rango={{ rango }}"

@@ -1,0 +1,132 @@
+{% extends 'gestion/base_gestion.html' %}
+{% load formato %}
+
+{% block titulo %}{{ clase.nombre }} · {{ fecha|date:"d/m/Y" }}{% endblock %}
+{% block encabezado %}Asistencia de una clase{% endblock %}
+
+{% block contenido %}
+
+<div class="g-card mb-4">
+    <div class="g-card-cabeza">
+        <div>
+            <h2 class="g-card-titulo mb-1">
+                {{ clase.emoji }} {{ clase.nombre }}
+                <span class="g-badge g-badge-gris">{{ clase.get_nivel_display }}</span>
+            </h2>
+            <p class="g-muted mb-0">
+                {{ fecha|date:"l d \d\e F \d\e Y"|capfirst }} ·
+                {{ clase.horario }} hrs · {{ clase.sala }}
+                {% if clase.profesora %}
+                    · con {{ clase.profesora.get_full_name|default:clase.profesora.username }}
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'gestion:asistencia_resumen' %}?clase={{ clase.pk }}&rango=todo"
+           class="g-btn g-btn-outline g-btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Volver al resumen
+        </a>
+    </div>
+</div>
+
+<!-- ==================== CIFRAS ==================== -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica exito">
+            <div class="g-metrica-etiqueta"><i class="bi bi-check-circle"></i> Asistieron</div>
+            <div class="g-metrica-valor">{{ conteo.presentes }}</div>
+            <div class="g-metrica-pie">de {{ inscritos }} inscrito{{ inscritos|pluralize }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica peligro">
+            <div class="g-metrica-etiqueta"><i class="bi bi-x-circle"></i> Faltaron</div>
+            <div class="g-metrica-valor">{{ conteo.ausentes }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica aviso">
+            <div class="g-metrica-etiqueta"><i class="bi bi-info-circle"></i> Justificados</div>
+            <div class="g-metrica-valor">{{ conteo.justificados }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-cash-stack"></i> Genera al mes</div>
+            <div class="g-metrica-valor">${{ ingreso_clase|clp }}</div>
+            <div class="g-metrica-pie">estimado</div>
+        </div>
+    </div>
+</div>
+
+{% if conteo.sin_marcar %}
+<div class="g-aviso aviso mb-4">
+    <i class="bi bi-question-circle"></i>
+    <div>
+        <strong>
+            {{ conteo.sin_marcar }} alumno{{ conteo.sin_marcar|pluralize }}
+            sin marcar.
+        </strong>
+        La profesora no los registró ese día. No es lo mismo que ausente,
+        por eso no se cuentan como falta.
+    </div>
+</div>
+{% endif %}
+
+<!-- ==================== QUIÉN VINO ==================== -->
+<div class="g-card">
+    <h2 class="g-card-titulo">Alumno por alumno</h2>
+
+    {% if filas %}
+    <div class="g-tabla-envoltura">
+        <table class="g-tabla">
+            <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>RUT</th>
+                    <th>Asistencia</th>
+                    <th>Observación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fila in filas %}
+                <tr>
+                    <td>
+                        <a href="{% url 'gestion:alumno_detalle' fila.alumno.pk %}">
+                            {{ fila.alumno.nombre_completo }}
+                        </a>
+                        {% if fila.ya_no_inscrito %}
+                            <small class="g-tenue">Ya no está en esta clase</small>
+                        {% endif %}
+                    </td>
+                    <td class="g-muted">{{ fila.alumno.rut }}</td>
+                    <td>
+                        {% if fila.estado == 'PRESENTE' %}
+                            <span class="g-badge g-badge-verde">
+                                <i class="bi bi-check-lg"></i> Asistió
+                            </span>
+                        {% elif fila.estado == 'AUSENTE' %}
+                            <span class="g-badge g-badge-rojo">
+                                <i class="bi bi-x-lg"></i> No asistió
+                            </span>
+                        {% elif fila.estado == 'JUSTIFICADO' %}
+                            <span class="g-badge g-badge-amarillo">Justificado</span>
+                        {% else %}
+                            <span class="g-badge g-badge-gris">Sin marcar</span>
+                        {% endif %}
+                    </td>
+                    <td class="g-muted">{{ fila.observacion|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="g-vacio">
+        <i class="bi bi-clipboard-x"></i>
+        <h3>Nadie inscrito en esta clase</h3>
+        <p>No hay alumnos que mostrar para esta fecha.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

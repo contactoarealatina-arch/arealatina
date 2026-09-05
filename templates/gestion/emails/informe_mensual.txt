@@ -13,8 +13,8 @@ Asistencia global: {% if asistencia_global is not None %}{{ asistencia_global }}
 {% if mejor_clase %}
 CLASES
 ------------------------------------------------------------
-Mas asistencia:  {{ mejor_clase.clase.get_nombre_display }} ({{ mejor_clase.presentes }}){% if peor_clase %}
-Menos asistencia: {{ peor_clase.clase.get_nombre_display }} ({{ peor_clase.presentes }}){% endif %}
+Mas asistencia:  {{ mejor_clase.clase.nombre }} ({{ mejor_clase.presentes }}){% if peor_clase %}
+Menos asistencia: {{ peor_clase.clase.nombre }} ({{ peor_clase.presentes }}){% endif %}
 {% endif %}{% if top_planes %}
 PLANES MAS CONTRATADOS
 ------------------------------------------------------------

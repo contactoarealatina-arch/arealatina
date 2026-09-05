@@ -1,7 +1,7 @@
 {% extends 'gestion/base_gestion.html' %}
 
 {% block titulo %}{% if editando %}Editar clase{% else %}Nueva clase{% endif %}{% endblock %}
-{% block encabezado %}{% if editando %}Editar {{ clase.get_nombre_display }}{% else %}Nueva clase{% endif %}{% endblock %}
+{% block encabezado %}{% if editando %}Editar {{ clase.nombre }}{% else %}Nueva clase{% endif %}{% endblock %}
 
 {% block acciones %}
     <a href="{% url 'gestion:clases' %}" class="g-btn g-btn-neutro g-btn-sm">
@@ -26,10 +26,25 @@
             <div class="g-card mb-3">
                 <h2 class="g-card-titulo">Identificación</h2>
                 <div class="row g-3">
-                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.nombre %}</div>
-                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.categoria %}</div>
+                    <div class="col-md-6">
+                        {% include 'gestion/_campo.html' with campo=form.nombre %}
+                        {% comment %}
+                            Sugerencias, no una lista cerrada: se puede
+                            escribir un ritmo que no existe todavía y el
+                            catálogo lo aprende al guardar.
+                        {% endcomment %}
+                        <datalist id="sugerenciasDisciplina">
+                            {% for d in form.sugerencias %}
+                                <option value="{{ d.nombre }}">{{ d.emoji }}</option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                    <div class="col-md-6">
+                        {% include 'gestion/_campo.html' with campo=form.categoria %}
+                        {% include 'gestion/_campo.html' with campo=form.pilar_nuevo %}
+                    </div>
                     <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.nivel %}</div>
-                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.edad_minima %}</div>
+                    <div class="col-md-6">{% include 'gestion/_campo.html' with campo=form.publico %}</div>
                     <div class="col-12">{% include 'gestion/_campo.html' with campo=form.descripcion %}</div>
                 </div>
             </div>

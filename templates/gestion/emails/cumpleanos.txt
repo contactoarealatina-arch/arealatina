@@ -8,7 +8,7 @@ AREA LATINA ESTUDIO
 Hoy es tu dia. Que lo pases increible, rodeado de la gente
 que quieres.
 {% if clase_hoy %}
-Y justo hoy tienes {{ clase_hoy.get_nombre_display }} a las
+Y justo hoy tienes {{ clase_hoy.nombre }} a las
 {{ clase_hoy.hora_inicio|time:"H:i" }} hrs. Te esperamos para
 celebrarlo bailando.
 {% else %}

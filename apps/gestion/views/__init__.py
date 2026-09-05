@@ -17,16 +17,21 @@ from .alumnos import (  # noqa: F401
     alumnos,
     alumnos_exportar,
 )
-from .asistencia import asistencia, asistencia_resumen  # noqa: F401
+from .asistencia import (asistencia, asistencia_resumen,  # noqa: F401
+                         asistencia_sesion)
 from .por_curso import por_curso, por_curso_exportar  # noqa: F401
 from .auditoria import auditoria  # noqa: F401
-from .clases import clase_detalle, clase_editar, clase_nueva, clases  # noqa: F401
+from .clases import (clase_alternar, clase_detalle, clase_editar,  # noqa: F401
+                     clase_eliminar, clase_nueva, clases)
 from .dashboard import dashboard  # noqa: F401
 from .pagos import pago_nuevo, pagos, pagos_exportar, resumen_financiero  # noqa: F401
-from .planes import plan_alternar, plan_editar, plan_nuevo, planes  # noqa: F401
+from .planes import (plan_alternar, plan_editar, plan_eliminar,  # noqa: F401
+                     plan_nuevo, planes)
 from .profesoras import (  # noqa: F401
     profesora_detalle,
     profesora_editar,
+    profesora_alternar,
+    profesora_eliminar,
     profesora_reenviar_acceso,
     profesora_nueva,
     profesoras,

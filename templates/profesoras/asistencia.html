@@ -8,7 +8,7 @@
     <a href="{% url 'profesoras:panel' %}" class="p-atras">
         <i class="bi bi-arrow-left"></i> Volver
     </a>
-    <h1>{{ clase.emoji }} {{ clase.get_nombre_display }}</h1>
+    <h1>{{ clase.emoji }} {{ clase.nombre }}</h1>
     <p>
         {{ fecha|date:"l d \d\e F"|capfirst }} · {{ clase.horario }} hrs · {{ clase.sala }}
     </p>

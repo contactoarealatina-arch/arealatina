@@ -59,8 +59,17 @@
                                       class="d-inline">
                                     {% csrf_token %}
                                     <button type="submit" class="g-btn g-btn-neutro g-btn-icono"
-                                            title="{% if plan.activo %}Desactivar{% else %}Activar{% endif %}">
-                                        <i class="bi {% if plan.activo %}bi-toggle-on{% else %}bi-toggle-off{% endif %}"></i>
+                                            title="{% if plan.activo %}Ocultar{% else %}Mostrar{% endif %}">
+                                        <i class="bi {% if plan.activo %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'gestion:plan_eliminar' plan.pk %}"
+                                      class="d-inline"
+                                      data-confirmar="¿Eliminar este plan? No se puede deshacer.">
+                                    {% csrf_token %}
+                                    <button type="submit" class="g-btn g-btn-peligro g-btn-icono"
+                                            title="Eliminar">
+                                        <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
                             </td>

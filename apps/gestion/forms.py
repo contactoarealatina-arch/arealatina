@@ -7,6 +7,8 @@ from django.utils import timezone
 
 from .validadores import redimensionar_foto
 from .models import (
+    Categoria,
+    Disciplina,
     ModalidadPago,
     Alumno,
     Clase,
@@ -167,6 +169,10 @@ class RadioPlanes(forms.RadioSelect):
         if plan is not None:
             opcion['attrs']['data-precio'] = plan.precio_clp
             opcion['attrs']['data-nombre'] = plan.nombre
+            # Vacío = ilimitado. El JS lo usa para avisar cuando se marcan
+            # más clases de las que el plan cubre.
+            if plan.clases_incluidas is not None:
+                opcion['attrs']['data-clases'] = plan.clases_incluidas
         return opcion
 
 
@@ -213,6 +219,20 @@ class InscripcionPlanForm(forms.Form):
         datos = super().clean()
         if datos.get('plan') and not datos.get('fecha_inicio'):
             self.add_error('fecha_inicio', 'Indica desde cuándo corre el plan.')
+
+        # Marcar cuatro clases con un plan de dos es casi siempre un
+        # descuido. Se avisa, pero no se bloquea: el estudio puede tener
+        # un acuerdo puntual con ese alumno y el sistema no es quién para
+        # impedirlo.
+        plan = datos.get('plan')
+        clases = datos.get('clases')
+        if plan and clases and plan.clases_incluidas is not None:
+            if len(clases) > plan.clases_incluidas:
+                self.aviso_clases = (
+                    f'Marcaste {len(clases)} clases y «{plan.nombre}» cubre '
+                    f'{plan.clases_incluidas}. Se guardó igual, pero revisa '
+                    f'si corresponde otro plan.'
+                )
         if datos.get('pago_matricula') and not datos.get('monto_matricula'):
             self.add_error('monto_matricula', 'Indica el monto de la matrícula.')
         return datos
@@ -301,7 +321,7 @@ class ClaseForm(MixinWidgets, forms.ModelForm):
     class Meta:
         model = Clase
         fields = [
-            'nombre', 'categoria', 'descripcion', 'nivel', 'edad_minima',
+            'nombre', 'categoria', 'descripcion', 'nivel', 'publico',
             'hora_inicio', 'hora_fin', 'sala', 'cupo_maximo',
             'modalidad_pago', 'precio_clase_suelta', 'profesora', 'activa',
         ]
@@ -311,16 +331,37 @@ class ClaseForm(MixinWidgets, forms.ModelForm):
             'hora_fin': forms.TimeInput(attrs={'type': 'time'}, format='%H:%M'),
         }
 
+    # Pilar nuevo escrito a mano. Va aparte del select para no obligar a
+    # salir del formulario, ir a crear el pilar y volver a empezar.
+    pilar_nuevo = forms.CharField(
+        required=False,
+        max_length=50,
+        label='...o crea uno nuevo',
+        widget=forms.TextInput(attrs={
+            'class': 'g-input',
+            'placeholder': 'Ej: Kids & Teens',
+        }),
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['profesora'].queryset = User.objects.filter(rol=User.Rol.PROFESOR)
         self.fields['profesora'].required = False
         self.fields['descripcion'].required = False
         self.fields['precio_clase_suelta'].required = False
+
+        # La disciplina se escribe, pero con las que ya existen a un clic:
+        # ni lista cerrada ni campo en blanco.
+        self.fields['nombre'].widget = forms.TextInput(attrs={
+            'class': 'g-input',
+            'list': 'sugerenciasDisciplina',
+            'autocomplete': 'off',
+            'placeholder': 'Salsa, Bachata, Pilates Mat...',
+        })
+        self.sugerencias = Disciplina.objects.filter(activa=True)
         # El area decide en que pagina del sitio sale la clase. Sin ella la
         # clase existe pero no aparece agrupada en /clases/.
         self.fields['categoria'].required = False
-        self.fields['edad_minima'].required = False
         # El precio suelto solo aplica si la clase lo admite; la
         # validacion cruzada esta en clean().
         self.fields['precio_clase_suelta'].required = False
@@ -344,6 +385,21 @@ class ClaseForm(MixinWidgets, forms.ModelForm):
                 'Indica cuánto cuesta la clase suelta, o cambia la modalidad '
                 'a solo mensualidad.',
             )
+
+        # Se normaliza el nombre para no terminar con "salsa", "Salsa" y
+        # "SALSA" como tres disciplinas distintas.
+        nombre = (datos.get('nombre') or '').strip()
+        if nombre:
+            existente = Disciplina.objects.filter(nombre__iexact=nombre).first()
+            datos['nombre'] = existente.nombre if existente else nombre
+
+        # O se elige un pilar de la lista, o se escribe uno nuevo. Los dos
+        # a la vez es ambiguo y hay que decirlo.
+        if datos.get('pilar_nuevo') and datos.get('categoria'):
+            self.add_error(
+                'pilar_nuevo',
+                'Elige un pilar de la lista o crea uno nuevo, pero no las dos cosas.',
+            )
         return datos
 
     def save(self, commit=True):
@@ -352,8 +408,26 @@ class ClaseForm(MixinWidgets, forms.ModelForm):
         orden = [c for c, _ in DiaSemana.choices]
         elegidos = set(self.cleaned_data['dias'])
         clase.dias_semana = ','.join(c for c in orden if c in elegidos)
+
+        # Pilar escrito a mano: se crea al vuelo.
+        nuevo_pilar = (self.cleaned_data.get('pilar_nuevo') or '').strip()
+        if nuevo_pilar:
+            from django.utils.text import slugify
+
+            clase.categoria, _ = Categoria.objects.get_or_create(
+                nombre__iexact=nuevo_pilar,
+                defaults={
+                    'nombre': nuevo_pilar,
+                    'slug': slugify(nuevo_pilar)[:60],
+                    'orden': 90,
+                },
+            )
+
         if commit:
             clase.save()
+            # El catálogo aprende la disciplina nueva, para que la próxima
+            # vez salga sugerida y nadie tenga que escribirla de nuevo.
+            Disciplina.aprender(clase.nombre)
         return clase
 
 
@@ -361,18 +435,41 @@ class ClaseForm(MixinWidgets, forms.ModelForm):
 # Plan
 # ---------------------------------------------------------------------------
 class PlanForm(MixinWidgets, forms.ModelForm):
+    """Un plan del estudio.
+
+    Además del precio, dice a qué pilares aplica y cuántas clases cubre.
+    Lo segundo es lo que permite avisar cuando un alumno marca cuatro
+    clases y elige un plan de dos.
+    """
+
     class Meta:
         model = Plan
-        fields = ['nombre', 'precio_clp', 'duracion_dias', 'descripcion', 'activo']
+        fields = [
+            'nombre', 'precio_clp', 'duracion_dias', 'clases_incluidas',
+            'pilares', 'descripcion', 'beneficios', 'icono', 'destacado',
+            'orden', 'activo',
+        ]
         widgets = {
-            'descripcion': forms.Textarea(attrs={'rows': 3}),
-            'nombre': forms.TextInput(attrs={'placeholder': 'Ej: Plan 2 veces por semana'}),
+            'descripcion': forms.Textarea(attrs={'rows': 2}),
+            'beneficios': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': ('Uno por línea. Por ejemplo:  4 clases mensuales  ·  Acceso a la app'),
+            }),
+            'nombre': forms.TextInput(attrs={'placeholder': 'Ej: 2 Cursos'}),
+            'pilares': forms.CheckboxSelectMultiple,
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['descripcion'].required = False
+        for campo in ('descripcion', 'beneficios', 'clases_incluidas',
+                      'pilares', 'icono', 'orden'):
+            self.fields[campo].required = False
+
+        self.fields['pilares'].queryset = Categoria.objects.filter(activa=True)
         self.estilizar()
+        # Los checkbox no llevan la clase de input de texto: la hereda del
+        # estilizador y se ven como una caja gris vacía.
+        self.fields['pilares'].widget.attrs.pop('class', None)
 
 
 # ---------------------------------------------------------------------------
@@ -409,7 +506,8 @@ class PagoForm(MixinWidgets, forms.ModelForm):
         model = Pago
         fields = [
             'alumno', 'concepto', 'detalle', 'monto_clp', 'metodo',
-            'numero_comprobante', 'fecha_pago', 'estado', 'nota_interna',
+            'numero_comprobante', 'boleta', 'fecha_pago', 'estado',
+            'nota_interna',
         ]
         widgets = {
             'fecha_pago': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
@@ -424,6 +522,7 @@ class PagoForm(MixinWidgets, forms.ModelForm):
         self.fields['detalle'].required = False
         self.fields['numero_comprobante'].required = False
         self.fields['nota_interna'].required = False
+        self.fields['boleta'].required = False
 
         # Solo las clases que el estudio marcó como pagables sueltas, y
         # solo las que tienen precio: sin precio no hay nada que
@@ -451,7 +550,7 @@ class PagoForm(MixinWidgets, forms.ModelForm):
         # clase corresponde, y sin esto se perdería el dato.
         clase = datos.get('clase_suelta')
         if datos.get('concepto') == Pago.Concepto.CLASE_SUELTA and clase and not datos.get('detalle'):
-            datos['detalle'] = f'{clase.get_nombre_display()} · {clase.horario}'
+            datos['detalle'] = f'{clase.nombre} · {clase.horario}'
         return datos
 
 
@@ -459,6 +558,14 @@ class PagoForm(MixinWidgets, forms.ModelForm):
 # Profesoras
 # ---------------------------------------------------------------------------
 class ProfesoraForm(MixinWidgets, forms.ModelForm):
+    """Ficha de una profesora.
+
+    El correo del estudio (camila.soto@arealatina.cl) se genera solo a
+    partir del nombre y es con lo que entra al sistema. Ojo: es una
+    identidad, no una casilla de correo — las casillas reales las da un
+    proveedor aparte. Por eso los avisos van al correo personal.
+    """
+
     password1 = forms.CharField(
         required=False, label='Contraseña', widget=forms.PasswordInput(attrs={'class': 'g-input'}),
         help_text='Si la dejas en blanco, se le manda un enlace para que la '
@@ -467,7 +574,7 @@ class ProfesoraForm(MixinWidgets, forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'telefono',
+        fields = ['first_name', 'last_name', 'correo_personal', 'telefono',
                   'rut', 'especialidad', 'is_active']
         widgets = {
             'rut': forms.TextInput(attrs={
@@ -481,13 +588,65 @@ class ProfesoraForm(MixinWidgets, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for campo in ('email', 'telefono', 'rut', 'especialidad'):
+        for campo in ('telefono', 'rut', 'especialidad'):
             self.fields[campo].required = False
         self.fields['first_name'].required = True
         self.fields['first_name'].label = 'Nombre'
         self.fields['last_name'].label = 'Apellido'
-        self.fields['username'].label = 'Usuario para entrar al sistema'
+        self.fields['last_name'].required = True
+
+        # El correo personal es obligatorio: sin él no hay dónde mandarle
+        # la clave temporal, y el correo del estudio no recibe mensajes.
+        self.fields['correo_personal'].required = True
+        self.fields['correo_personal'].help_text = (
+            'Acá le llega su clave y los avisos. Su correo del estudio se '
+            'genera solo y sirve para entrar, no para recibir correo.'
+        )
         self.estilizar()
+
+    def clean_correo_personal(self):
+        correo = (self.cleaned_data.get('correo_personal') or '').strip().lower()
+        if not correo:
+            return correo
+
+        # Dos profesoras con el mismo correo personal harían ambiguo el
+        # login: el backend no sabría a cuál de las dos dejar entrar.
+        repetido = User.objects.filter(correo_personal__iexact=correo)
+        if self.instance.pk:
+            repetido = repetido.exclude(pk=self.instance.pk)
+        if repetido.exists():
+            raise forms.ValidationError(
+                'Ya hay otra persona con este correo. Cada una necesita el suyo.'
+            )
+        return correo
+
+    def save(self, commit=True):
+        profesora = super().save(commit=False)
+        profesora.rol = User.Rol.PROFESOR
+
+        # El correo del estudio y el nombre de usuario se generan al crear
+        # y no se vuelven a tocar: cambiarlos después dejaría fuera a
+        # alguien que ya sabe cómo entrar.
+        if not profesora.correo_institucional:
+            profesora.correo_institucional = User.generar_correo_institucional(
+                profesora.first_name, profesora.last_name,
+            )
+        if not profesora.username:
+            profesora.username = profesora.correo_institucional
+
+        # El campo email queda apuntando al personal: es a donde tienen
+        # que salir los correos de Django que lo usan por defecto.
+        profesora.email = profesora.correo_personal or ''
+
+        # Contraseña puesta a mano. Sin ella se le manda un enlace para
+        # que la elija, que es lo recomendable.
+        clave = self.cleaned_data.get('password1')
+        if clave:
+            profesora.set_password(clave)
+
+        if commit:
+            profesora.save()
+        return profesora
 
     def clean_rut(self):
         rut = self.cleaned_data.get('rut')
@@ -501,15 +660,7 @@ class ProfesoraForm(MixinWidgets, forms.ModelForm):
             raise forms.ValidationError('Ya hay un usuario con este RUT.')
         return rut
 
-    def save(self, commit=True):
-        usuario = super().save(commit=False)
-        usuario.rol = User.Rol.PROFESOR
-        clave = self.cleaned_data.get('password1')
-        if clave:
-            usuario.set_password(clave)
-        if commit:
-            usuario.save()
-        return usuario
+
 
 
 # ---------------------------------------------------------------------------

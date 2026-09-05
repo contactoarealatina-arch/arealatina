@@ -1,4 +1,5 @@
 {% extends 'gestion/base_gestion.html' %}
+{% load formato %}
 
 {% block titulo %}Asistencia{% endblock %}
 {% block encabezado %}Asistencia{% endblock %}
@@ -22,7 +23,7 @@
                     {% for clase in clases %}
                         <option value="{{ clase.pk }}"
                                 {% if clase_activa == clase.pk|stringformat:"s" %}selected{% endif %}>
-                            {{ clase.get_nombre_display }} · {{ clase.get_nivel_display }}
+                            {{ clase.nombre }} · {{ clase.get_nivel_display }}
                             ({{ clase.horario }})
                         </option>
                     {% endfor %}
@@ -85,6 +86,40 @@
     </div>
 </div>
 
+{% comment %}
+    La ganancia solo aparece con una clase filtrada: sumar la de todas
+    mezcladas no significaría nada.
+{% endcomment %}
+{% if clase_elegida %}
+<div class="g-card mb-4">
+    <div class="g-card-cabeza">
+        <div>
+            <h2 class="g-card-titulo mb-1">
+                {{ clase_elegida.emoji }} {{ clase_elegida.nombre }}
+            </h2>
+            <p class="g-muted mb-0">
+                {{ clase_elegida.dias_display }} · {{ clase_elegida.horario }} hrs ·
+                {{ clase_elegida.sala }} ·
+                {{ clase_elegida.inscritos }} inscrito{{ clase_elegida.inscritos|pluralize }}
+                de {{ clase_elegida.cupo_maximo }}
+            </p>
+        </div>
+        <div class="g-ingreso-clase">
+            <span class="g-ingreso-etiqueta">Genera al mes</span>
+            <span class="g-ingreso-valor">${{ ingreso_clase|clp }}</span>
+        </div>
+    </div>
+
+    <p class="g-ayuda mb-0">
+        <i class="bi bi-info-circle me-1"></i>
+        Es un estimado. El alumno no paga por clase sino un plan que le da
+        acceso a varias, así que su mensualidad se reparte entre las clases
+        en las que está inscrito. Contarla completa en cada una haría que la
+        suma de todas diera más de lo que el estudio factura.
+    </p>
+</div>
+{% endif %}
+
 <!-- ==================== SESIONES ==================== -->
 <div class="g-card">
     <h2 class="g-card-titulo">Clase por clase</h2>
@@ -101,6 +136,7 @@
                     <th class="num">Justificados</th>
                     <th class="num">Inscritos hoy</th>
                     <th>Asistencia</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -108,7 +144,13 @@
                 <tr>
                     <td>{{ fila.fecha|date:"D d/m/Y" }}</td>
                     <td>
-                        <strong>{{ fila.clase }}</strong>
+                        {% comment %}
+                            El nombre lleva al detalle: el estudio quiere ver
+                            quién fue, no solo cuántos.
+                        {% endcomment %}
+                        <a href="{% url 'gestion:asistencia_sesion' fila.clase_id fila.fecha|date:'Y-m-d' %}">
+                            <strong>{{ fila.clase }}</strong>
+                        </a>
                         <small class="g-tenue">{{ fila.hora|time:"H:i" }}</small>
                     </td>
                     <td class="num"><span class="g-num bien">{{ fila.presentes }}</span></td>
@@ -122,11 +164,19 @@
                         </div>
                         <small class="g-tenue">{{ fila.porcentaje }}%</small>
                     </td>
+                    <td class="g-nowrap">
+                        <a href="{% url 'gestion:asistencia_sesion' fila.clase_id fila.fecha|date:'Y-m-d' %}"
+                           class="g-btn g-btn-outline g-btn-sm">
+                            Ver quién fue
+                        </a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    {% include 'gestion/_paginacion.html' %}
 
     <p class="g-ayuda mt-3">
         «Inscritos hoy» es cuántos hay inscritos ahora en esa clase, no

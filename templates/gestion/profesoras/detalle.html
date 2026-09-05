@@ -64,7 +64,15 @@
             </div>
             <div class="g-dato"><i class="bi bi-envelope"></i>
                 <span class="g-dato-etiqueta">Email</span>
-                <span class="g-dato-valor">{{ profesora.email|default:"—" }}</span>
+                <span class="g-dato-valor">{{ profesora.correo_personal|default:"—" }}</span>
+            </div>
+            <div class="g-dato">
+                <span class="g-dato-etiqueta">
+                    <i class="bi bi-envelope-at"></i> Entra con
+                </span>
+                <span class="g-dato-valor">
+                    <code>{{ profesora.correo_institucional|default:profesora.username }}</code>
+                </span>
             </div>
             <div class="g-dato"><i class="bi bi-telephone"></i>
                 <span class="g-dato-etiqueta">Teléfono</span>
@@ -98,7 +106,7 @@
                             <td>
                                 {{ clase.emoji }}
                                 <a href="{% url 'gestion:clase_detalle' clase.pk %}">
-                                    {{ clase.get_nombre_display }}
+                                    {{ clase.nombre }}
                                 </a>
                             </td>
                             <td class="g-muted">{{ clase.dias_display }}</td>
@@ -134,7 +142,7 @@
                     {% for sesion in sesiones %}
                         <tr>
                             <td class="g-nowrap">{{ sesion.fecha|date:"d/m/Y" }}</td>
-                            <td>{{ sesion.clase.get_nombre_display }}</td>
+                            <td>{{ sesion.clase.nombre }}</td>
                             <td class="num">{{ sesion.total }}</td>
                         </tr>
                     {% endfor %}

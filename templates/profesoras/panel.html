@@ -51,7 +51,7 @@
                    class="p-sesion-profe">
                     <span class="p-sesion-hora">{{ item.clase.hora_inicio|time:"H:i" }}</span>
                     <span class="p-sesion-datos">
-                        <strong>{{ item.clase.emoji }} {{ item.clase.get_nombre_display }}</strong>
+                        <strong>{{ item.clase.emoji }} {{ item.clase.nombre }}</strong>
                         <span>
                             {{ item.clase.sala }} ·
                             {{ item.inscritos }} inscrito{{ item.inscritos|pluralize }}
@@ -82,7 +82,7 @@
             <div class="p-clase-cabeza">
                 <span class="p-emoji">{{ fila.clase.emoji }}</span>
                 <div class="p-clase-titulo">
-                    <h2>{{ fila.clase.get_nombre_display }}</h2>
+                    <h2>{{ fila.clase.nombre }}</h2>
                     <span class="p-nivel">{{ fila.clase.get_nivel_display }}</span>
                 </div>
                 {% if fila.ya_paso_lista %}
@@ -119,7 +119,7 @@
         <h2>Hoy no tienes clases</h2>
         {% if siguiente %}
             <p>
-                Tu próxima clase es <strong>{{ siguiente.clase.get_nombre_display }}</strong><br>
+                Tu próxima clase es <strong>{{ siguiente.clase.nombre }}</strong><br>
                 el {{ siguiente.fecha|date:"l d \d\e F"|lower }}
                 a las {{ siguiente.clase.hora_inicio|time:"H:i" }} hrs.
             </p>

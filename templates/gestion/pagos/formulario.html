@@ -13,7 +13,7 @@
 
 <div class="row">
     <div class="col-lg-8 col-xl-7">
-        <form method="post" class="g-form">
+        <form method="post" class="g-form" enctype="multipart/form-data">
             {% csrf_token %}
 
             {% if form.non_field_errors %}
@@ -56,6 +56,11 @@
                     <div class="col-12">{% include 'gestion/_campo.html' with campo=form.detalle %}</div>
                     <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.metodo %}</div>
                     <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.numero_comprobante %}</div>
+                    {% comment %}
+                        La boleta queda guardada en la ficha del alumno, no
+                        solo en el pago: es ahí donde alguien la va a buscar.
+                    {% endcomment %}
+                    <div class="col-12">{% include 'gestion/_campo.html' with campo=form.boleta %}</div>
                     <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.fecha_pago %}</div>
                     <div class="col-md-4">{% include 'gestion/_campo.html' with campo=form.estado %}</div>
                     <div class="col-12">{% include 'gestion/_campo.html' with campo=form.nota_interna %}</div>

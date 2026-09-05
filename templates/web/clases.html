@@ -95,9 +95,9 @@
                                     <td class="hora">{{ clase.horario }}</td>
                                     <td>
                                         <span class="clase-emoji">{{ clase.emoji }}</span>
-                                        {{ clase.get_nombre_display }}
-                                        {% if clase.edad_minima %}
-                                            <small>Desde los {{ clase.edad_minima }} años</small>
+                                        {{ clase.nombre }}
+                                        {% if clase.publico == 'KIDS' %}
+                                            <small>{{ clase.get_publico_display }}</small>
                                         {% endif %}
                                     </td>
                                     <td>{{ clase.dias_display }}</td>

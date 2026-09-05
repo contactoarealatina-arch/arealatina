@@ -73,10 +73,9 @@ NOMBRES_DEMO = [
 ]
 
 
-# Edad minima por disciplina. Sin esto el filtro por edad del buscador
-# no devuelve nada, porque el campo queda en nulo.
-EDAD_MINIMA = {
-    'KIDS': 4,
+# Las clases de ninos se marcan como Kids; el resto queda en cualquier edad.
+PUBLICO = {
+    'Kids Dance': 'KIDS',
 }
 
 # Los dos pilares del estudio. Kids Dance va en Baile Urbano: es una
@@ -169,7 +168,7 @@ class Command(BaseCommand):
                 nombre=estilo, nivel=nivel, dias_semana=dias, hora_inicio=inicio,
                 defaults={'hora_fin': fin, 'sala': sala, 'cupo_maximo': cupo,
                           'profesora': profes[idx], 'categoria': area,
-                          'edad_minima': EDAD_MINIMA.get(estilo),
+                          'publico': PUBLICO.get(estilo, 'TODAS'),
                           'activa': True},
             )
         self.stdout.write(self.style.SUCCESS(f'Clases: {Clase.objects.count()}'))

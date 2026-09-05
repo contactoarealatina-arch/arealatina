@@ -21,7 +21,35 @@
                     <div class="col-sm-6">{% include 'gestion/_campo.html' with campo=form.precio_clp %}</div>
                     <div class="col-sm-6">{% include 'gestion/_campo.html' with campo=form.duracion_dias %}</div>
                 </div>
+                {% include 'gestion/_campo.html' with campo=form.clases_incluidas %}
+
+                {% comment %}
+                    Los pilares dicen dónde sirve el plan. Vacío = sirve en
+                    todo el estudio; los dos marcados = permite combinar
+                    baile y bienestar.
+                {% endcomment %}
+                <div class="g-campo">
+                    <label>{{ form.pilares.label }}</label>
+                    <div class="g-opciones-check">
+                        {% for opcion in form.pilares %}
+                            <label class="g-opcion-check">
+                                {{ opcion.tag }}
+                                <span>{{ opcion.choice_label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    <div class="g-ayuda">{{ form.pilares.help_text }}</div>
+                </div>
+
                 {% include 'gestion/_campo.html' with campo=form.descripcion %}
+                {% include 'gestion/_campo.html' with campo=form.beneficios %}
+
+                <div class="row g-3">
+                    <div class="col-sm-6">{% include 'gestion/_campo.html' with campo=form.icono %}</div>
+                    <div class="col-sm-6">{% include 'gestion/_campo.html' with campo=form.orden %}</div>
+                </div>
+
+                {% include 'gestion/_campo.html' with campo=form.destacado %}
                 {% include 'gestion/_campo.html' with campo=form.activo %}
             </div>
 

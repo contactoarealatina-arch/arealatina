@@ -32,7 +32,8 @@ from ..models import (
 from ..permisos import gestion_requerida
 from .. import servicios
 
-POR_PAGINA = 20
+# Diez por pagina: con 200 alumnos una lista completa es un muro.
+POR_PAGINA = 10
 
 
 def _url_activacion(token):
@@ -189,6 +190,13 @@ def alumno_nuevo(request):
             else:
                 aviso += ' Sin email no se le puede crear acceso al portal.'
             messages.success(request, aviso)
+
+            # El plan no cubre todas las clases marcadas: se avisa, no se
+            # bloquea. El estudio puede tener un acuerdo con ese alumno.
+            desajuste = getattr(form_plan, 'aviso_clases', None)
+            if desajuste:
+                messages.warning(request, desajuste)
+
             return redirect('gestion:alumno_detalle', pk=alumno.pk)
 
         messages.error(request, 'Revisa los datos: hay campos con errores.')

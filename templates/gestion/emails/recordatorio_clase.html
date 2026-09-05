@@ -1,7 +1,7 @@
 {% extends 'gestion/emails/_base.html' %}
 
 {% block asunto %}Mañana tienes clase{% endblock %}
-{% block preview %}{{ clase.get_nombre_display }} a las {{ clase.hora_inicio|time:"H:i" }}. Te esperamos.{% endblock %}
+{% block preview %}{{ clase.nombre }} a las {{ clase.hora_inicio|time:"H:i" }}. Te esperamos.{% endblock %}
 {% block bajada %}Recordatorio de clase{% endblock %}
 
 {% block cuerpo %}
@@ -18,7 +18,7 @@
            style="background:#0D0D0D;border-radius:10px;margin-bottom:20px;">
         <tr><td style="padding:22px;text-align:center;">
             <div style="color:#FF5722;font-size:24px;font-weight:bold;margin-bottom:6px;">
-                {{ clase.get_nombre_display }}
+                {{ clase.nombre }}
             </div>
             <div style="color:#FFFFFF;font-size:17px;">
                 {{ fecha|date:"l d" }} de {{ fecha|date:"F" }}

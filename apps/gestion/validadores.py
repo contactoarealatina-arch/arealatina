@@ -93,3 +93,57 @@ def redimensionar_foto(archivo, lado=LADO_MAXIMO):
         # Si algo sale mal, se guarda el original: ya pasó la validación.
         archivo.seek(0)
         return archivo
+
+
+# ---------------------------------------------------------------------------
+# Boletas y comprobantes
+# ---------------------------------------------------------------------------
+EXTENSIONES_DOC = {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}
+TAMANO_DOC = 8 * 1024 * 1024      # 8 MB: una boleta escaneada cabe de sobra
+
+
+def validar_documento(archivo):
+    """Boleta o comprobante: PDF o imagen, nada más.
+
+    Se comprueba la cabecera real y no solo la extensión, igual que con
+    las fotos: renombrar un .exe a .pdf es trivial.
+    """
+    extension = os.path.splitext(archivo.name)[1].lower()
+    if extension not in EXTENSIONES_DOC:
+        raise ValidationError(
+            'Formato no permitido. Sube la boleta en PDF, JPG, PNG o WebP.'
+        )
+
+    if archivo.size > TAMANO_DOC:
+        mb = archivo.size / (1024 * 1024)
+        raise ValidationError(
+            f'El archivo pesa {mb:.1f} MB y el máximo son 8 MB.'
+        )
+
+    posicion = archivo.tell()
+    try:
+        archivo.seek(0)
+        cabecera = archivo.read(5)
+
+        if extension == '.pdf':
+            # Todo PDF válido empieza con %PDF-. Si no, no es un PDF.
+            if not cabecera.startswith(b'%PDF-'):
+                raise ValidationError(
+                    'El archivo dice ser PDF pero su contenido no lo es.'
+                )
+        else:
+            archivo.seek(0)
+            imagen = Image.open(archivo)
+            imagen.verify()
+            if imagen.format not in FORMATOS:
+                raise ValidationError(
+                    f'El archivo dice ser {imagen.format} y no es un formato permitido.'
+                )
+    except ValidationError:
+        raise
+    except Exception:
+        raise ValidationError(
+            'No se pudo leer el archivo. Puede estar dañado o no ser lo que dice ser.'
+        )
+    finally:
+        archivo.seek(posicion)

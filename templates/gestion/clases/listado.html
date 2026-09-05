@@ -36,7 +36,7 @@
                 <div style="flex:1;min-width:0">
                     <h3>
                         <a href="{% url 'gestion:clase_detalle' clase.pk %}">
-                            {{ clase.get_nombre_display }}
+                            {{ clase.nombre }}
                         </a>
                     </h3>
                     <span class="g-badge g-badge-naranja">{{ clase.get_nivel_display }}</span>
@@ -68,9 +68,33 @@
                 </div>
             </div>
 
-            <div class="d-flex gap-2 mt-auto pt-2">
+            {% comment %}
+                Ocultar es reversible y siempre se puede. Eliminar solo si
+                la clase no arrastra historial; si lo arrastra, la vista lo
+                rechaza y explica por qué.
+            {% endcomment %}
+            <div class="d-flex gap-2 mt-auto pt-2 flex-wrap">
                 <a href="{% url 'gestion:clase_detalle' clase.pk %}" class="g-btn g-btn-outline g-btn-sm">Ver</a>
                 <a href="{% url 'gestion:clase_editar' clase.pk %}" class="g-btn g-btn-neutro g-btn-sm">Editar</a>
+
+                <form method="post" action="{% url 'gestion:clase_alternar' clase.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="g-btn g-btn-neutro g-btn-sm">
+                        {% if clase.activa %}
+                            <i class="bi bi-eye-slash me-1"></i>Ocultar
+                        {% else %}
+                            <i class="bi bi-eye me-1"></i>Mostrar
+                        {% endif %}
+                    </button>
+                </form>
+
+                <form method="post" action="{% url 'gestion:clase_eliminar' clase.pk %}"
+                      class="d-inline ms-auto" data-confirmar="¿Eliminar esta clase? No se puede deshacer.">
+                    {% csrf_token %}
+                    <button type="submit" class="g-btn g-btn-peligro g-btn-sm" title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
             </div>
         </div>
     </div>

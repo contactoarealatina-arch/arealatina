@@ -157,7 +157,7 @@ def _pilares():
             # pilares muestran los mismos. No hay precios por pilar.
             'planes': planes,
             'suelta': suelta,
-            'disciplinas': sorted({c.get_nombre_display() for c in clases}),
+            'disciplinas': sorted({c.nombre for c in clases}),
         })
     return resultado
 

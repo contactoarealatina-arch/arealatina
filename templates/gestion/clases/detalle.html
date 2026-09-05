@@ -1,8 +1,8 @@
 {% extends 'gestion/base_gestion.html' %}
 {% load formato %}
 
-{% block titulo %}{{ clase.get_nombre_display }}{% endblock %}
-{% block encabezado %}{{ clase.emoji }} {{ clase.get_nombre_display }}{% endblock %}
+{% block titulo %}{{ clase.nombre }}{% endblock %}
+{% block encabezado %}{{ clase.emoji }} {{ clase.nombre }}{% endblock %}
 {% block subtitulo %}
     <div class="g-subtitulo">{{ clase.get_nivel_display }} · {{ clase.dias_display }} · {{ clase.horario }} hrs</div>
 {% endblock %}

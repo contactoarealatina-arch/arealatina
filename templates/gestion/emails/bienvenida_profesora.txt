@@ -8,7 +8,7 @@ clases del dia y pasar lista, sin papel ni planillas.
 {% if clases %}
 TUS CLASES
 ------------------------------------------------------------
-{% for clase in clases %}- {{ clase.get_nombre_display }} ({{ clase.get_nivel_display }})
+{% for clase in clases %}- {{ clase.nombre }} ({{ clase.get_nivel_display }})
   {{ clase.dias_display }} | {{ clase.horario }} hrs | {{ clase.sala }}
 {% endfor %}{% else %}
 Todavia no tienes clases asignadas.

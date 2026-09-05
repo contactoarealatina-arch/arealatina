@@ -65,7 +65,7 @@
                 <tr>
                     <td class="nowrap">{{ fila.fecha|date:"d/m/Y" }}</td>
                     <td>
-                        {{ fila.clase.emoji }} {{ fila.clase.get_nombre_display }}
+                        {{ fila.clase.emoji }} {{ fila.clase.nombre }}
                         <span class="p-suave">{{ fila.clase.get_nivel_display }}</span>
                     </td>
                     {% if vista_admin %}

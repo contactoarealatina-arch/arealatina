@@ -91,9 +91,8 @@ def alumnos_por_clase():
         .annotate(total=Count('inscripciones__alumno', distinct=True))
         .order_by('nombre')
     )
-    etiquetas = dict(Clase.Estilo.choices)
     return [
-        {'etiqueta': etiquetas.get(f['nombre'], f['nombre']), 'total': f['total']}
+        {'etiqueta': f['nombre'], 'total': f['total']}
         for f in filas if f['total']
     ]
 

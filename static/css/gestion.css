@@ -1193,3 +1193,69 @@ a:hover { color: var(--al-orange-lite); }
     flex-wrap: wrap;
     margin-bottom: 1.1rem;
 }
+
+/* Ganancia estimada de una clase, en la cabecera de su resumen. */
+.g-ingreso-clase {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.g-ingreso-etiqueta {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--al-muted);
+}
+
+.g-ingreso-valor {
+    display: block;
+    font-family: var(--font-titulo);
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--al-verde);
+}
+
+/* Grupo de casillas (los pilares de un plan). */
+.g-opciones-check {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.g-opcion-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    background-color: var(--al-input);
+    border: 1px solid var(--al-input-borde);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.g-opcion-check:hover { border-color: var(--al-orange); }
+
+.g-opcion-check input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--al-orange);
+    margin: 0;
+}
+
+/* Enlace a la boleta adjunta, dentro de la tabla de pagos. */
+.g-enlace-boleta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--al-orange-lite);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.g-enlace-boleta:hover { text-decoration: underline; }

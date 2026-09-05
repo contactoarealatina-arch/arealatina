@@ -44,7 +44,7 @@
                             <option value="">Todas las clases</option>
                             {% for clase in clases %}
                                 <option value="{{ clase.pk }}">
-                                    {{ clase.get_nombre_display }} · {{ clase.get_nivel_display }}
+                                    {{ clase.nombre }} · {{ clase.get_nivel_display }}
                                 </option>
                             {% endfor %}
                         </select>
