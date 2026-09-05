@@ -190,6 +190,8 @@ a:hover { color: var(--naranja-cla); }
 /* --------------------------------------------------------------------------
    Contenido
    -------------------------------------------------------------------------- */
+/* El portal del alumno se queda angosto: su contenido son tres líneas y
+   una lista, no tablas. Ver .p-contenido.angosto más abajo. */
 .p-contenido {
     flex: 1;
     width: 100%;
@@ -869,7 +871,7 @@ a:hover { color: var(--naranja-cla); }
 }
 
 .p-plan-detalle {
-    margin: 0.85rem 0 0;
+    margin: 0;
     color: var(--suave);
     font-size: 0.95rem;
 }
@@ -880,7 +882,8 @@ a:hover { color: var(--naranja-cla); }
     display: flex;
     flex-wrap: wrap;
     gap: 0.65rem;
-    margin-top: 1.15rem;
+    /* Sin margen: la tarjeta ya separa a sus hijos con su propio gap. */
+    margin-top: 0.25rem;
 }
 
 /* Sello de estado. Va aparte de .p-estado, que en el portal ya es el
@@ -1186,170 +1189,192 @@ a:hover { color: var(--naranja-cla); }
 }
 
 /* --------------------------------------------------------------------------
-   El plan, con detalle
+   El plan, compacto
    -------------------------------------------------------------------------- */
-/* Es lo primero que mira el alumno al entrar. Antes era una línea con la
-   fecha de vencimiento; ahora dice qué contrató, hasta cuándo le sirve y
-   qué incluye. */
-.p-plan-tiempo {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    margin: 1.1rem 0 0.75rem;
+.p-contenido.angosto { max-width: 780px; }
+
+
+/* Tiene que caber en el primer vistazo junto con la semana. Antes ocupaba
+   600 px y empujaba las clases fuera de la pantalla. */
+/* La tarjeta es un flex column con gap propio, asi que los hijos NO
+   llevan margen: si lo llevan se suman los dos y aparece el doble de
+   espacio del que se pidio. Acá se aprieta el gap y punto. */
+.p-plan { gap: 0.5rem; }
+
+.p-plan-linea {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--suave);
 }
 
-.p-plan-dias {
-    font-family: var(--titulo, inherit);
-    font-size: 2.6rem;
-    font-weight: 800;
-    line-height: 1;
+.p-plan-linea strong {
+    font-size: 1.25rem;
     color: var(--naranja);
 }
 
-.p-plan-dias.vencido { color: var(--rojo); }
+.p-plan-linea strong.vencido { color: var(--rojo); }
 
-.p-plan-dias-texto {
-    color: var(--suave);
-    font-size: 0.95rem;
-}
-
-.p-barra {
-    height: 8px;
+/* OJO con el nombre: .p-barra ya es la barra superior del portal. Esta
+   se llama p-plan-barra a proposito; llamarla p-barra aplastaba el header
+   a 6 px y, con su overflow hidden, recortaba el boton de cerrar sesion. */
+.p-plan-barra {
+    height: 6px;
     border-radius: 50px;
     background: rgba(255, 255, 255, 0.07);
     overflow: hidden;
 }
 
-.p-barra-relleno {
+.p-plan-barra-relleno {
     height: 100%;
     border-radius: 50px;
     background: var(--naranja);
     transition: width 0.4s ease;
 }
 
-.p-barra-relleno.por_vencer { background: var(--amarillo); }
-.p-barra-relleno.vencido    { background: var(--rojo); }
+.p-plan-barra-relleno.por_vencer { background: var(--amarillo); }
+.p-plan-barra-relleno.vencido    { background: var(--rojo); }
 
-.p-plan-fechas {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-top: 0.45rem;
-    font-size: 0.8rem;
-    color: var(--suave);
-}
-
-/* Qué incluye */
-.p-plan-detalle-caja {
-    margin-top: 1.35rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--borde);
-}
-
-.p-plan-subtitulo {
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--suave);
-    margin-bottom: 0.9rem;
-}
-
-.p-plan-datos {
+/* Los tres datos en una línea, separados por puntos. Como una ficha, no
+   como tres tarjetas. */
+.p-plan-resumen {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.75rem;
-    margin-bottom: 1rem;
-}
-
-.p-plan-dato { display: flex; flex-direction: column; }
-
-.p-plan-dato-valor {
-    font-size: 1.35rem;
-    font-weight: 700;
-    line-height: 1.2;
-}
-
-.p-plan-dato-etiqueta {
-    font-size: 0.8rem;
+    align-items: center;
+    gap: 0.4rem 1.1rem;
+    margin: 0.15rem 0 0;
+    font-size: 0.87rem;
     color: var(--suave);
 }
 
-.p-plan-pilares {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-bottom: 0.9rem;
+.p-plan-resumen > span:not(.p-chip) { position: relative; }
+
+.p-plan-resumen > span:not(.p-chip) + span:not(.p-chip)::before {
+    content: '·';
+    position: absolute;
+    left: -0.7rem;
+    color: var(--borde);
 }
+
+.p-plan-resumen strong { color: var(--texto); font-size: 0.98rem; }
 
 .p-chip {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    padding: 0.2rem 0.6rem;
+    padding: 0.15rem 0.55rem;
     border-radius: 50px;
     color: var(--naranja);
     background: rgba(255, 87, 34, 0.12);
     border: 1px solid rgba(255, 87, 34, 0.3);
 }
 
+/* El detalle, plegado */
+.p-plan-mas {
+    margin: 0.25rem 0 0;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--borde);
+}
+
+.p-plan-mas > summary {
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--naranja);
+    list-style: none;
+    /* Objetivo táctil: se abre desde el celular con el dedo. */
+    padding: 0.35rem 0;
+}
+
+.p-plan-mas > summary::-webkit-details-marker { display: none; }
+
+.p-plan-mas > summary i {
+    display: inline-block;
+    font-size: 0.8rem;
+    transition: transform 0.2s ease;
+}
+
+.p-plan-mas[open] > summary i { transform: rotate(180deg); }
+
 .p-plan-beneficios {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 0.6rem 0 0;
+    /* Dos columnas en pantalla ancha: cuatro beneficios en fila son
+       cuatro renglones de alto que no hacen falta. */
+    columns: 2;
+    column-gap: 1.5rem;
 }
 
 .p-plan-beneficios li {
     display: flex;
     align-items: flex-start;
-    gap: 0.55rem;
-    padding: 0.3rem 0;
-    font-size: 0.92rem;
+    gap: 0.5rem;
+    padding: 0.22rem 0;
+    font-size: 0.87rem;
     color: var(--suave);
+    break-inside: avoid;
 }
 
 .p-plan-beneficios i {
     color: var(--naranja);
-    font-size: 0.9rem;
-    margin-top: 0.2rem;
+    font-size: 0.85rem;
+    margin-top: 0.18rem;
     flex-shrink: 0;
 }
 
 .p-plan-nota {
     display: flex;
     align-items: flex-start;
-    gap: 0.55rem;
-    margin: 1rem 0 0;
-    padding: 0.75rem 0.9rem;
+    gap: 0.5rem;
+    margin: 0.85rem 0 0;
+    padding: 0.6rem 0.8rem;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.04);
-    font-size: 0.87rem;
+    font-size: 0.84rem;
     color: var(--suave);
 }
 
 .p-plan-nota i { color: var(--naranja); margin-top: 0.15rem; flex-shrink: 0; }
 
-/* El último pago: una línea, sin totales. Solo para que confirme que el
-   suyo se registró. */
+/* El último pago: una línea, sin monto ni total. Solo para que confirme
+   que el suyo se registró. */
 .p-plan-pago {
     display: flex;
     align-items: center;
     gap: 0.45rem;
-    margin: 1.15rem 0 0;
-    padding-top: 1rem;
+    margin: 0.25rem 0 0;
+    padding-top: 0.7rem;
     border-top: 1px solid var(--borde);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--suave);
 }
 
 .p-plan-pago i { color: var(--verde); }
 
+/* Los derechos del alumno, en el pie del portal. */
+.p-pie-enlaces {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.p-pie-enlaces a {
+    color: var(--suave);
+    text-decoration: none;
+    font-size: 0.82rem;
+}
+
+.p-pie-enlaces a:hover { color: var(--naranja); }
+.p-pie-enlaces i { color: var(--naranja); }
+
 @media (max-width: 575.98px) {
-    .p-plan-datos { gap: 1.25rem; }
-    .p-plan-fechas { flex-direction: column; gap: 0.2rem; }
+    .p-plan-beneficios { columns: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .p-barra-relleno { transition: none; }
+    .p-plan-barra-relleno,
+    .p-plan-mas > summary i { transition: none; }
 }

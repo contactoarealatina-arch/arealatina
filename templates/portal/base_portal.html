@@ -53,7 +53,13 @@
     </div>
 </header>
 
-<main class="p-contenido">
+{% comment %}
+    Más angosto que el de profesoras: acá el contenido son tres líneas de
+    texto y una lista de clases. A 1100 px la tarjeta queda estirada, el
+    estado se va a 900 px del título y todo se ve vacío. El de profesoras
+    sí necesita ese ancho porque lleva tablas.
+{% endcomment %}
+<main class="p-contenido angosto">
     {% if messages %}
         <div class="p-mensajes">
             {% for message in messages %}
@@ -69,7 +75,24 @@
 </main>
 
 <footer class="p-pie">
-    Área Latina Estudio · {{ academia.direccion_completa }}
+    {% comment %}
+        Sus derechos sobre sus datos, siempre a la vista. La Ley 21.719 le
+        da derecho a pedir copia de todo lo que el estudio guarda de él,
+        corregirlo o pedir que lo borren, y esconderlo detrás de un correo
+        al soporte no cuenta como darle acceso.
+    {% endcomment %}
+    <div class="p-pie-enlaces">
+        <a href="{% url 'web:mis_derechos' %}" target="_blank" rel="noopener">
+            <i class="bi bi-shield-check"></i> Mis datos y mis derechos
+        </a>
+        <a href="{% url 'web:privacidad' %}" target="_blank" rel="noopener">
+            Privacidad
+        </a>
+        <a href="{% url 'web:contacto' %}" target="_blank" rel="noopener">
+            Contacto
+        </a>
+    </div>
+    <div>Área Latina Estudio · {{ academia.direccion_completa }}</div>
 </footer>
 
 <script src="{% static 'js/portales.js' %}"></script>
