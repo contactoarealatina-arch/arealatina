@@ -27,15 +27,14 @@
         </a>
 
         {% comment %}
-            Tres entradas. El plan y las clases dejaron de ser paginas
-            propias: viven en el inicio, que es lo primero que se abre.
+            Dos entradas. El plan y las clases viven en el inicio, que es
+            lo primero que se abre. El historial de pagos se quitó: ver la
+            suma de todo lo que lleva gastado en bailar no le sirve de
+            nada al alumno y desanima.
         {% endcomment %}
         <nav class="p-nav">
             <a href="{% url 'portal:panel' %}" class="{% if activo == 'panel' %}activo{% endif %}">
                 <i class="bi bi-house"></i><span>Inicio</span>
-            </a>
-            <a href="{% url 'portal:pagos' %}" class="{% if activo == 'pagos' %}activo{% endif %}">
-                <i class="bi bi-receipt"></i><span>Pagos</span>
             </a>
             <a href="{% url 'portal:perfil' %}" class="{% if activo == 'perfil' %}activo{% endif %}">
                 <i class="bi bi-person"></i><span>Perfil</span>

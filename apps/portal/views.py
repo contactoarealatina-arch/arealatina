@@ -185,10 +185,50 @@ def panel(request):
         'dias_restantes': dias,
         'estado_pago': alumno.estado_pago,
         'avisar_renovacion': dias is not None and dias <= 7,
+        'plan': _detalle_del_plan(alumno, suscripcion),
         'semana': _semana_del_alumno(alumno),
-        'ultimos_pagos': alumno.pagos.filter(estado=Pago.Estado.PAGADO)[:3],
+        # Solo el último, y solo para que pueda confirmar que su pago se
+        # registró. El historial completo se quitó: ver la suma de todo lo
+        # que lleva gastado en bailar no le sirve de nada y desanima.
+        'ultimo_pago': alumno.pagos.filter(estado=Pago.Estado.PAGADO).first(),
         'whatsapp': _enlace_whatsapp(alumno, 'renovar'),
     })
+
+
+def _detalle_del_plan(alumno, suscripcion):
+    """Lo que el alumno necesita saber de su plan.
+
+    Es lo primero que mira al entrar: qué contrató, hasta cuándo le sirve
+    y qué incluye. Antes era una línea con la fecha de vencimiento.
+    """
+    if not suscripcion or not suscripcion.plan:
+        return None
+
+    plan = suscripcion.plan
+    hoy = timezone.localdate()
+
+    total = (suscripcion.fecha_vencimiento - suscripcion.fecha_inicio).days
+    usados = (hoy - suscripcion.fecha_inicio).days
+    # Se limita entre 0 y 100: un plan vencido no muestra 130% consumido,
+    # y uno que parte mañana no muestra negativo.
+    avance = max(0, min(100, round(usados / total * 100))) if total > 0 else 0
+
+    inscritas = alumno.inscripciones.count()
+    cubre = plan.clases_incluidas
+
+    return {
+        'plan': plan,
+        'suscripcion': suscripcion,
+        'avance': avance,
+        'dias_totales': total,
+        'inscritas': inscritas,
+        'cubre': cubre,
+        # None cuando el plan es ilimitado: no hay cupo que llenar.
+        'le_sobran': (cubre - inscritas) if cubre is not None else None,
+        'pasado': cubre is not None and inscritas > cubre,
+        'beneficios': plan.beneficios_lista,
+        'pilares': list(plan.pilares.all()),
+    }
 
 
 def _semana_del_alumno(alumno):
@@ -267,27 +307,6 @@ def solicitar_renovacion(request):
             'Anotamos tu solicitud. Si tienes apuro, escríbenos por WhatsApp.'
         )
     return redirect('portal:panel')
-
-
-# ---------------------------------------------------------------------------
-# 2.6 Mis pagos
-# ---------------------------------------------------------------------------
-@alumno_requerido
-def pagos(request):
-    alumno = request.alumno
-    hoy = timezone.localdate()
-
-    del_anio = alumno.pagos.filter(
-        estado=Pago.Estado.PAGADO, fecha_pago__year=hoy.year)
-    total_anio = sum(p.monto_clp for p in del_anio)
-
-    return render(request, 'portal/pagos.html', {
-        'activo': 'pagos',
-        'alumno': alumno,
-        'pagos': alumno.pagos.select_related('suscripcion__plan'),
-        'total_anio': total_anio,
-        'anio': hoy.year,
-    })
 
 
 # ---------------------------------------------------------------------------

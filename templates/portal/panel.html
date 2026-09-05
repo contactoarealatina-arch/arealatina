@@ -6,9 +6,10 @@
 {% block contenido %}
 
 {% comment %}
-    Una sola pantalla: el plan y la semana. Antes esto estaba repartido en
-    tres páginas y el alumno tenía que navegar para saber si le quedaba
-    plan o a qué hora era su clase.
+    Una sola pantalla: el plan y la semana. El historial de pagos se quitó
+    a propósito — ver la suma de todo lo que lleva gastado en bailar no le
+    sirve de nada al alumno y desanima. Queda solo el último pago, para
+    que pueda confirmar que el suyo se registró.
 {% endcomment %}
 
 <h1 class="p-saludo">Hola, {{ alumno.primer_nombre }}</h1>
@@ -31,17 +32,103 @@
         </span>
     </div>
 
-    {% if suscripcion %}
-        <p class="p-plan-detalle">
-            {% if dias_restantes is not None and dias_restantes >= 0 %}
-                Vence el {{ suscripcion.fecha_vencimiento|date:"d \d\e F" }}
-                — te quedan <strong>{{ dias_restantes }} día{{ dias_restantes|pluralize }}</strong>.
-            {% elif dias_restantes is not None %}
-                Venció el {{ suscripcion.fecha_vencimiento|date:"d \d\e F" }}.
+    {% if plan %}
+        <!-- Cuánto le queda -->
+        <div class="p-plan-tiempo">
+            {% if dias_restantes >= 0 %}
+                <span class="p-plan-dias">{{ dias_restantes }}</span>
+                <span class="p-plan-dias-texto">
+                    día{{ dias_restantes|pluralize }} por delante
+                </span>
             {% else %}
-                Vence el {{ suscripcion.fecha_vencimiento|date:"d \d\e F" }}.
+                <span class="p-plan-dias vencido">!</span>
+                <span class="p-plan-dias-texto">
+                    Tu plan venció el
+                    {{ plan.suscripcion.fecha_vencimiento|date:"d \d\e F" }}
+                </span>
             {% endif %}
-        </p>
+        </div>
+
+        {% comment %}
+            La barra se llena a medida que pasa el mes. Se limita entre 0 y
+            100 en la vista: un plan vencido no muestra 130%.
+        {% endcomment %}
+        <div class="p-barra">
+            <div class="p-barra-relleno {{ estado_pago }}" style="width: {{ plan.avance }}%"></div>
+        </div>
+
+        <div class="p-plan-fechas">
+            <span>Desde el {{ plan.suscripcion.fecha_inicio|date:"d/m/Y" }}</span>
+            <span>Hasta el {{ plan.suscripcion.fecha_vencimiento|date:"d/m/Y" }}</span>
+        </div>
+
+        <!-- Qué incluye -->
+        <div class="p-plan-detalle-caja">
+            <h3 class="p-plan-subtitulo">Qué incluye tu plan</h3>
+
+            <div class="p-plan-datos">
+                <div class="p-plan-dato">
+                    <span class="p-plan-dato-valor">${{ plan.plan.precio_clp|clp }}</span>
+                    <span class="p-plan-dato-etiqueta">al mes</span>
+                </div>
+
+                <div class="p-plan-dato">
+                    <span class="p-plan-dato-valor">
+                        {% if plan.cubre %}{{ plan.cubre }}{% else %}Todas{% endif %}
+                    </span>
+                    <span class="p-plan-dato-etiqueta">
+                        {% if plan.cubre %}
+                            clase{{ plan.cubre|pluralize }} incluida{{ plan.cubre|pluralize }}
+                        {% else %}
+                            las clases del estudio
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="p-plan-dato">
+                    <span class="p-plan-dato-valor">{{ plan.inscritas }}</span>
+                    <span class="p-plan-dato-etiqueta">
+                        clase{{ plan.inscritas|pluralize }} tomando
+                    </span>
+                </div>
+            </div>
+
+            {% if plan.pilares %}
+                <div class="p-plan-pilares">
+                    {% for pilar in plan.pilares %}
+                        <span class="p-chip">{{ pilar.nombre }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if plan.beneficios %}
+                <ul class="p-plan-beneficios">
+                    {% for beneficio in plan.beneficios %}
+                        <li><i class="bi bi-check-circle-fill"></i>{{ beneficio }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% comment %}
+                Si está tomando más clases de las que cubre su plan, es
+                algo que el estudio le autorizó. Se dice sin alarmar: no es
+                culpa suya ni tiene que hacer nada.
+            {% endcomment %}
+            {% if plan.pasado %}
+                <p class="p-plan-nota">
+                    <i class="bi bi-info-circle"></i>
+                    Estás tomando {{ plan.inscritas }} clases y tu plan cubre
+                    {{ plan.cubre }}. Lo tienes autorizado por la academia.
+                </p>
+            {% elif plan.le_sobran %}
+                <p class="p-plan-nota">
+                    <i class="bi bi-plus-circle"></i>
+                    Te queda{{ plan.le_sobran|pluralize }} {{ plan.le_sobran }}
+                    clase{{ plan.le_sobran|pluralize }} por usar de tu plan.
+                    Pregunta en el estudio para sumarte a otra.
+                </p>
+            {% endif %}
+        </div>
     {% else %}
         <p class="p-plan-detalle">
             Todavía no tienes un plan contratado. Habla con la academia para
@@ -61,6 +148,18 @@
             </a>
         {% endif %}
     </div>
+    {% endif %}
+
+    {% comment %}
+        Una línea, no una tabla: solo para que confirme que su último pago
+        quedó registrado. Sin totales ni historial.
+    {% endcomment %}
+    {% if ultimo_pago %}
+        <p class="p-plan-pago">
+            <i class="bi bi-check-circle"></i>
+            Tu último pago quedó registrado el
+            {{ ultimo_pago.fecha_pago|date:"d/m/Y" }}.
+        </p>
     {% endif %}
 </section>
 
@@ -116,28 +215,5 @@
         </div>
     {% endif %}
 </section>
-
-<!-- ==================== ÚLTIMOS PAGOS ==================== -->
-{% if ultimos_pagos %}
-<section class="p-bloque">
-    <h2 class="p-titulo">
-        <i class="bi bi-receipt"></i> Mis últimos pagos
-    </h2>
-
-    <div class="p-pagos">
-        {% for pago in ultimos_pagos %}
-        <div class="p-pago">
-            <span class="p-pago-fecha">{{ pago.fecha_pago|date:"d/m/Y" }}</span>
-            <span class="p-pago-concepto">{{ pago.get_concepto_display }}</span>
-            <span class="p-pago-monto">${{ pago.monto_clp|clp }}</span>
-        </div>
-        {% endfor %}
-    </div>
-
-    <a href="{% url 'portal:pagos' %}" class="p-enlace">
-        Ver todos mis pagos <i class="bi bi-arrow-right"></i>
-    </a>
-</section>
-{% endif %}
 
 {% endblock %}

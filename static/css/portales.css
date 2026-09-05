@@ -1184,3 +1184,172 @@ a:hover { color: var(--naranja-cla); }
     color: var(--suave);
     text-align: center;
 }
+
+/* --------------------------------------------------------------------------
+   El plan, con detalle
+   -------------------------------------------------------------------------- */
+/* Es lo primero que mira el alumno al entrar. Antes era una línea con la
+   fecha de vencimiento; ahora dice qué contrató, hasta cuándo le sirve y
+   qué incluye. */
+.p-plan-tiempo {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin: 1.1rem 0 0.75rem;
+}
+
+.p-plan-dias {
+    font-family: var(--titulo, inherit);
+    font-size: 2.6rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--naranja);
+}
+
+.p-plan-dias.vencido { color: var(--rojo); }
+
+.p-plan-dias-texto {
+    color: var(--suave);
+    font-size: 0.95rem;
+}
+
+.p-barra {
+    height: 8px;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.07);
+    overflow: hidden;
+}
+
+.p-barra-relleno {
+    height: 100%;
+    border-radius: 50px;
+    background: var(--naranja);
+    transition: width 0.4s ease;
+}
+
+.p-barra-relleno.por_vencer { background: var(--amarillo); }
+.p-barra-relleno.vencido    { background: var(--rojo); }
+
+.p-plan-fechas {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.45rem;
+    font-size: 0.8rem;
+    color: var(--suave);
+}
+
+/* Qué incluye */
+.p-plan-detalle-caja {
+    margin-top: 1.35rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--borde);
+}
+
+.p-plan-subtitulo {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--suave);
+    margin-bottom: 0.9rem;
+}
+
+.p-plan-datos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.75rem;
+    margin-bottom: 1rem;
+}
+
+.p-plan-dato { display: flex; flex-direction: column; }
+
+.p-plan-dato-valor {
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.p-plan-dato-etiqueta {
+    font-size: 0.8rem;
+    color: var(--suave);
+}
+
+.p-plan-pilares {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.9rem;
+}
+
+.p-chip {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 50px;
+    color: var(--naranja);
+    background: rgba(255, 87, 34, 0.12);
+    border: 1px solid rgba(255, 87, 34, 0.3);
+}
+
+.p-plan-beneficios {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.p-plan-beneficios li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    padding: 0.3rem 0;
+    font-size: 0.92rem;
+    color: var(--suave);
+}
+
+.p-plan-beneficios i {
+    color: var(--naranja);
+    font-size: 0.9rem;
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+}
+
+.p-plan-nota {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    margin: 1rem 0 0;
+    padding: 0.75rem 0.9rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    font-size: 0.87rem;
+    color: var(--suave);
+}
+
+.p-plan-nota i { color: var(--naranja); margin-top: 0.15rem; flex-shrink: 0; }
+
+/* El último pago: una línea, sin totales. Solo para que confirme que el
+   suyo se registró. */
+.p-plan-pago {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 1.15rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--borde);
+    font-size: 0.85rem;
+    color: var(--suave);
+}
+
+.p-plan-pago i { color: var(--verde); }
+
+@media (max-width: 575.98px) {
+    .p-plan-datos { gap: 1.25rem; }
+    .p-plan-fechas { flex-direction: column; gap: 0.2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .p-barra-relleno { transition: none; }
+}
