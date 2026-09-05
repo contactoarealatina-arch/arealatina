@@ -13,71 +13,84 @@
 {% block contenido %}
 
 <div class="row g-3">
-    <div class="col-xl-7">
+    <div class="col-12">
         <div class="g-card h-100">
             <h2 class="g-card-titulo">Planes configurados</h2>
+
             {% if planes %}
-                <div class="g-scroll-x">
-                <table class="g-tabla" data-ordenable>
-                    <thead>
-                        <tr>
-                            <th class="ordenable" data-tipo="texto">Plan</th>
-                            <th class="num ordenable" data-tipo="numero">Precio</th>
-                            <th class="num">Duración</th>
-                            <th class="num">Alumnos</th>
-                            <th>Estado</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for plan in planes %}
-                        <tr>
-                            <td>
-                                <strong>{{ plan.nombre }}</strong>
-                                {% if plan.descripcion %}
-                                    <div class="g-muted" style="font-size:.78rem">{{ plan.descripcion }}</div>
-                                {% endif %}
-                            </td>
-                            <td class="num" data-orden="{{ plan.precio_clp }}">${{ plan.precio_clp|clp }}</td>
-                            <td class="num g-muted g-nowrap">
-                                {% if plan.duracion_dias == 1 %}1 clase{% else %}{{ plan.duracion_dias }} días{% endif %}
-                            </td>
-                            <td class="num">{{ plan.suscripciones_vigentes }}</td>
-                            <td>
-                                {% if plan.activo %}
-                                    <span class="g-badge g-badge-verde">Activo</span>
-                                {% else %}
-                                    <span class="g-badge g-badge-gris">Inactivo</span>
-                                {% endif %}
-                            </td>
-                            <td class="g-nowrap">
-                                <a href="{% url 'gestion:plan_editar' plan.pk %}"
-                                   class="g-btn g-btn-neutro g-btn-icono" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form method="post" action="{% url 'gestion:plan_alternar' plan.pk %}"
-                                      class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="g-btn g-btn-neutro g-btn-icono"
-                                            title="{% if plan.activo %}Ocultar{% else %}Mostrar{% endif %}">
-                                        <i class="bi {% if plan.activo %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
-                                    </button>
-                                </form>
-                                <form method="post" action="{% url 'gestion:plan_eliminar' plan.pk %}"
-                                      class="d-inline"
-                                      data-confirmar="¿Eliminar este plan? No se puede deshacer.">
-                                    {% csrf_token %}
-                                    <button type="submit" class="g-btn g-btn-peligro g-btn-icono"
-                                            title="Eliminar">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
+                {% comment %}
+                    Una pestaña por pilar. Baile urbano y bienestar se
+                    venden distinto, y verlos juntos obliga a leer plan por
+                    plan para saber cuál es cuál.
+
+                    Los planes sin pilar salen en las dos: para un alumno de
+                    bienestar un plan general es una opción real, y
+                    esconderlo sería mentir por omisión.
+                {% endcomment %}
+                <div class="g-pestanas" role="tablist">
+                    {% for grupo in grupos %}
+                        <button type="button"
+                                class="g-pestana {% if forloop.first %}activa{% endif %}"
+                                role="tab"
+                                aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                                aria-controls="grupo-{{ grupo.slug }}"
+                                data-pestana="grupo-{{ grupo.slug }}">
+                            <i class="bi {{ grupo.icono }}"></i>
+                            <span class="g-pestana-nombre">{{ grupo.nombre }}</span>
+                            <span class="g-pestana-cuenta">{{ grupo.cuantos }}</span>
+                        </button>
                     {% endfor %}
-                    </tbody>
-                </table>
                 </div>
+
+                {% for grupo in grupos %}
+                <div id="grupo-{{ grupo.slug }}" class="g-panel-pestana"
+                     role="tabpanel" {% if not forloop.first %}hidden{% endif %}>
+
+                    {% if grupo.planes %}
+                        <div class="g-scroll-x">
+                        <table class="g-tabla" data-ordenable>
+                            <thead>
+                                <tr>
+                                    <th class="ordenable" data-tipo="texto">Plan</th>
+                                    <th class="num ordenable" data-tipo="numero">Precio</th>
+                                    <th class="num">Duración</th>
+                                    <th class="num">Alumnos</th>
+                                    <th>Estado</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for plan in grupo.planes %}
+                                    {% include 'gestion/planes/_fila.html' with plan=plan %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+
+                        {% if grupo.pilar %}
+                        <p class="g-ayuda mt-3">
+                            <i class="bi bi-globe me-1"></i>
+                            Estos son los {{ grupo.activos }} plan{{ grupo.activos|pluralize:"es" }}
+                            activo{{ grupo.activos|pluralize }} que el visitante ve en
+                            <a href="/clases/#{{ grupo.slug }}" target="_blank" rel="noopener">{{ grupo.nombre }}</a>
+                            del sitio web. Ocultar uno lo saca de ahí al instante.
+                        </p>
+                        {% endif %}
+                    {% else %}
+                        <div class="g-vacio">
+                            <i class="bi bi-card-checklist"></i>
+                            <h3>Sin planes para {{ grupo.nombre }}</h3>
+                            <p>
+                                Crea uno y marca «{{ grupo.nombre }}» en sus pilares,
+                                o deja los pilares vacíos para que sirva en todo el estudio.
+                            </p>
+                            <a href="{% url 'gestion:plan_nuevo' %}" class="g-btn g-btn-primario">
+                                Crear un plan
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
             {% else %}
                 <div class="g-vacio">
                     <i class="bi bi-card-checklist"></i>
@@ -89,7 +102,7 @@
         </div>
     </div>
 
-    <div class="col-xl-5">
+    <div class="col-12">
         <div class="g-card h-100">
             <h2 class="g-card-titulo">Suscripciones recientes</h2>
             {% if suscripciones_recientes %}
@@ -126,4 +139,41 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ request.csp_nonce }}">
+// Pestañas. Todo el contenido está en el HTML desde el principio, así que
+// cambiar de pilar es instantáneo y no vuelve a pedir la página.
+(function () {
+    var botones = document.querySelectorAll('[data-pestana]');
+    if (!botones.length) { return; }
+
+    botones.forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            var destino = boton.getAttribute('data-pestana');
+
+            botones.forEach(function (otro) {
+                var activo = otro === boton;
+                otro.classList.toggle('activa', activo);
+                otro.setAttribute('aria-selected', activo ? 'true' : 'false');
+
+                var panel = document.getElementById(otro.getAttribute('data-pestana'));
+                if (panel) { panel.hidden = !activo; }
+            });
+
+            // Se recuerda para el resto de la sesión: quien administra
+            // bienestar no quiere volver a "Todos" en cada guardado.
+            try { sessionStorage.setItem('al-pestana-planes', destino); } catch (e) {}
+        });
+    });
+
+    var recordada = null;
+    try { recordada = sessionStorage.getItem('al-pestana-planes'); } catch (e) {}
+    if (recordada) {
+        var boton = document.querySelector('[data-pestana="' + recordada + '"]');
+        if (boton) { boton.click(); }
+    }
+})();
+</script>
 {% endblock %}

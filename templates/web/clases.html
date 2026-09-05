@@ -128,8 +128,14 @@
                         Planes
                     </h3>
                     <p class="texto-suave">
-                        Los planes valen para cualquier disciplina del estudio: puedes
-                        combinar baile y bienestar dentro del mismo plan.
+                        {% if bloque.planes_propios %}
+                            Estos son los planes de {{ bloque.pilar.nombre }}.
+                            Los que no dicen un área sirven para cualquier
+                            disciplina del estudio.
+                        {% else %}
+                            Los planes valen para cualquier disciplina del estudio:
+                            puedes combinar baile y bienestar dentro del mismo plan.
+                        {% endif %}
                     </p>
 
                     <div class="row g-4 justify-content-center">
@@ -147,6 +153,14 @@
                                     <span class="plan-moneda">$</span>{{ plan.precio_clp|clp }}
                                 </div>
                                 <div class="plan-periodo">al mes</div>
+
+                                {% if plan.pilares.all %}
+                                    <div class="plan-cobertura">
+                                        {% for pilar in plan.pilares.all %}
+                                            <span class="chip">{{ pilar.nombre }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
 
                                 <ul class="plan-beneficios">
                                     {% for beneficio in plan.beneficios_lista %}

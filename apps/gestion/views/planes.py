@@ -4,15 +4,55 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from ..auditoria import registrar
 from ..forms import PlanForm
-from ..models import AuditLog, Plan, Suscripcion
+from ..models import AuditLog, Categoria, Plan, Suscripcion
 from ..permisos import gestion_requerida
 
 
 @gestion_requerida
 def planes(request):
+    """Los planes, separados por pilar.
+
+    Baile urbano y bienestar se venden distinto, así que verlos juntos en
+    una sola tabla obliga a leer plan por plan para saber cuál es cuál.
+
+    Los planes sin pilar sirven en todo el estudio, así que aparecen en
+    las dos pestañas: para un alumno de bienestar, un plan general es una
+    opción real y esconderlo sería mentir por omisión.
+    """
+    todos = list(Plan.objects.prefetch_related('pilares'))
+
+    grupos = []
+    for pilar in Categoria.objects.filter(activa=True):
+        del_pilar = [
+            p for p in todos
+            if not p.pilares.all() or pilar in p.pilares.all()
+        ]
+        grupos.append({
+            'pilar': pilar,
+            'slug': pilar.slug,
+            'nombre': pilar.nombre,
+            'icono': pilar.icono,
+            'planes': del_pilar,
+            'cuantos': len(del_pilar),
+            'activos': sum(1 for p in del_pilar if p.activo),
+        })
+
+    # Una pestaña más con todo junto: para comparar precios entre pilares
+    # sin ir y volver.
+    grupos.insert(0, {
+        'pilar': None,
+        'slug': 'todos',
+        'nombre': 'Todos los planes',
+        'icono': 'bi-collection',
+        'planes': todos,
+        'cuantos': len(todos),
+        'activos': sum(1 for p in todos if p.activo),
+    })
+
     return render(request, 'gestion/planes/listado.html', {
         'activo': 'planes',
-        'planes': Plan.objects.all(),
+        'grupos': grupos,
+        'planes': todos,
         'suscripciones_recientes': Suscripcion.objects.select_related(
             'alumno', 'plan'
         ).filter(alumno__eliminado=False)[:10],

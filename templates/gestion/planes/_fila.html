@@ -1,0 +1,70 @@
+{% load formato %}
+{% comment %}
+    Una fila de plan. Se repite en cada pestaña, así que vive acá y no
+    copiada tres veces.
+{% endcomment %}
+<tr>
+    <td>
+        <strong>{{ plan.nombre }}</strong>
+        {% if plan.descripcion %}
+            <div class="g-muted" style="font-size:.78rem">{{ plan.descripcion }}</div>
+        {% endif %}
+
+        <div class="g-plan-etiquetas">
+            {% comment %}
+                Sin pilares el plan sirve en todo el estudio: se dice, para
+                que no parezca un dato olvidado.
+            {% endcomment %}
+            {% if plan.pilares.all %}
+                {% for pilar in plan.pilares.all %}
+                    <span class="g-chip">{{ pilar.nombre }}</span>
+                {% endfor %}
+            {% else %}
+                <span class="g-chip neutro">Todo el estudio</span>
+            {% endif %}
+
+            {% if plan.clases_incluidas %}
+                <span class="g-chip neutro">
+                    {{ plan.clases_incluidas }} clase{{ plan.clases_incluidas|pluralize }}
+                </span>
+            {% elif plan.duracion_dias > 1 %}
+                <span class="g-chip neutro">Ilimitado</span>
+            {% endif %}
+        </div>
+    </td>
+    <td class="num" data-orden="{{ plan.precio_clp }}">${{ plan.precio_clp|clp }}</td>
+    <td class="num g-muted g-nowrap">
+        {% if plan.duracion_dias == 1 %}1 clase{% else %}{{ plan.duracion_dias }} días{% endif %}
+    </td>
+    <td class="num">{{ plan.suscripciones_vigentes }}</td>
+    <td>
+        {% if plan.activo %}
+            <span class="g-badge g-badge-verde">Activo</span>
+        {% else %}
+            <span class="g-badge g-badge-gris">Oculto</span>
+        {% endif %}
+    </td>
+    <td class="g-nowrap">
+        <a href="{% url 'gestion:plan_editar' plan.pk %}"
+           class="g-btn g-btn-neutro g-btn-icono" title="Editar">
+            <i class="bi bi-pencil"></i>
+        </a>
+        <form method="post" action="{% url 'gestion:plan_alternar' plan.pk %}"
+              class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="g-btn g-btn-neutro g-btn-icono"
+                    title="{% if plan.activo %}Ocultar del sitio web{% else %}Mostrar en el sitio web{% endif %}">
+                <i class="bi {% if plan.activo %}bi-eye-slash{% else %}bi-eye{% endif %}"></i>
+            </button>
+        </form>
+        <form method="post" action="{% url 'gestion:plan_eliminar' plan.pk %}"
+              class="d-inline"
+              data-confirmar="¿Eliminar este plan? No se puede deshacer.">
+            {% csrf_token %}
+            <button type="submit" class="g-btn g-btn-peligro g-btn-icono"
+                    title="Eliminar">
+                <i class="bi bi-trash"></i>
+            </button>
+        </form>
+    </td>
+</tr>

@@ -1259,3 +1259,106 @@ a:hover { color: var(--al-orange-lite); }
 }
 
 .g-enlace-boleta:hover { text-decoration: underline; }
+
+/* --------------------------------------------------------------------------
+   Pestañas por pilar
+   -------------------------------------------------------------------------- */
+/* Grandes a propósito: es la separación principal de la pantalla, no un
+   filtro secundario. Se tienen que ver antes que la tabla. */
+.g-pestanas {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--al-border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.g-pestana {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.9rem 1.4rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    color: var(--al-muted);
+    font-family: var(--font-titulo);
+    font-size: 0.98rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.g-pestana:hover { color: var(--al-text); }
+
+.g-pestana:focus-visible {
+    outline: 2px solid var(--al-orange);
+    outline-offset: -4px;
+    border-radius: 8px 8px 0 0;
+}
+
+.g-pestana.activa {
+    color: var(--al-orange);
+    border-bottom-color: var(--al-orange);
+}
+
+.g-pestana i { font-size: 1.15rem; }
+
+.g-pestana-cuenta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 0.4rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--al-muted);
+}
+
+.g-pestana.activa .g-pestana-cuenta {
+    background: rgba(255, 87, 34, 0.18);
+    color: var(--al-orange-lite);
+}
+
+@media (max-width: 575.98px) {
+    .g-pestana { padding: 0.75rem 0.9rem; font-size: 0.88rem; }
+    .g-pestana-nombre { display: none; }
+    .g-pestana.activa .g-pestana-nombre { display: inline; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .g-pestana { transition: none; }
+}
+
+/* Etiquetas de un plan: sus pilares y cuántas clases cubre. */
+.g-plan-etiquetas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.45rem;
+}
+
+.g-chip {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.18rem 0.55rem;
+    border-radius: 50px;
+    color: var(--al-orange-lite);
+    background: rgba(255, 87, 34, 0.12);
+    border: 1px solid rgba(255, 87, 34, 0.3);
+    white-space: nowrap;
+}
+
+.g-chip.neutro {
+    color: var(--al-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--al-border);
+}

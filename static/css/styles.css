@@ -3034,3 +3034,12 @@ html[data-nivel="bajo"] .entrando { animation: none; }
         animation: none;
     }
 }
+
+/* A qué pilar pertenece un plan, en la tarjeta del sitio público. */
+.plan-cobertura {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    justify-content: center;
+    margin-top: 0.85rem;
+}

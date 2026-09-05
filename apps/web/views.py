@@ -138,7 +138,10 @@ def _pilares():
     recorre dos veces (la tarjeta grande y el detalle desplegado) y
     repetir la consulta por cada pasada no tiene sentido.
     """
-    planes = list(Plan.objects.filter(activo=True, duracion_dias__gte=28))
+    mensuales = list(
+        Plan.objects.filter(activo=True, duracion_dias__gte=28)
+        .prefetch_related('pilares')
+    )
     suelta = Plan.objects.filter(activo=True, duracion_dias__lt=28).first()
 
     resultado = []
@@ -150,12 +153,22 @@ def _pilares():
         )
         if not clases:
             continue
+
+        # Cada pilar muestra sus planes. Los que no tienen pilar marcado
+        # sirven en todo el estudio, así que salen en los dos: para quien
+        # viene por bienestar, un plan general es una opción real.
+        planes = [
+            p for p in mensuales
+            if not p.pilares.all() or pilar in p.pilares.all()
+        ]
+
         resultado.append({
             'pilar': pilar,
             'clases': clases,
-            # Los planes valen para cualquier disciplina, así que los dos
-            # pilares muestran los mismos. No hay precios por pilar.
             'planes': planes,
+            # True cuando alguno es específico de este pilar: la plantilla
+            # cambia el texto en vez de decir siempre lo mismo.
+            'planes_propios': any(p.pilares.all() for p in planes),
             'suelta': suelta,
             'disciplinas': sorted({c.nombre for c in clases}),
         })
