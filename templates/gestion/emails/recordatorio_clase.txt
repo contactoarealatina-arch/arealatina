@@ -9,10 +9,9 @@ Hola {{ alumno.primer_nombre }}, manana bailas.
 Sala: {{ clase.sala }}{% if clase.profesora %}
 Con:  {{ clase.profesora.get_full_name }}{% endif %}
 
-CONFIRMA TU ASISTENCIA:
-{{ url_confirmar }}
+Te esperamos. No tienes que confirmar nada.
 
-Confirma antes de las {{ clase.hora_inicio|time:"H:i" }} de manana.
+Tus clases y tu plan: {{ url_portal }}
 
 {{ academia.direccion_completa }}
 Como llegar: {{ url_mapa }}

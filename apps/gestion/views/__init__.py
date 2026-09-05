@@ -17,7 +17,7 @@ from .alumnos import (  # noqa: F401
     alumnos,
     alumnos_exportar,
 )
-from .asistencia import asistencia  # noqa: F401
+from .asistencia import asistencia, asistencia_resumen  # noqa: F401
 from .auditoria import auditoria  # noqa: F401
 from .clases import clase_detalle, clase_editar, clase_nueva, clases  # noqa: F401
 from .dashboard import dashboard  # noqa: F401

@@ -10,7 +10,7 @@ from django.utils import timezone
 from apps.asistencia.models import RegistroAsistencia
 from apps.gestion import servicios
 from apps.gestion.auditoria import registrar
-from apps.gestion.models import AuditLog, ConfirmacionAsistencia, DiaSemana
+from apps.gestion.models import AuditLog, DiaSemana
 
 from .permisos import acceso_profesoras, clase_visible_o_404, clases_visibles, es_vista_admin
 
@@ -19,10 +19,6 @@ def _contexto_base(request):
     return {
         'vista_admin': es_vista_admin(request.user),
     }
-
-
-def _confirmados(clase, fecha):
-    return ConfirmacionAsistencia.objects.filter(clase=clase, fecha=fecha).count()
 
 
 def _inscritos(clase):
@@ -42,7 +38,6 @@ def panel(request):
         del_dia.append({
             'clase': clase,
             'inscritos': _inscritos(clase),
-            'confirmados': _confirmados(clase, hoy),
             'ya_paso_lista': RegistroAsistencia.objects.filter(
                 clase=clase, fecha=hoy).exists(),
         })
@@ -51,17 +46,51 @@ def panel(request):
     # Si hoy no hay nada, se muestra cuándo vuelve a haber.
     siguiente = None if del_dia else servicios.proxima_sesion(mis_clases)
 
-    semana = servicios.sesiones_proximas(mis_clases, dias=7, desde=hoy + timedelta(days=1))
-
     return render(request, 'profesoras/panel.html', {
         **_contexto_base(request),
         'activo': 'panel',
         'hoy': hoy,
         'clases_hoy': del_dia,
         'siguiente': siguiente,
-        'semana': semana,
+        'semana': _semana(mis_clases, hoy),
         'total_clases': len(mis_clases),
     })
+
+
+def _semana(mis_clases, hoy):
+    """Los próximos siete días agrupados por día, hoy incluido.
+
+    Antes la lista empezaba mañana, así que la profesora tenía que juntar
+    en su cabeza "las de hoy" con "esta semana". Ahora es una sola grilla
+    de lunes a domingo y hoy va marcado.
+    """
+    paso_lista = {
+        (r['clase_id'], r['fecha'])
+        for r in RegistroAsistencia.objects
+        .filter(fecha__gte=hoy)
+        .values('clase_id', 'fecha')
+        .distinct()
+    }
+
+    dias = {}
+    for sesion in servicios.sesiones_proximas(mis_clases, dias=7, desde=hoy):
+        clase = sesion['clase']
+        fecha = sesion['fecha']
+        dias.setdefault(fecha, []).append({
+            'clase': clase,
+            'fecha': fecha,
+            'inscritos': _inscritos(clase),
+            'ya_paso_lista': (clase.pk, fecha) in paso_lista,
+        })
+
+    return [
+        {
+            'fecha': fecha,
+            'es_hoy': fecha == hoy,
+            'clases': sorted(clases, key=lambda c: c['clase'].hora_inicio),
+        }
+        for fecha, clases in sorted(dias.items())
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -233,11 +262,6 @@ def asistencia(request, clase_id, fecha):
     # ------------------------------------------------------------------
     previos = {r.alumno_id: r for r in
                RegistroAsistencia.objects.filter(clase=clase, fecha=dia)}
-    confirmados = set(
-        ConfirmacionAsistencia.objects
-        .filter(clase=clase, fecha=dia)
-        .values_list('alumno_id', flat=True)
-    )
     inicio_mes, fin_mes = servicios.rango_mes(dia)
 
     filas = []
@@ -251,7 +275,6 @@ def asistencia(request, clase_id, fecha):
         filas.append({
             'alumno': alumno,
             'registro': previos.get(alumno.pk),
-            'confirmo': alumno.pk in confirmados,
             'porcentaje_mes': round(presentes / total * 100) if total else None,
         })
 
@@ -264,5 +287,4 @@ def asistencia(request, clase_id, fecha):
         'filas': filas,
         'estados': RegistroAsistencia.Estado.choices,
         'ya_registrada': any(f['registro'] for f in filas),
-        'total_confirmados': len(confirmados),
     })

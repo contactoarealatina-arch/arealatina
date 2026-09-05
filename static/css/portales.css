@@ -837,3 +837,269 @@ a:hover { color: var(--naranja-cla); }
     .p-body { background: #FFFFFF; color: #000000; }
     .p-tarjeta, .p-clase, .p-tabla-caja { border: 1px solid #CCCCCC; }
 }
+
+/* ==========================================================================
+   PANEL DEL ALUMNO — TODO EN UNA PANTALLA
+   El plan y la semana dejaron de ser páginas propias. Acá conviven.
+   ========================================================================== */
+
+.p-saludo {
+    font-size: clamp(1.4rem, 5vw, 1.9rem);
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   Mi plan
+   -------------------------------------------------------------------------- */
+.p-plan { margin-bottom: 1.75rem; }
+
+.p-plan-cabecera {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.p-plan-nombre {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0.25rem 0 0;
+}
+
+.p-plan-detalle {
+    margin: 0.85rem 0 0;
+    color: var(--suave);
+    font-size: 0.95rem;
+}
+
+.p-plan-detalle strong { color: var(--texto); }
+
+.p-plan-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 1.15rem;
+}
+
+/* Sello de estado. Va aparte de .p-estado, que en el portal ya es el
+   botón de asistencia de la profesora. */
+.p-sello {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    border-radius: 50px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.p-sello.al_dia      { color: var(--verde);    background: var(--verde-lavado);    border-color: rgba(95,190,118,.4); }
+.p-sello.por_vencer  { color: var(--amarillo); background: var(--amarillo-lavado); border-color: rgba(224,169,59,.4); }
+.p-sello.vencido     { color: var(--rojo);     background: var(--rojo-lavado);     border-color: rgba(224,82,82,.4); }
+.p-sello.sin_plan    { color: var(--suave);    background: rgba(255,255,255,.05);  border-color: var(--borde); }
+
+/* La tarjeta se tiñe apenas según el estado: se entiende de un vistazo
+   sin tener que leer el sello. */
+.p-plan.vencido    { border-color: rgba(224, 82, 82, 0.45); }
+.p-plan.por_vencer { border-color: rgba(224, 169, 59, 0.45); }
+
+/* --------------------------------------------------------------------------
+   Bloques
+   -------------------------------------------------------------------------- */
+.p-bloque { margin-bottom: 1.75rem; }
+
+.p-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.9rem;
+}
+
+.p-titulo i { color: var(--naranja); }
+
+.p-enlace {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.85rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--naranja);
+    text-decoration: none;
+}
+
+.p-enlace:hover { text-decoration: underline; }
+
+/* --------------------------------------------------------------------------
+   La semana
+   -------------------------------------------------------------------------- */
+.p-dia {
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    padding: 1rem 1.15rem;
+    margin-bottom: 0.65rem;
+}
+
+.p-dia.hoy { border-color: var(--naranja); }
+
+.p-dia-cabecera {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-bottom: 0.6rem;
+    margin-bottom: 0.6rem;
+    border-bottom: 1px solid var(--borde);
+}
+
+.p-dia-nombre {
+    font-weight: 700;
+    text-transform: capitalize;
+    font-size: 0.98rem;
+}
+
+.p-dia-fecha { font-size: 0.82rem; color: var(--suave); }
+.p-dia.hoy .p-dia-fecha { color: var(--naranja); font-weight: 600; }
+
+.p-sesion {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.55rem 0;
+}
+
+.p-sesion + .p-sesion { border-top: 1px solid rgba(255, 255, 255, 0.05); }
+
+/* Lo que ya pasó se atenúa: sigue a la vista, pero no compite con lo
+   que todavía viene. */
+.p-sesion.pasada { opacity: 0.55; }
+
+.p-sesion-hora {
+    flex-shrink: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--naranja);
+    min-width: 52px;
+}
+
+.p-sesion-datos {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.p-sesion-datos strong { font-size: 0.98rem; }
+
+.p-sesion-datos > span {
+    font-size: 0.83rem;
+    color: var(--suave);
+}
+
+.p-marca {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.22rem 0.6rem;
+    border-radius: 50px;
+    white-space: nowrap;
+}
+
+.p-marca.curso       { color: var(--naranja);  background: rgba(255, 87, 34, 0.14); }
+.p-marca.ok          { color: var(--verde);    background: var(--verde-lavado); }
+.p-marca.falta       { color: var(--rojo);     background: var(--rojo-lavado); }
+.p-marca.justificado { color: var(--amarillo); background: var(--amarillo-lavado); }
+
+.p-vacio-nota { font-size: 0.85rem !important; }
+
+/* --------------------------------------------------------------------------
+   Últimos pagos
+   -------------------------------------------------------------------------- */
+.p-pagos {
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    overflow: hidden;
+}
+
+.p-pago {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.15rem;
+}
+
+.p-pago + .p-pago { border-top: 1px solid var(--borde); }
+
+.p-pago-fecha {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    color: var(--suave);
+    min-width: 82px;
+}
+
+.p-pago-concepto { flex: 1; min-width: 0; font-size: 0.92rem; }
+
+.p-pago-monto {
+    flex-shrink: 0;
+    font-weight: 700;
+    color: var(--verde);
+}
+
+@media (max-width: 575.98px) {
+    .p-sesion { flex-wrap: wrap; }
+    .p-pago-fecha { min-width: 0; }
+}
+
+/* --------------------------------------------------------------------------
+   La semana de la profesora
+   -------------------------------------------------------------------------- */
+/* Reusa el aspecto del panel del alumno, pero cada sesión es un enlace:
+   desde acá se entra a pasar lista sin buscar la clase en otro lado. */
+.p-dia-profe {
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    padding: 1rem 1.15rem;
+    margin-bottom: 0.65rem;
+}
+
+.p-dia-profe.hoy { border-color: var(--naranja); }
+.p-dia-profe.hoy .p-dia-fecha { color: var(--naranja); font-weight: 600; }
+
+.p-sesion-profe {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.6rem 0.5rem;
+    margin: 0 -0.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.2s ease;
+    /* Objetivo táctil: la profesora usa esto en tablet, de pie. */
+    min-height: 52px;
+}
+
+.p-sesion-profe:hover,
+.p-sesion-profe:focus-visible {
+    background: rgba(255, 87, 34, 0.08);
+}
+
+.p-sesion-profe + .p-sesion-profe {
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .p-sesion-profe { transition: none; }
+}

@@ -83,15 +83,30 @@
                     </span>
                 </td>
                 <td>
-                    <a href="{% url 'gestion:alumno_detalle' alerta.alumno.pk %}">
-                        {{ alerta.alumno.nombre_completo }}
-                    </a>
-                    <div class="g-muted" style="font-size:.76rem">{{ alerta.alumno.telefono|default:"Sin teléfono" }}</div>
+                    {% comment %}
+                        Las alertas técnicas (un correo que no salió) no son
+                        sobre ningún alumno, así que no hay ficha a la que ir.
+                    {% endcomment %}
+                    {% if alerta.alumno %}
+                        <a href="{% url 'gestion:alumno_detalle' alerta.alumno.pk %}">
+                            {{ alerta.alumno.nombre_completo }}
+                        </a>
+                        <div class="g-muted" style="font-size:.76rem">{{ alerta.alumno.telefono|default:"Sin teléfono" }}</div>
+                    {% else %}
+                        <span class="g-muted">—</span>
+                        <div class="g-muted" style="font-size:.76rem">Alerta del sistema</div>
+                    {% endif %}
                 </td>
                 <td class="g-muted">{{ alerta.mensaje }}</td>
                 <td class="g-muted g-nowrap">{{ alerta.created_at|date:"d/m/Y" }}</td>
                 <td class="g-nowrap">
-                    {% if alerta.tipo == 'PAGO_PENDIENTE' %}
+                    {% if alerta.tipo == 'CORREO_FALLIDO' %}
+                        <a href="{% url 'admin:gestion_correoenviado_changelist' %}?enviado__exact=0"
+                           target="_blank" rel="noopener"
+                           class="g-btn g-btn-outline g-btn-sm">Ver el correo</a>
+                    {% elif not alerta.alumno %}
+                        <span class="g-muted">—</span>
+                    {% elif alerta.tipo == 'PAGO_PENDIENTE' %}
                         <a href="{% url 'gestion:pago_nuevo' %}?alumno={{ alerta.alumno.pk }}"
                            class="g-btn g-btn-outline g-btn-sm">Registrar pago</a>
                     {% else %}

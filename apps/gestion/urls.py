@@ -46,6 +46,8 @@ urlpatterns = [
     path('alertas/<int:pk>/gestionar/', views.alerta_gestionar, name='alerta_gestionar'),
 
     # Módulo 7 — Reportes
+    path('asistencia/resumen/', views.asistencia_resumen,
+         name='asistencia_resumen'),
     path('reportes/', views.reportes, name='reportes'),
     path('reportes/<slug:slug>/', views.reporte_descargar, name='reporte_descargar'),
 

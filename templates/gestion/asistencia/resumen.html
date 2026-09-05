@@ -1,0 +1,151 @@
+{% extends 'gestion/base_gestion.html' %}
+
+{% block titulo %}Asistencia | Área Latina Estudio{% endblock %}
+{% block encabezado %}Asistencia{% endblock %}
+
+{% block contenido %}
+
+{% comment %}
+    Lo que la profesora marcó, leído desde la administración. Reemplaza a
+    la confirmación previa del alumno, que se eliminó: ahora el dato sale
+    de quien efectivamente pasó lista.
+{% endcomment %}
+
+<!-- ==================== FILTROS ==================== -->
+<form method="get" class="g-card mb-3">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+            <div class="g-campo mb-0">
+                <label for="f-clase">Clase</label>
+                <select name="clase" id="f-clase" class="g-input">
+                    <option value="">Todas las clases</option>
+                    {% for clase in clases %}
+                        <option value="{{ clase.pk }}"
+                                {% if clase_activa == clase.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ clase.get_nombre_display }} · {{ clase.get_nivel_display }}
+                            ({{ clase.horario }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="g-campo mb-0">
+                <label for="f-rango">Período</label>
+                <select name="rango" id="f-rango" class="g-input">
+                    {% for valor, etiqueta in rangos %}
+                        <option value="{{ valor }}" {% if rango_activo == valor %}selected{% endif %}>
+                            {{ etiqueta }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="g-btn g-btn-primario">
+                <i class="bi bi-funnel me-1"></i>Filtrar
+            </button>
+            {% if hay_filtro %}
+                <a href="{% url 'gestion:asistencia_resumen' %}" class="g-btn g-btn-neutro">
+                    Limpiar
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</form>
+
+<!-- ==================== TOTALES ==================== -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-calendar-check"></i> Sesiones</div>
+            <div class="g-metrica-valor">{{ totales.sesiones }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica exito">
+            <div class="g-metrica-etiqueta"><i class="bi bi-check-circle"></i> Presentes</div>
+            <div class="g-metrica-valor">{{ totales.presentes }}</div>
+            <div class="g-metrica-pie">{{ totales.porcentaje }}% de asistencia</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica peligro">
+            <div class="g-metrica-etiqueta"><i class="bi bi-x-circle"></i> Ausentes</div>
+            <div class="g-metrica-valor">{{ totales.ausentes }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="g-metrica aviso">
+            <div class="g-metrica-etiqueta"><i class="bi bi-info-circle"></i> Justificados</div>
+            <div class="g-metrica-valor">{{ totales.justificados }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== SESIONES ==================== -->
+<div class="g-card">
+    <h2 class="g-card-titulo">Clase por clase</h2>
+
+    {% if filas %}
+    <div class="g-tabla-envoltura">
+        <table class="g-tabla">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Clase</th>
+                    <th class="num">Presentes</th>
+                    <th class="num">Ausentes</th>
+                    <th class="num">Justificados</th>
+                    <th class="num">Inscritos hoy</th>
+                    <th>Asistencia</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fila in filas %}
+                <tr>
+                    <td>{{ fila.fecha|date:"D d/m/Y" }}</td>
+                    <td>
+                        <strong>{{ fila.clase }}</strong>
+                        <small class="g-tenue">{{ fila.hora|time:"H:i" }}</small>
+                    </td>
+                    <td class="num"><span class="g-num bien">{{ fila.presentes }}</span></td>
+                    <td class="num"><span class="g-num mal">{{ fila.ausentes }}</span></td>
+                    <td class="num"><span class="g-num medio">{{ fila.justificados }}</span></td>
+                    <td class="num g-tenue">{{ fila.inscritos }}</td>
+                    <td>
+                        <div class="g-progreso">
+                            <div class="g-progreso-relleno{% if fila.porcentaje < 50 %} peligro{% elif fila.porcentaje < 75 %} aviso{% endif %}"
+                                 style="width: {{ fila.porcentaje }}%"></div>
+                        </div>
+                        <small class="g-tenue">{{ fila.porcentaje }}%</small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <p class="g-ayuda mt-3">
+        «Inscritos hoy» es cuántos hay inscritos ahora en esa clase, no
+        cuántos había el día de la sesión: ese dato histórico no se guarda.
+    </p>
+    {% else %}
+    <div class="g-vacio">
+        <i class="bi bi-clipboard-x"></i>
+        <h3>No hay asistencia registrada</h3>
+        <p>
+            {% if hay_filtro %}
+                Prueba con otra clase u otro período.
+            {% else %}
+                Aparecerá aquí en cuanto las profesoras empiecen a pasar lista
+                desde su panel.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

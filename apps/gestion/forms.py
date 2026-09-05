@@ -152,6 +152,23 @@ class AlumnoForm(MixinWidgets, forms.ModelForm):
         return fecha
 
 
+class RadioPlanes(forms.RadioSelect):
+    """Radios de plan que llevan su precio en el HTML.
+
+    Sin esto el navegador no sabe cuánto cuesta el plan que se acaba de
+    marcar, y el monto habría que pedirlo al servidor o repetirlo a mano
+    en la plantilla.
+    """
+
+    def create_option(self, name, value, *args, **kwargs):
+        opcion = super().create_option(name, value, *args, **kwargs)
+        plan = getattr(value, 'instance', None)
+        if plan is not None:
+            opcion['attrs']['data-precio'] = plan.precio_clp
+            opcion['attrs']['data-nombre'] = plan.nombre
+        return opcion
+
+
 class InscripcionPlanForm(forms.Form):
     """Paso 3 del alta: clases y plan contratado."""
 
@@ -164,7 +181,7 @@ class InscripcionPlanForm(forms.Form):
     plan = forms.ModelChoiceField(
         queryset=Plan.objects.none(),
         required=False,
-        widget=forms.RadioSelect,
+        widget=RadioPlanes,
         label='Plan contratado',
         empty_label=None,
     )
@@ -205,7 +222,13 @@ class PagoInicialForm(forms.Form):
 
     monto_clp = forms.IntegerField(
         required=False, min_value=0,
-        widget=forms.NumberInput(attrs={'class': 'g-input', 'placeholder': '0'}),
+        # data-monto-auto: el JS escribe acá el precio del plan elegido,
+        # pero solo mientras el admin no lo haya tocado a mano.
+        widget=forms.NumberInput(attrs={
+            'class': 'g-input',
+            'placeholder': '0',
+            'data-monto-auto': '',
+        }),
         label='Monto pagado (CLP)',
     )
     metodo = forms.ChoiceField(

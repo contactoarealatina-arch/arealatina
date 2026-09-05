@@ -290,7 +290,7 @@ def enviar_recordatorios_profesoras(fecha=None):
     """Recorre las profesoras con clase hoy y les manda su resumen."""
     from django.contrib.auth import get_user_model
 
-    from .models import Clase, ConfirmacionAsistencia
+    from .models import Clase
     from .servicios import clase_ocurre_en
 
     fecha = fecha or timezone.localdate()
@@ -308,8 +308,6 @@ def enviar_recordatorios_profesoras(fecha=None):
         detalle = [{
             'clase': clase,
             'inscritos': clase.inscripciones.filter(alumno__eliminado=False).count(),
-            'confirmados': ConfirmacionAsistencia.objects.filter(
-                clase=clase, fecha=fecha).count(),
         } for clase in sorted(clases, key=lambda c: c.hora_inicio)]
 
         ok, _ = enviar_recordatorio_profesora(profesora, detalle, fecha)
@@ -352,7 +350,7 @@ def enviar_recordatorio_clase(alumno, clase, fecha):
             'alumno': alumno,
             'clase': clase,
             'fecha': fecha,
-            'url_confirmar': _url('portal:confirmar', clase.pk, fecha.isoformat()),
+            'url_portal': _url('portal:panel'),
             'url_mapa': _mapa(),
         },
         alumno=alumno,
@@ -361,11 +359,13 @@ def enviar_recordatorio_clase(alumno, clase, fecha):
 
 
 def enviar_recordatorios_clases(fecha=None):
-    """Avisa a los alumnos de las clases de mañana que aún no confirmaron.
+    """Le recuerda a cada alumno la clase que tiene mañana.
 
-    Al que ya confirmó no se le escribe: sería insistirle por algo que ya hizo.
+    Es solo informativo. Antes pedía confirmar asistencia y solo se le
+    escribía a quien no había confirmado; el estudio decidió sacar esa
+    confirmación porque complicaba al alumno sin darle nada a cambio.
     """
-    from .models import Alumno, Clase, ConfirmacionAsistencia
+    from .models import Alumno, Clase
     from .servicios import clase_ocurre_en
 
     manana = fecha or (timezone.localdate() + timedelta(days=1))
@@ -375,12 +375,6 @@ def enviar_recordatorios_clases(fecha=None):
         if not clase_ocurre_en(clase, manana):
             continue
 
-        ya_confirmaron = set(
-            ConfirmacionAsistencia.objects
-            .filter(clase=clase, fecha=manana)
-            .values_list('alumno_id', flat=True)
-        )
-
         inscritos = clase.inscripciones.filter(
             alumno__eliminado=False,
             alumno__estado=Alumno.Estado.ACTIVO,
@@ -388,7 +382,7 @@ def enviar_recordatorios_clases(fecha=None):
 
         for inscripcion in inscritos:
             alumno = inscripcion.alumno
-            if alumno.pk in ya_confirmaron or not alumno.email:
+            if not alumno.email:
                 omitidos += 1
                 continue
             ok, _ = enviar_recordatorio_clase(alumno, clase, manana)

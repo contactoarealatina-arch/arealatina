@@ -10,7 +10,6 @@ from django.utils import timezone
 from apps.asistencia.models import RegistroAsistencia
 from apps.gestion import servicios
 from apps.gestion.models import (
-    ConfirmacionAsistencia,
     Pago,
     Suscripcion,
     TokenActivacion,
@@ -101,23 +100,18 @@ def _estado_barra(dias):
 
 @alumno_requerido
 def panel(request):
+    """Todo lo que el alumno necesita, en una sola pantalla.
+
+    Antes eran tres páginas —panel, mis clases y mi plan— y ninguna se
+    entendía sola: el plan estaba en una, el horario en otra. Ahora al
+    entrar ve su plan y su semana, que es a lo que viene.
+    """
     alumno = request.alumno
     servicios.vencer_suscripciones_pasadas()
 
     suscripcion = alumno.suscripcion_vigente
     if not suscripcion:
         suscripcion = alumno.suscripciones.order_by('-fecha_vencimiento').first()
-
-    mis_clases = _clases_del_alumno(alumno)
-    siguiente = servicios.proxima_sesion(mis_clases)
-
-    ya_confirmada = False
-    puede_confirmar_siguiente = False
-    if siguiente:
-        ya_confirmada = ConfirmacionAsistencia.objects.filter(
-            alumno=alumno, clase=siguiente['clase'], fecha=siguiente['fecha']
-        ).exists()
-        puede_confirmar_siguiente = servicios.puede_confirmar(siguiente) and not ya_confirmada
 
     dias = alumno.dias_para_vencer
 
@@ -127,15 +121,52 @@ def panel(request):
         'suscripcion': suscripcion,
         'dias_restantes': dias,
         'estado_pago': alumno.estado_pago,
-        'color_barra': _estado_barra(dias),
-        'siguiente': siguiente,
-        'inicio_siguiente': servicios.inicio_sesion(siguiente) if siguiente else None,
-        'ya_confirmada': ya_confirmada,
-        'puede_confirmar': puede_confirmar_siguiente,
-        'total_clases': len(mis_clases),
+        'avisar_renovacion': dias is not None and dias <= 7,
+        'semana': _semana_del_alumno(alumno),
         'ultimos_pagos': alumno.pagos.filter(estado=Pago.Estado.PAGADO)[:3],
-        'whatsapp': _enlace_whatsapp(alumno),
+        'whatsapp': _enlace_whatsapp(alumno, 'renovar'),
     })
+
+
+def _semana_del_alumno(alumno):
+    """Las clases de los próximos siete días, agrupadas por día.
+
+    Sin estados ni botones: día, hora y sala. Lo que ya pasó se marca
+    solo si la profesora alcanzó a pasar lista, y es informativo.
+    """
+    hoy = timezone.localdate()
+    ahora = timezone.now()
+
+    marcas = {
+        (r.clase_id, r.fecha): r.estado
+        for r in RegistroAsistencia.objects.filter(alumno=alumno, fecha__gte=hoy)
+    }
+
+    dias = {}
+    for sesion in servicios.sesiones_proximas(
+        _clases_del_alumno(alumno), dias=7, desde=hoy
+    ):
+        clase = sesion['clase']
+        fecha = sesion['fecha']
+        inicio = servicios.inicio_sesion(sesion)
+        fin = timezone.make_aware(
+            datetime.combine(fecha, clase.hora_fin),
+            timezone.get_current_timezone(),
+        )
+
+        dias.setdefault(fecha, []).append({
+            'clase': clase,
+            'fecha': fecha,
+            'inicio': inicio,
+            'en_curso': inicio <= ahora <= fin,
+            'paso': ahora > fin,
+            'asistencia': marcas.get((clase.pk, fecha)),
+        })
+
+    return [
+        {'fecha': fecha, 'es_hoy': fecha == hoy, 'clases': clases}
+        for fecha, clases in sorted(dias.items())
+    ]
 
 
 def _enlace_whatsapp(alumno, motivo='renovar'):
@@ -154,140 +185,10 @@ def _enlace_whatsapp(alumno, motivo='renovar'):
     return f'https://wa.me/{numero}?text={quote(textos.get(motivo, textos["consulta"]))}'
 
 
-# ---------------------------------------------------------------------------
-# 2.3 Mis clases
-# ---------------------------------------------------------------------------
-@alumno_requerido
-def clases(request):
-    alumno = request.alumno
-    mis_clases = _clases_del_alumno(alumno)
-    hoy = timezone.localdate()
-    ahora = timezone.now()
-
-    confirmadas = {
-        (c.clase_id, c.fecha)
-        for c in ConfirmacionAsistencia.objects.filter(alumno=alumno, fecha__gte=hoy - timedelta(days=1))
-    }
-    marcas = {
-        (r.clase_id, r.fecha): r.estado
-        for r in RegistroAsistencia.objects.filter(
-            alumno=alumno, fecha__gte=hoy - timedelta(days=1))
-    }
-
-    sesiones = []
-    for sesion in servicios.sesiones_proximas(mis_clases, dias=7, desde=hoy):
-        llave = (sesion['clase'].pk, sesion['fecha'])
-        inicio = servicios.inicio_sesion(sesion)
-        fin = timezone.make_aware(
-            datetime.combine(sesion['fecha'], sesion['clase'].hora_fin),
-            timezone.get_current_timezone())
-
-        marca = marcas.get(llave)
-        if marca == RegistroAsistencia.Estado.PRESENTE:
-            estado = 'asistio'
-        elif marca == RegistroAsistencia.Estado.AUSENTE:
-            estado = 'ausente'
-        elif marca == RegistroAsistencia.Estado.JUSTIFICADO:
-            estado = 'justificado'
-        elif inicio <= ahora <= fin:
-            estado = 'en_curso'
-        elif llave in confirmadas:
-            estado = 'confirmada'
-        elif servicios.puede_confirmar(sesion):
-            estado = 'puede_confirmar'
-        elif ahora > fin:
-            estado = 'sin_confirmar'
-        else:
-            estado = 'fuera_de_plazo'
-
-        sesiones.append({**sesion, 'estado': estado, 'inicio': inicio})
-
-    return render(request, 'portal/clases.html', {
-        'activo': 'clases',
-        'alumno': alumno,
-        'mis_clases': mis_clases,
-        'sesiones': sesiones,
-    })
-
-
-# ---------------------------------------------------------------------------
-# 2.4 Confirmar asistencia
-# ---------------------------------------------------------------------------
-@alumno_requerido
-def confirmar(request, clase_id, fecha):
-    alumno = request.alumno
-
-    inscripcion = alumno.inscripciones.filter(clase_id=clase_id).select_related('clase').first()
-    if inscripcion is None:
-        messages.error(request, 'No estás inscrito en esa clase.')
-        return redirect('portal:clases')
-
-    clase = inscripcion.clase
-
-    try:
-        dia = datetime.fromisoformat(fecha).date()
-    except (ValueError, TypeError):
-        messages.error(request, 'Esa fecha no es válida.')
-        return redirect('portal:clases')
-
-    sesion = {'clase': clase, 'fecha': dia}
-
-    if not servicios.clase_ocurre_en(clase, dia):
-        messages.error(request, 'Esa clase no se dicta ese día.')
-        return redirect('portal:clases')
-
-    ya = ConfirmacionAsistencia.objects.filter(
-        alumno=alumno, clase=clase, fecha=dia).exists()
-    a_tiempo = servicios.puede_confirmar(sesion)
-
-    if request.method == 'POST' and not ya and a_tiempo:
-        from apps.gestion.correos import enviar_confirmacion_asistencia
-
-        confirmacion = ConfirmacionAsistencia.objects.create(
-            alumno=alumno, clase=clase, fecha=dia)
-        enviar_confirmacion_asistencia(confirmacion)
-
-        messages.success(request, f'Asistencia confirmada para el {dia:%d/%m}. ¡Te esperamos!')
-        return redirect('portal:panel')
-
-    return render(request, 'portal/confirmar.html', {
-        'activo': 'clases',
-        'clase': clase,
-        'fecha': dia,
-        'inicio': servicios.inicio_sesion(sesion),
-        'ya_confirmada': ya,
-        'a_tiempo': a_tiempo,
-    })
-
-
-# ---------------------------------------------------------------------------
-# 2.5 Mi plan
-# ---------------------------------------------------------------------------
-@alumno_requerido
-def plan(request):
-    alumno = request.alumno
-    servicios.vencer_suscripciones_pasadas()
-
-    activa = alumno.suscripcion_vigente
-    dias = alumno.dias_para_vencer
-
-    return render(request, 'portal/plan.html', {
-        'activo': 'plan',
-        'alumno': alumno,
-        'suscripcion': activa,
-        'dias_restantes': dias,
-        'color_barra': _estado_barra(dias),
-        'estado_pago': alumno.estado_pago,
-        'historial': alumno.suscripciones.select_related('plan'),
-        'avisar': dias is not None and dias <= 7,
-        'whatsapp': _enlace_whatsapp(alumno, 'renovar'),
-    })
-
-
 @alumno_requerido
 def solicitar_renovacion(request):
     if request.method != 'POST':
-        return redirect('portal:plan')
+        return redirect('portal:panel')
 
     from apps.gestion.correos import avisar_solicitud_renovacion
 
@@ -302,7 +203,7 @@ def solicitar_renovacion(request):
             request,
             'Anotamos tu solicitud. Si tienes apuro, escríbenos por WhatsApp.'
         )
-    return redirect('portal:plan')
+    return redirect('portal:panel')
 
 
 # ---------------------------------------------------------------------------

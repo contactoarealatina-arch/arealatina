@@ -1,6 +1,6 @@
 {% extends 'profesoras/base_profesoras.html' %}
 
-{% block titulo %}Mis clases de hoy{% endblock %}
+{% block titulo %}Mi semana{% endblock %}
 
 {% block contenido %}
 
@@ -24,6 +24,56 @@
         {% endif %}
     </p>
 </div>
+
+{% comment %}
+    La semana completa va primero. El cliente pidió que la profesora vea
+    de un vistazo qué le toca, sin leer nada más: primero la grilla de
+    siete días, después el detalle de hoy para pasar lista.
+{% endcomment %}
+<section class="p-seccion">
+    <h2 class="p-seccion-titulo">
+        <i class="bi bi-calendar-week"></i> Mis clases esta semana
+    </h2>
+
+    {% if semana %}
+        <div class="p-semana">
+            {% for dia in semana %}
+            <div class="p-dia-profe {% if dia.es_hoy %}hoy{% endif %}">
+                <div class="p-dia-cabecera">
+                    <span class="p-dia-nombre">{{ dia.fecha|date:"l" }}</span>
+                    <span class="p-dia-fecha">
+                        {{ dia.fecha|date:"d/m" }}{% if dia.es_hoy %} · Hoy{% endif %}
+                    </span>
+                </div>
+
+                {% for item in dia.clases %}
+                <a href="{% url 'profesoras:asistencia' item.clase.pk item.fecha|date:'Y-m-d' %}"
+                   class="p-sesion-profe">
+                    <span class="p-sesion-hora">{{ item.clase.hora_inicio|time:"H:i" }}</span>
+                    <span class="p-sesion-datos">
+                        <strong>{{ item.clase.emoji }} {{ item.clase.get_nombre_display }}</strong>
+                        <span>
+                            {{ item.clase.sala }} ·
+                            {{ item.inscritos }} inscrito{{ item.inscritos|pluralize }}
+                        </span>
+                    </span>
+                    {% if item.ya_paso_lista %}
+                        <span class="p-marca ok"><i class="bi bi-check-lg"></i> Lista pasada</span>
+                    {% elif dia.es_hoy %}
+                        <span class="p-marca curso">Pasar lista</span>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="p-vacio">
+            <i class="bi bi-calendar-x"></i>
+            <p>No tienes clases en los próximos siete días.</p>
+        </div>
+    {% endif %}
+</section>
 
 {% if clases_hoy %}
     <div class="p-tarjetas">
@@ -53,10 +103,6 @@
                     <strong>{{ fila.inscritos }}</strong>
                     <span>inscrito{{ fila.inscritos|pluralize }}</span>
                 </div>
-                <div class="p-cifra destacada">
-                    <strong>{{ fila.confirmados }}</strong>
-                    <span>confirmaron</span>
-                </div>
             </div>
 
             <a href="{% url 'profesoras:asistencia' fila.clase.pk hoy|date:'Y-m-d' %}"
@@ -85,24 +131,5 @@
     </div>
 {% endif %}
 
-{% if semana %}
-<section class="p-seccion">
-    <h2 class="p-seccion-titulo">Esta semana</h2>
-    <div class="p-semana">
-        {% for sesion in semana %}
-        <div class="p-fila-semana">
-            <div class="p-fecha">
-                <strong>{{ sesion.fecha|date:"D"|capfirst }}</strong>
-                <span>{{ sesion.fecha|date:"d/m" }}</span>
-            </div>
-            <div class="p-fila-datos">
-                <strong>{{ sesion.clase.emoji }} {{ sesion.clase.get_nombre_display }}</strong>
-                <span>{{ sesion.clase.horario }} hrs · {{ sesion.clase.sala }}</span>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
 
 {% endblock %}

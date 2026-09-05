@@ -28,7 +28,7 @@ COMO SE USA
 ------------------------------------------------------------
 1. Entra al portal con tu usuario y contrasena.
 2. En la pantalla de inicio ves tus clases del dia, con cuantos
-   alumnos hay inscritos y cuantos confirmaron que vienen.
+   alumnos hay inscritos en cada una.
 3. Toca "Pasar asistencia" y marca presente, ausente o justificado.
 
 Cualquier duda, responde este correo. Bienvenida.

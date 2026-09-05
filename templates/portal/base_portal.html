@@ -26,15 +26,13 @@
             <span>Área Latina</span>
         </a>
 
+        {% comment %}
+            Tres entradas. El plan y las clases dejaron de ser paginas
+            propias: viven en el inicio, que es lo primero que se abre.
+        {% endcomment %}
         <nav class="p-nav">
             <a href="{% url 'portal:panel' %}" class="{% if activo == 'panel' %}activo{% endif %}">
                 <i class="bi bi-house"></i><span>Inicio</span>
-            </a>
-            <a href="{% url 'portal:clases' %}" class="{% if activo == 'clases' %}activo{% endif %}">
-                <i class="bi bi-music-note-beamed"></i><span>Clases</span>
-            </a>
-            <a href="{% url 'portal:plan' %}" class="{% if activo == 'plan' %}activo{% endif %}">
-                <i class="bi bi-card-checklist"></i><span>Mi plan</span>
             </a>
             <a href="{% url 'portal:pagos' %}" class="{% if activo == 'pagos' %}activo{% endif %}">
                 <i class="bi bi-receipt"></i><span>Pagos</span>

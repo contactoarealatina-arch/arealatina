@@ -1122,3 +1122,23 @@ a:hover { color: var(--al-orange-lite); }
     background-color: rgba(255, 193, 7, 0.10);
 }
 .g-aviso.aviso > i { color: #FFD54F; }
+
+/* --------------------------------------------------------------------------
+   Resumen de asistencia
+   -------------------------------------------------------------------------- */
+/* Texto secundario dentro de una celda: la hora bajo el nombre de la
+   clase, el porcentaje bajo la barra. */
+.g-tenue {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--al-muted);
+}
+
+/* Los tres conteos se distinguen por color para poder leer la tabla en
+   diagonal, sin ir columna por columna. */
+.g-num.bien  { color: var(--al-verde);    font-weight: 700; }
+.g-num.mal   { color: #FF8A80;            font-weight: 700; }
+.g-num.medio { color: var(--al-amarillo); font-weight: 700; }
+
+.g-tabla td.num,
+.g-tabla th.num { text-align: right; }

@@ -261,7 +261,14 @@
                     <div class="g-campo">
                         <label for="{{ form_pago.monto_clp.id_for_label }}">Monto pagado (CLP)</label>
                         {{ form_pago.monto_clp }}
-                        <div class="g-ayuda">Déjalo vacío si todavía no paga.</div>
+                        <div class="g-ayuda">
+                            <span data-monto-pista hidden>
+                                <i class="bi bi-magic"></i>
+                                Se completó solo con el precio del plan. Puedes
+                                cambiarlo si hay descuento.
+                            </span>
+                            <span data-monto-ayuda>Déjalo vacío si todavía no paga.</span>
+                        </div>
                     </div>
                     <div class="g-campo">
                         <label for="{{ form_pago.metodo.id_for_label }}">Método de pago</label>
@@ -317,6 +324,55 @@
 
 {% block extra_js %}
 {{ duraciones_planes|json_script:"duracionesPlanes" }}
+
+<script nonce="{{ request.csp_nonce }}">
+// Autocompleta el monto con el precio del plan elegido.
+//
+// Es un punto de partida, no un candado: si el admin escribe otra cifra
+// (un descuento, un ajuste), el campo deja de autocompletarse y respeta
+// lo que puso. Volver a pisarle el valor sería peor que no ayudarlo.
+(function () {
+    var monto = document.querySelector('[data-monto-auto]');
+    if (!monto) { return; }
+
+    var pista = document.querySelector('[data-monto-pista]');
+    var ayuda = document.querySelector('[data-monto-ayuda]');
+    var radios = document.querySelectorAll('input[name="plan"][data-precio]');
+    if (!radios.length) { return; }
+
+    // Arranca en true solo si el campo viene vacio: si el formulario se
+    // recargo con errores, el valor que ya escribio manda.
+    var automatico = !monto.value;
+
+    function mostrarPista(visible) {
+        if (pista) { pista.hidden = !visible; }
+        if (ayuda) { ayuda.hidden = visible; }
+    }
+
+    function aplicar(radio) {
+        if (!automatico) { return; }
+        var precio = radio.getAttribute('data-precio');
+        if (!precio) { return; }
+        monto.value = precio;
+        mostrarPista(true);
+    }
+
+    radios.forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            if (radio.checked) { aplicar(radio); }
+        });
+        // Si ya venia marcado (por ejemplo tras un error de validacion).
+        if (radio.checked) { aplicar(radio); }
+    });
+
+    // En cuanto lo escribe a mano, el autocompletado se apaga.
+    monto.addEventListener('input', function () {
+        automatico = false;
+        mostrarPista(false);
+    });
+})();
+</script>
+
 <script nonce="{{ request.csp_nonce }}">
 // El resumen del paso 4 lee estos campos: se marcan aquí para no
 // ensuciar el formulario con atributos repetidos.

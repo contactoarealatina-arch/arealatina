@@ -11,9 +11,6 @@
     <h1>{{ clase.emoji }} {{ clase.get_nombre_display }}</h1>
     <p>
         {{ fecha|date:"l d \d\e F"|capfirst }} · {{ clase.horario }} hrs · {{ clase.sala }}
-        {% if total_confirmados %}
-            · <strong class="p-naranja">{{ total_confirmados }} confirmaron</strong>
-        {% endif %}
     </p>
 </div>
 
@@ -49,9 +46,6 @@
                 <div class="p-alumno-nombre">
                     <strong>{{ fila.alumno.nombre_completo }}</strong>
                     <span>
-                        {% if fila.confirmo %}
-                            <span class="p-etiqueta ok"><i class="bi bi-check-lg"></i> Confirmó</span>
-                        {% endif %}
                         {% if fila.porcentaje_mes is not None %}
                             {{ fila.porcentaje_mes }}% este mes
                         {% endif %}
