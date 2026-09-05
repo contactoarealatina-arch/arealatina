@@ -52,6 +52,15 @@ class CustomUser(AbstractUser):
         help_text='Acá le llegan la clave temporal y los avisos. Tiene que '
                   'ser un correo que la persona revise de verdad.',
     )
+    # Se marca al crear la cuenta con clave temporal y se apaga cuando la
+    # persona elige la suya. Mientras esté encendida, el sistema no la
+    # deja usar nada: una clave que viajó por correo la conoce cualquiera
+    # que abra esa bandeja.
+    debe_cambiar_clave = models.BooleanField(
+        'Debe cambiar la contraseña',
+        default=False,
+        help_text='Se enciende solo al generarle una clave temporal.',
+    )
     telefono = models.CharField('Teléfono', max_length=20, blank=True)
     rut = models.CharField(
         'RUT',

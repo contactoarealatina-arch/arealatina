@@ -146,7 +146,14 @@ def _configurado():
 # ---------------------------------------------------------------------------
 # 1. Bienvenida
 # ---------------------------------------------------------------------------
-def enviar_bienvenida(alumno, enlace_activacion='', usuario=None):
+def enviar_bienvenida(alumno, usuario=None, clave_temporal=''):
+    """La bienvenida con el detalle del registro y su acceso.
+
+    Lleva la contraseña temporal en el cuerpo. No es lo ideal —queda
+    escrita en su bandeja— pero es lo que pidió el estudio, y el sistema
+    la obliga a cambiarla apenas entra, así que la que viajó por correo
+    deja de servir en el primer acceso.
+    """
     config = ConfiguracionAlertas.obtener()
     if not config.enviar_bienvenida or not _configurado():
         return False, 'Correo de bienvenida desactivado.'
@@ -161,8 +168,8 @@ def enviar_bienvenida(alumno, enlace_activacion='', usuario=None):
             'alumno': alumno,
             'suscripcion': suscripcion,
             'clases': [i.clase for i in alumno.inscripciones.select_related('clase')],
-            'enlace': enlace_activacion,
             'usuario': usuario or alumno.usuario,
+            'clave': clave_temporal,
             'url_portal': _url('portal:login'),
         },
         alumno=alumno,
@@ -234,8 +241,12 @@ def enviar_recordatorio(suscripcion):
 # ---------------------------------------------------------------------------
 # 3b. Bienvenida a la profesora
 # ---------------------------------------------------------------------------
-def enviar_bienvenida_profesora(profesora, enlace_activacion=''):
-    """Se manda cuando la administración le crea la cuenta."""
+def enviar_bienvenida_profesora(profesora, clave_temporal=''):
+    """Se manda cuando la administración le crea la cuenta.
+
+    Va al correo personal: el del estudio es su forma de entrar, no una
+    casilla que reciba mensajes.
+    """
     if not _configurado():
         return False, 'SMTP sin configurar.'
     if not profesora.correo_de_contacto:
@@ -253,7 +264,7 @@ def enviar_bienvenida_profesora(profesora, enlace_activacion=''):
         contexto={
             'profesora': profesora,
             'clases': Clase.objects.filter(profesora=profesora, activa=True),
-            'enlace': enlace_activacion,
+            'clave': clave_temporal,
             'url_portal': _url('profesoras:panel'),
         },
         referencia=f'BIENVPROF-{profesora.pk}',

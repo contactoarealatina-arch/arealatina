@@ -20,14 +20,18 @@ Plan:         {{ suscripcion.plan.nombre }}
 Desde:        {{ suscripcion.fecha_inicio|date:"d/m/Y" }}
 Valido hasta: {{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}
 {% endif %}
-{% if enlace %}TU PORTAL
+{% if clave %}TU ACCESO
 ------------------------------------------------------------
-Usuario: {{ usuario.username }}
-Elige tu contrasena aqui (vence en 48 horas):
-{{ enlace }}
+Entras con tu correo: {{ usuario.username }}
+Contrasena temporal:  {{ clave }}
 
-Desde tu portal ves tus clases, tu plan y tus pagos, y confirmas
-tu asistencia antes de cada clase.
+Entra aqui: {{ url_portal }}
+
+Apenas entres te vamos a pedir que elijas tu propia contrasena.
+La de arriba deja de servir en ese momento.
+
+Desde tu espacio ves tu plan, cuanto te queda y tus clases de
+la semana.
 {% endif %}
 PARA TU PRIMERA CLASE
 ------------------------------------------------------------

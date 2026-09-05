@@ -120,13 +120,36 @@ class AlumnoForm(MixinWidgets, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['direccion'].required = False
-        self.fields['email'].required = False
+        # Obligatorio: el alumno entra al portal con su correo, así que
+        # sin correo no hay cuenta posible. Antes era opcional y quedaba
+        # gente registrada sin forma de acceder.
+        self.fields['email'].required = True
+        self.fields['email'].label = 'Correo'
+        self.fields['email'].help_text = (
+            'Con este correo entra al portal y recibe sus avisos.'
+        )
         self.fields['telefono'].required = False
         self.fields['fecha_nacimiento'].required = False
         self.fields['observaciones'].required = False
         self.fields['contacto_emergencia'].required = True
         self.fields['telefono_emergencia'].required = True
         self.estilizar()
+
+    def clean_email(self):
+        """Único: con dos alumnos usando el mismo correo el login no
+        sabría a cuál de los dos dejar entrar."""
+        correo = (self.cleaned_data.get('email') or '').strip().lower()
+        if not correo:
+            return correo
+
+        repetido = Alumno.todos.filter(email__iexact=correo)
+        if self.instance.pk:
+            repetido = repetido.exclude(pk=self.instance.pk)
+        if repetido.exists():
+            raise forms.ValidationError(
+                'Ya hay otro alumno con este correo. Cada uno necesita el suyo.'
+            )
+        return correo
 
     def clean_rut(self):
         rut = validar_rut(self.cleaned_data['rut'])

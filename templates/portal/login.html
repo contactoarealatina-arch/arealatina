@@ -34,7 +34,7 @@
         {% elif form.errors %}
             <div class="p-mensaje error">
                 <i class="bi bi-exclamation-circle"></i>
-                <span>Usuario o contraseña incorrectos.</span>
+                <span>Correo o contraseña incorrectos.</span>
             </div>
         {% endif %}
 
@@ -48,7 +48,7 @@
             {% csrf_token %}
 
             <div class="p-grupo">
-                <label for="id_username">Usuario</label>
+                <label for="id_username">Correo</label>
                 <input type="text" name="username" id="id_username" class="p-campo"
                        autocomplete="username" autocapitalize="none" required
                        placeholder="El que te dio la academia">

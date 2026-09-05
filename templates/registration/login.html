@@ -53,7 +53,7 @@
 
             <h1 class="acceso-titulo" id="tituloFormulario">Iniciar sesión</h1>
             <p class="acceso-bajada" id="bajadaFormulario">
-                Usa las credenciales que te dio la academia.
+                Entra con tu correo y la contraseña que te dio la academia.
             </p>
 
             {% if bloqueado %}
@@ -74,7 +74,7 @@
                     <i class="bi bi-exclamation-circle"></i>
                     <div>
                         {% for error in form.non_field_errors %}{{ error }}{% empty %}
-                            Usuario o contraseña incorrectos. Verifica tus datos.
+                            Correo o contraseña incorrectos. Verifica tus datos.
                         {% endfor %}
                     </div>
                 </div>
@@ -90,13 +90,22 @@
             <form method="post" class="acceso-form">
                 {% csrf_token %}
 
+                {% comment %}
+                    Se entra con el correo, como en cualquier sitio. El
+                    alumno usa el suyo; la profesora, el del estudio. El
+                    campo es de tipo email pero no valida formato en el
+                    navegador: las cuentas antiguas todavía pueden entrar
+                    con su nombre de usuario y no hay que dejarlas fuera.
+                {% endcomment %}
                 <div class="acceso-campo">
-                    <label for="id_username">Usuario</label>
+                    <label for="id_username">Correo</label>
                     <div class="acceso-input">
-                        <i class="bi bi-person"></i>
+                        <i class="bi bi-envelope"></i>
                         <input type="text" name="username" id="id_username"
                                autocomplete="username" required
-                               placeholder="Tu nombre de usuario">
+                               inputmode="email" autocapitalize="off"
+                               spellcheck="false"
+                               placeholder="tucorreo@ejemplo.cl">
                     </div>
                 </div>
 
@@ -148,11 +157,11 @@
     var TEXTOS = {
         alumno: {
             titulo: 'Hola, bailarín/a',
-            bajada: 'Entra con el usuario que te dio la academia.'
+            bajada: 'Entra con tu correo y tu contraseña.'
         },
         profesor: {
             titulo: 'Hola, profe',
-            bajada: 'Entra para ver tus clases y pasar lista.'
+            bajada: 'Entra con tu correo del estudio (@arealatina.cl).'
         }
     };
 

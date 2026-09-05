@@ -182,11 +182,12 @@ def alumno_nuevo(request):
             if alumno.email:
                 from apps.portal.cuentas import crear_acceso
 
-                usuario, token = crear_acceso(alumno)
-                enlace = _url_activacion(token)
-                enviado, motivo = enviar_bienvenida(alumno, enlace, usuario)
-                aviso += (' Le mandamos la bienvenida con su acceso al portal.' if enviado
-                          else f' Ojo: no salió el correo de bienvenida ({motivo})')
+                usuario, clave = crear_acceso(alumno)
+                enviado, motivo = enviar_bienvenida(alumno, usuario, clave)
+                aviso += (
+                    f' Le mandamos su acceso a {alumno.email}.' if enviado
+                    else f' Ojo: no salió el correo de bienvenida ({motivo})'
+                )
             else:
                 aviso += ' Sin email no se le puede crear acceso al portal.'
             messages.success(request, aviso)
@@ -319,8 +320,8 @@ def alumno_reenviar_acceso(request, pk):
     from apps.portal.cuentas import crear_acceso
 
     anterior = request.POST.get('anterior', '')
-    usuario, token = crear_acceso(alumno)
-    enviado, motivo = enviar_bienvenida(alumno, _url_activacion(token), usuario)
+    usuario, clave = crear_acceso(alumno)
+    enviado, motivo = enviar_bienvenida(alumno, usuario, clave)
 
     detalle = f'Reenvió el acceso de {alumno.nombre_completo} a {alumno.email}'
     if anterior:
@@ -331,8 +332,8 @@ def alumno_reenviar_acceso(request, pk):
     if enviado:
         messages.success(
             request,
-            f'Correo de bienvenida reenviado a {alumno.email}. '
-            f'El enlace anterior quedó anulado.',
+            f'Le reenviamos su acceso a {alumno.email} con una contraseña '
+            f'nueva. La anterior dejó de servir.',
         )
     else:
         messages.error(request, f'No se pudo reenviar: {motivo}')

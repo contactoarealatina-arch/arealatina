@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -333,15 +334,40 @@ def perfil(request):
     })
 
 
-@alumno_requerido
+def _destino_de(usuario):
+    """A dónde mandarlo según su rol, después de poner su contraseña."""
+    if usuario.puede_gestionar:
+        return 'gestion:dashboard'
+    if usuario.es_profesor:
+        return 'profesoras:panel'
+    return 'portal:panel'
+
+
+@login_required
 def cambiar_clave(request):
     if request.method == 'POST':
         form = CambiarClaveForm(request.user, request.POST)
         if form.is_valid():
             usuario = form.guardar()
+
+            # Se apaga la marca: la clave que viajó por correo ya no vale
+            # y la persona puede usar el sistema.
+            era_temporal = usuario.debe_cambiar_clave
+            if era_temporal:
+                usuario.debe_cambiar_clave = False
+                usuario.save(update_fields=['debe_cambiar_clave', 'updated_at'])
+
             # Cambiar la clave invalida la sesión: se vuelve a iniciar.
-            usuario.backend = 'django.contrib.auth.backends.ModelBackend'
+            usuario.backend = 'apps.usuarios.backends.CorreoOUsuarioBackend'
             login(request, usuario)
+
+            if era_temporal:
+                messages.success(
+                    request,
+                    'Listo, tu contraseña quedó puesta. Ya puedes usar tu espacio.',
+                )
+                return redirect(_destino_de(usuario))
+
             messages.success(request, 'Tu contraseña quedó cambiada.')
             return redirect('portal:perfil')
     else:

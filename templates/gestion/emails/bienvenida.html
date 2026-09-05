@@ -71,32 +71,53 @@
     </table>
     {% endif %}
 
-    {% if enlace %}
+    {% if clave %}
     <!-- Acceso al portal -->
+    {% comment %}
+        La contraseña va escrita en el correo porque así lo pidió el
+        estudio. Se compensa con dos cosas: es aleatoria, y el sistema
+        obliga a cambiarla en el primer acceso, así que la que viaja acá
+        deja de servir apenas la persona entra.
+    {% endcomment %}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
            style="background:#0D0D0D;border-radius:10px;margin-bottom:20px;">
         <tr><td style="padding:22px;text-align:center;">
             <div style="color:#FF5722;font-size:12px;letter-spacing:1px;font-weight:bold;text-transform:uppercase;margin-bottom:8px;">
-                Tu portal
+                Tu acceso
             </div>
             <div style="color:#FFFFFF;font-size:15px;line-height:1.6;margin-bottom:16px;">
-                Desde tu portal ves tus clases, tu plan y tus pagos, y confirmas
-                tu asistencia antes de cada clase.
+                Desde tu espacio ves tu plan, cuánto te queda y tus clases
+                de la semana.
             </div>
-            <div style="background:#1A1A1A;border-radius:8px;padding:12px;margin-bottom:16px;">
-                <div style="color:#B0B0B0;font-size:12px;">Tu usuario</div>
-                <div style="color:#FFFFFF;font-size:17px;font-weight:bold;">{{ usuario.username }}</div>
-            </div>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                   style="background:#1A1A1A;border-radius:8px;margin-bottom:16px;">
+                <tr><td style="padding:14px 16px;text-align:left;">
+                    <div style="color:#B0B0B0;font-size:12px;">Entras con tu correo</div>
+                    <div style="color:#FFFFFF;font-size:16px;font-weight:bold;word-break:break-all;">
+                        {{ usuario.username }}
+                    </div>
+                </td></tr>
+                <tr><td style="padding:0 16px 14px;text-align:left;">
+                    <div style="color:#B0B0B0;font-size:12px;">Contraseña temporal</div>
+                    <div style="color:#FF8A65;font-size:22px;font-weight:bold;letter-spacing:2px;font-family:monospace;">
+                        {{ clave }}
+                    </div>
+                </td></tr>
+            </table>
+
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
                 <tr><td style="background:#FF5722;border-radius:8px;">
-                    <a href="{{ enlace }}"
+                    <a href="{{ url_portal }}"
                        style="display:inline-block;padding:14px 34px;color:#FFFFFF;font-size:15px;font-weight:bold;text-decoration:none;">
-                        Acceder a mi portal
+                        Entrar a mi espacio
                     </a>
                 </td></tr>
             </table>
-            <div style="color:#7A716C;font-size:12px;margin-top:12px;">
-                Con ese botón eliges tu contraseña. El enlace vence en 48 horas.
+
+            <div style="color:#7A716C;font-size:12px;margin-top:14px;line-height:1.5;">
+                Apenas entres te vamos a pedir que elijas tu propia
+                contraseña. La de arriba deja de servir en ese momento.
             </div>
         </td></tr>
     </table>

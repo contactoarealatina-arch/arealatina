@@ -26,7 +26,7 @@ registro = logging.getLogger('arealatina.seguridad')
 
 # Un único mensaje para todos los fallos. Decir "ese usuario no existe" le
 # regala al atacante la mitad del trabajo: le confirma qué cuentas probar.
-MENSAJE_GENERICO = 'Usuario o contraseña incorrectos. Verifica tus datos.'
+MENSAJE_GENERICO = 'Correo o contraseña incorrectos. Verifica tus datos.'
 
 
 @method_decorator(never_cache, name='dispatch')

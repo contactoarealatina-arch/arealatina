@@ -52,21 +52,38 @@
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;">
                 <tr>
                     <td style="padding:4px 0;color:#666;">Usuario</td>
-                    <td style="padding:4px 0;text-align:right;color:#0D0D0D;font-weight:bold;">
-                        {{ profesora.username }}
+                    <td style="padding:4px 0;text-align:right;color:#0D0D0D;font-weight:bold;word-break:break-all;">
+                        {{ profesora.correo_institucional }}
                     </td>
                 </tr>
+                {% if clave %}
                 <tr>
-                    <td style="padding:4px 0;color:#666;">Correo</td>
-                    <td style="padding:4px 0;text-align:right;color:#0D0D0D;">{{ profesora.email }}</td>
+                    <td style="padding:4px 0;color:#666;">Contraseña temporal</td>
+                    <td style="padding:4px 0;text-align:right;color:#E64A19;font-weight:bold;font-family:monospace;font-size:16px;letter-spacing:1px;">
+                        {{ clave }}
+                    </td>
                 </tr>
+                {% endif %}
             </table>
-            {% if enlace %}
-                <p style="margin:12px 0 0;font-size:13px;color:#555;">
-                    Elige tu contraseña con el botón de abajo. El enlace vence en 48 horas.
+
+            {% comment %}
+                Se aclara que el correo del estudio es para entrar, no una
+                casilla que reciba mensajes. Sin decirlo, la profesora
+                intentaría abrirlo para leer y no encontraría nada.
+            {% endcomment %}
+            <p style="margin:12px 0 0;font-size:13px;color:#555;line-height:1.6;">
+                Ese correo del estudio es tu forma de entrar al sistema, no
+                una casilla de correo: los mensajes te siguen llegando acá,
+                a {{ profesora.correo_personal|default:"tu correo personal" }}.
+            </p>
+
+            {% if clave %}
+                <p style="margin:10px 0 0;font-size:13px;color:#555;">
+                    Apenas entres te vamos a pedir que elijas tu propia
+                    contraseña. La de arriba deja de servir en ese momento.
                 </p>
             {% else %}
-                <p style="margin:12px 0 0;font-size:13px;color:#555;">
+                <p style="margin:10px 0 0;font-size:13px;color:#555;">
                     La contraseña te la entrega la administración en persona.
                 </p>
             {% endif %}
@@ -76,9 +93,9 @@
     <!-- Botón -->
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 22px;">
         <tr><td style="background:#FF5722;border-radius:8px;">
-            <a href="{% if enlace %}{{ enlace }}{% else %}{{ url_portal }}{% endif %}"
+            <a href="{{ url_portal }}"
                style="display:inline-block;padding:14px 34px;color:#FFFFFF;font-size:15px;font-weight:bold;text-decoration:none;">
-                {% if enlace %}Crear mi contraseña{% else %}Ir a mi portal{% endif %}
+                Entrar al portal
             </a>
         </td></tr>
     </table>

@@ -64,6 +64,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'axes.middleware.AxesMiddleware',
+    # Despues del de autenticacion: necesita request.user resuelto.
+    'apps.usuarios.middleware.CambioDeClaveObligatorio',
 ]
 
 # Axes primero: intercepta el intento antes de que Django valide la clave.

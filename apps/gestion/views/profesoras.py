@@ -48,12 +48,11 @@ def profesora_nueva(request):
             from apps.portal.cuentas import crear_acceso_profesora
 
             sin_clave = not form.cleaned_data.get('password1')
-            token = crear_acceso_profesora(profesora, sin_clave)
-            enlace = _url_activacion(token)
+            clave = crear_acceso_profesora(profesora, sin_clave)
 
-            aviso = 'Profesora registrada.'
+            aviso = f'Profesora registrada. Entra con {profesora.correo_institucional}.'
             if profesora.correo_de_contacto:
-                enviado, motivo = enviar_bienvenida_profesora(profesora, enlace)
+                enviado, motivo = enviar_bienvenida_profesora(profesora, clave)
                 aviso += (' Le mandamos la bienvenida con su acceso.' if enviado
                           else f' No salió el correo ({motivo})')
             else:
@@ -120,8 +119,8 @@ def profesora_reenviar_acceso(request, pk):
     from apps.portal.cuentas import crear_acceso_profesora
 
     anterior = request.POST.get('anterior', '')
-    token = crear_acceso_profesora(profesora, True)
-    enviado, motivo = enviar_bienvenida_profesora(profesora, _url_activacion(token))
+    clave = crear_acceso_profesora(profesora, True)
+    enviado, motivo = enviar_bienvenida_profesora(profesora, clave)
 
     detalle = f'Reenvió el acceso de {profesora.get_full_name()} a {profesora.correo_de_contacto}'
     if anterior:
@@ -132,8 +131,8 @@ def profesora_reenviar_acceso(request, pk):
     if enviado:
         messages.success(
             request,
-            f'Correo reenviado a {profesora.correo_de_contacto}. '
-            f'El enlace anterior quedó anulado.',
+            f'Le reenviamos su acceso a {profesora.correo_de_contacto} '
+            f'con una contraseña nueva. La anterior dejó de servir.',
         )
     else:
         messages.error(request, f'No se pudo reenviar: {motivo}')

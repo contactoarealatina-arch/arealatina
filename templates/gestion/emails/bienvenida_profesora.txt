@@ -15,18 +15,23 @@ Todavia no tienes clases asignadas.
 {% endif %}
 TU ACCESO
 ------------------------------------------------------------
-Usuario: {{ profesora.username }}
-Correo:  {{ profesora.email }}
-{% if enlace %}
-Elige tu contrasena aqui (el enlace vence en 48 horas):
-{{ enlace }}
+Entras con:          {{ profesora.correo_institucional }}{% if clave %}
+Contrasena temporal: {{ clave }}{% endif %}
+
+Portal: {{ url_portal }}
+
+Ese correo del estudio es tu forma de entrar al sistema, no una
+casilla de correo: los mensajes te siguen llegando a
+{{ profesora.correo_personal|default:"tu correo personal" }}.
+{% if clave %}
+Apenas entres te vamos a pedir que elijas tu propia contrasena.
+La de arriba deja de servir en ese momento.
 {% else %}
 La contrasena te la entrega la administracion en persona.
-Portal: {{ url_portal }}
 {% endif %}
 COMO SE USA
 ------------------------------------------------------------
-1. Entra al portal con tu usuario y contrasena.
+1. Entra al portal con tu correo del estudio y tu contrasena.
 2. En la pantalla de inicio ves tus clases del dia, con cuantos
    alumnos hay inscritos en cada una.
 3. Toca "Pasar asistencia" y marca presente, ausente o justificado.
