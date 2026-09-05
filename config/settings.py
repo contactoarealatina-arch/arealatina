@@ -339,11 +339,34 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ---------------------------------------------------------------------------
 # Email
 # ---------------------------------------------------------------------------
-EMAIL_BACKEND = (
-    # En desarrollo el correo sale por consola. Se usa un backend propio
-    # porque el de Django escribe en cp1252 en Windows y falla con UTF-8.
-    'apps.gestion.email_backends.EmailBackend' if DEBUG
-    else 'django.core.mail.backends.smtp.EmailBackend'
+# Por defecto en desarrollo el correo sale por consola, y en produccion
+# por SMTP. Pero se puede forzar desde el .env con EMAIL_BACKEND.
+#
+# Esto existe porque ataba el backend a DEBUG: en la maquina de desarrollo
+# los correos solo se imprimian en la terminal y el sistema los daba por
+# enviados, asi que parecia que "no llegaban" sin ningun error a la vista.
+# Para probar envios reales en local:  EMAIL_BACKEND=smtp
+ATAJOS_EMAIL = {
+    'smtp': 'django.core.mail.backends.smtp.EmailBackend',
+    'consola': 'apps.gestion.email_backends.EmailBackend',
+    'dummy': 'django.core.mail.backends.dummy.EmailBackend',
+}
+_backend = env('EMAIL_BACKEND', default='')
+if _backend:
+    EMAIL_BACKEND = ATAJOS_EMAIL.get(_backend, _backend)
+elif DEBUG:
+    # Backend propio: el de Django escribe en cp1252 en Windows y falla
+    # con UTF-8.
+    EMAIL_BACKEND = ATAJOS_EMAIL['consola']
+else:
+    EMAIL_BACKEND = ATAJOS_EMAIL['smtp']
+
+# True cuando el correo se esta imprimiendo en vez de enviarse. El panel
+# lo muestra para que nadie vuelva a creer que los correos se perdieron.
+EMAIL_SOLO_CONSOLA = EMAIL_BACKEND in (
+    ATAJOS_EMAIL['consola'],
+    ATAJOS_EMAIL['dummy'],
+    'django.core.mail.backends.console.EmailBackend',
 )
 # Brevo (ex Sendinblue) como relay SMTP. Todo viene del .env para no
 # dejar credenciales en el repositorio.

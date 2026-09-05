@@ -67,17 +67,61 @@ def _enviar(tipo, destinatarios, asunto, plantilla, contexto,
         referencia=referencia[:60],
     )
 
+    # Queda en el registro qué backend se usó. Si el correo salió por
+    # consola, el sistema lo dio por enviado pero nadie lo recibió, y sin
+    # esta linea no hay forma de saberlo despues.
+    solo_consola = getattr(settings, 'EMAIL_SOLO_CONSOLA', False)
+
     try:
         mensaje.send(fail_silently=False)
-        registro.enviado = True
-        registro.save()
-        return True, f'Enviado a {", ".join(destinatarios)}.'
     except Exception as error:
         registro.enviado = False
-        registro.error = str(error)[:2000]
+        registro.error = f'{type(error).__name__}: {error}'[:2000]
         registro.save()
-        logger.warning('Falló el correo %s a %s: %s', tipo, destinatarios, error)
+        logger.error(
+            'Falló el correo %s a %s (%s): %s',
+            tipo, destinatarios, type(error).__name__, error,
+        )
+        _alertar_correo_fallido(registro)
         return False, f'No se pudo enviar: {error}'
+
+    registro.enviado = True
+    registro.solo_consola = solo_consola
+    registro.save()
+
+    if solo_consola:
+        logger.warning(
+            'Correo %s a %s NO se envió: el backend está en consola. '
+            'Define EMAIL_BACKEND=smtp en el .env para enviar de verdad.',
+            tipo, destinatarios,
+        )
+        return True, ('Impreso en consola, NO enviado: el backend de correo '
+                      'está en modo desarrollo.')
+
+    logger.info('Correo %s enviado a %s', tipo, destinatarios)
+    return True, f'Enviado a {", ".join(destinatarios)}.'
+
+
+def _alertar_correo_fallido(registro):
+    """Deja el fallo a la vista en el panel.
+
+    Un warning en el log no lo lee nadie. Si un correo de bienvenida no
+    sale, el alumno se queda sin acceso al portal y hay que enterarse el
+    mismo día, no cuando reclama.
+    """
+    from .models import Alerta
+
+    try:
+        Alerta.objects.create(
+            tipo=Alerta.Tipo.CORREO_FALLIDO,
+            alumno=registro.alumno,
+            mensaje=f'No salió el correo «{registro.asunto[:80]}» '
+                    f'a {registro.destinatario}',
+            detalle=registro.error,
+        )
+    except Exception:
+        # Si hasta la alerta falla, el log ya guardó el error original.
+        logger.exception('No se pudo crear la alerta del correo fallido')
 
 
 def _url(nombre, *args):

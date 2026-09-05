@@ -14,6 +14,35 @@
 
 {% block contenido %}
 
+<!-- ==================== EMAIL CORREGIDO ==================== -->
+{% if email_corregido %}
+<div class="g-aviso aviso mb-4">
+    <i class="bi bi-envelope-arrow-up"></i>
+    <div>
+        <strong>El email fue modificado.</strong>
+        Antes era <code>{{ email_corregido.anterior }}</code> y ahora es
+        <code>{{ email_corregido.nuevo }}</code>.
+        Si nunca recibió su acceso, puedes reenviarle el correo a la
+        dirección nueva.
+        <br>
+        <small>
+            Se generará un enlace de activación nuevo y el anterior dejará
+            de funcionar.
+        </small>
+
+        <form method="post"
+              action="{% url 'gestion:profesora_reenviar_acceso' profesora.pk %}"
+              class="mt-3">
+            {% csrf_token %}
+            <input type="hidden" name="anterior" value="{{ email_corregido.anterior }}">
+            <button type="submit" class="g-btn g-btn-primario g-btn-sm">
+                <i class="bi bi-send me-1"></i>Reenviar correo de acceso
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
 <div class="row g-3">
     <div class="col-lg-4">
         <div class="g-card mb-3">

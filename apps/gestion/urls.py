@@ -18,6 +18,8 @@ urlpatterns = [
     path('alumnos/<int:pk>/eliminar/', views.alumno_eliminar, name='alumno_eliminar'),
     path('alumnos/<int:pk>/renovar/', views.alumno_renovar, name='alumno_renovar'),
     path('alumnos/<int:pk>/nota/', views.alumno_nota, name='alumno_nota'),
+    path('alumnos/<int:pk>/reenviar-acceso/', views.alumno_reenviar_acceso,
+         name='alumno_reenviar_acceso'),
 
     # Módulo 3 — Clases
     path('clases/', views.clases, name='clases'),
@@ -55,6 +57,8 @@ urlpatterns = [
     path('profesoras/nueva/', views.profesora_nueva, name='profesora_nueva'),
     path('profesoras/<int:pk>/', views.profesora_detalle, name='profesora_detalle'),
     path('profesoras/<int:pk>/editar/', views.profesora_editar, name='profesora_editar'),
+    path('profesoras/<int:pk>/reenviar-acceso/', views.profesora_reenviar_acceso,
+         name='profesora_reenviar_acceso'),
 
     # Módulo 10 — Auditoría
     path('auditoria/', views.auditoria, name='auditoria'),

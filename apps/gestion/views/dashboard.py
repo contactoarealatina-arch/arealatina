@@ -1,10 +1,12 @@
 """Módulo 1 — Dashboard principal."""
 from datetime import timedelta
 
+from django.conf import settings
 from django.shortcuts import render
 from django.utils import timezone
 
-from ..models import Alumno, Clase, ConfiguracionAlertas, Pago, Suscripcion
+from ..models import (Alumno, Clase, ConfiguracionAlertas, CorreoEnviado,
+                      Pago, Suscripcion)
 from ..permisos import gestion_requerida
 from .. import servicios
 
@@ -55,9 +57,25 @@ def dashboard(request):
     serie_ingresos = servicios.ingresos_por_mes(6)
     distribucion = servicios.alumnos_por_clase()
 
+    # ------------------------------------------------------------------
+    # Salud del correo
+    # ------------------------------------------------------------------
+    # Todo el sistema de avisos depende de que el correo salga. Si no
+    # sale, hay que enterarse acá y no cuando un alumno reclama que nunca
+    # recibió su acceso.
+    correos_fallidos = CorreoEnviado.objects.filter(
+        enviado=False,
+        created_at__date=hoy,
+    ).count()
+
     contexto = {
         'activo': 'dashboard',
         'hoy': hoy,
+
+        'correos_fallidos': correos_fallidos,
+        # True cuando el correo se está imprimiendo en la terminal en vez
+        # de enviarse: es la trampa que hizo creer que "no llegaban".
+        'correo_solo_consola': getattr(settings, 'EMAIL_SOLO_CONSOLA', False),
 
         'total_activos': total_activos,
         'variacion_alumnos': servicios.variacion(total_activos, activos_mes_anterior),

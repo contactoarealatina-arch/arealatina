@@ -709,11 +709,15 @@ class Alerta(TimeStampedModel):
         PLAN_VENCIDO = 'PLAN_VENCIDO', 'Plan vencido'
         PAGO_PENDIENTE = 'PAGO_PENDIENTE', 'Pago pendiente'
         AUSENCIA_PROLONGADA = 'AUSENCIA', 'Lleva dos semanas sin venir'
+        CORREO_FALLIDO = 'CORREO_FALLIDO', 'Correo que no se pudo enviar'
 
     tipo = models.CharField('Tipo', max_length=20, choices=Tipo.choices)
+    # Opcional: las alertas tecnicas (un correo que no salio, el resumen
+    # diario que fallo) no son sobre ningun alumno en particular.
     alumno = models.ForeignKey(
         Alumno,
         on_delete=models.CASCADE,
+        null=True, blank=True,
         related_name='alertas',
         verbose_name='Alumno',
     )
@@ -725,6 +729,12 @@ class Alerta(TimeStampedModel):
         verbose_name='Suscripción',
     )
     mensaje = models.CharField('Mensaje', max_length=250)
+    detalle = models.TextField(
+        'Detalle',
+        blank=True,
+        help_text='Para las alertas técnicas: el error exacto que devolvió '
+                  'el servidor.',
+    )
     gestionada = models.BooleanField('Gestionada', default=False)
     gestionada_en = models.DateTimeField('Gestionada el', null=True, blank=True)
     gestionada_por = models.ForeignKey(
@@ -911,6 +921,13 @@ class CorreoEnviado(models.Model):
         help_text='Identifica el envío para no repetirlo. Ej: RECORDATORIO-12-2026-08-30',
     )
     enviado = models.BooleanField('Enviado', default=False)
+    solo_consola = models.BooleanField(
+        'Solo consola',
+        default=False,
+        help_text='Se marca cuando el correo se imprimió en la terminal en '
+                  'vez de salir de verdad. Sirve para distinguir un envío '
+                  'real de una prueba de desarrollo.',
+    )
     error = models.TextField('Error', blank=True)
     created_at = models.DateTimeField('Fecha', auto_now_add=True)
 

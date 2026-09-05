@@ -268,9 +268,16 @@ def alumno_detalle(request, pk):
         alumno.asistencias.select_related('clase').order_by('-fecha')[:40]
     )
 
+    # Se saca de la sesion al leerlo: el ofrecimiento aparece una vez,
+    # no cada vez que alguien abre la ficha.
+    email_corregido = request.session.pop('email_corregido', None)
+    if email_corregido and email_corregido.get('alumno') != alumno.pk:
+        email_corregido = None
+
     return render(request, 'gestion/alumnos/detalle.html', {
         'activo': 'alumnos',
         'alumno': alumno,
+        'email_corregido': email_corregido,
         'suscripcion': alumno.suscripcion_vigente,
         'suscripciones': alumno.suscripciones.select_related('plan'),
         'pagos': alumno.pagos.select_related('suscripcion__plan'),
@@ -282,6 +289,47 @@ def alumno_detalle(request, pk):
         'dias_aviso': ConfiguracionAlertas.obtener().dias_anticipacion,
         'whatsapp': _mensajes_whatsapp(alumno),
     })
+
+
+@gestion_requerida
+def alumno_reenviar_acceso(request, pk):
+    """Genera un token nuevo y reenvía el correo de bienvenida.
+
+    Se usa cuando el email estaba mal escrito: el alumno nunca recibió su
+    enlace y el anterior no sirve de nada. `crear_acceso` borra los tokens
+    sin usar de esa persona, así que el enlace viejo queda invalidado.
+    """
+    if request.method != 'POST':
+        return redirect('gestion:alumno_detalle', pk=pk)
+
+    alumno = get_object_or_404(Alumno, pk=pk)
+
+    if not alumno.email:
+        messages.error(request, 'El alumno no tiene email registrado.')
+        return redirect('gestion:alumno_detalle', pk=pk)
+
+    from apps.portal.cuentas import crear_acceso
+
+    anterior = request.POST.get('anterior', '')
+    usuario, token = crear_acceso(alumno)
+    enviado, motivo = enviar_bienvenida(alumno, _url_activacion(token), usuario)
+
+    detalle = f'Reenvió el acceso de {alumno.nombre_completo} a {alumno.email}'
+    if anterior:
+        detalle = (f'Email corregido de {anterior} a {alumno.email}, '
+                   f'correo reenviado')
+    registrar(request, AuditLog.Accion.EDITAR, alumno, detalle)
+
+    if enviado:
+        messages.success(
+            request,
+            f'Correo de bienvenida reenviado a {alumno.email}. '
+            f'El enlace anterior quedó anulado.',
+        )
+    else:
+        messages.error(request, f'No se pudo reenviar: {motivo}')
+
+    return redirect('gestion:alumno_detalle', pk=pk)
 
 
 def _mensajes_whatsapp(alumno):
@@ -338,6 +386,10 @@ def alumno_editar(request, pk):
     alumno = get_object_or_404(Alumno, pk=pk)
 
     if request.method == 'POST':
+        # Se guarda antes de tocar nada: despues de form.save() el valor
+        # viejo ya no existe en ninguna parte.
+        email_anterior = alumno.email
+
         form = AlumnoForm(request.POST, request.FILES, instance=alumno)
         if form.is_valid():
             alumno = form.save(commit=False)
@@ -348,6 +400,17 @@ def alumno_editar(request, pk):
             registrar(request, AuditLog.Accion.EDITAR, alumno,
                       f'Editó a {alumno.nombre_completo} ({cambios})')
             messages.success(request, 'Datos actualizados.')
+
+            # Si el email cambio de verdad, la ficha ofrece reenviar el
+            # acceso. No se reenvia solo: puede ser una correccion menor
+            # (una mayuscula) y mandar otro correo confundiria al alumno.
+            if 'email' in form.changed_data and alumno.email:
+                request.session['email_corregido'] = {
+                    'alumno': alumno.pk,
+                    'anterior': email_anterior or '(estaba vacío)',
+                    'nuevo': alumno.email,
+                }
+
             return redirect('gestion:alumno_detalle', pk=alumno.pk)
         messages.error(request, 'Revisa los datos: hay campos con errores.')
     else:

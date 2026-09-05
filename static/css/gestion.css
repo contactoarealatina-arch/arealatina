@@ -1065,3 +1065,60 @@ a:hover { color: var(--al-orange-lite); }
     .g-body { background: #FFFFFF; color: #000000; }
     .g-card, .g-tabla-envoltura { border: 1px solid #CCCCCC; }
 }
+
+/* --------------------------------------------------------------------------
+   Aviso del panel
+   -------------------------------------------------------------------------- */
+/* Franja para lo que el administrador tiene que ver sí o sí al entrar:
+   correos que no salieron, configuración mal puesta. Va arriba de las
+   métricas porque enterrado abajo no lo lee nadie. */
+.g-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid var(--al-border);
+    background-color: var(--al-card);
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.g-aviso > i {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.g-aviso strong { color: var(--al-text); }
+
+.g-aviso small {
+    display: inline-block;
+    margin-top: 0.35rem;
+    color: var(--al-muted);
+}
+
+.g-aviso code {
+    background-color: rgba(255, 255, 255, 0.08);
+    padding: 0.1rem 0.4rem;
+    border-radius: 5px;
+    color: var(--al-orange-lite);
+}
+
+.g-aviso a {
+    color: var(--al-orange-lite);
+    text-decoration: underline;
+    white-space: nowrap;
+}
+
+.g-aviso.peligro {
+    border-color: rgba(244, 67, 54, 0.45);
+    background-color: rgba(244, 67, 54, 0.10);
+}
+.g-aviso.peligro > i { color: #EF5350; }
+
+.g-aviso.aviso {
+    border-color: rgba(255, 193, 7, 0.40);
+    background-color: rgba(255, 193, 7, 0.10);
+}
+.g-aviso.aviso > i { color: #FFD54F; }

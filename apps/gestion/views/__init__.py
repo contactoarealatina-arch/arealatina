@@ -12,6 +12,7 @@ from .alumnos import (  # noqa: F401
     alumno_estado,
     alumno_nota,
     alumno_nuevo,
+    alumno_reenviar_acceso,
     alumno_renovar,
     alumnos,
     alumnos_exportar,
@@ -25,6 +26,7 @@ from .planes import plan_alternar, plan_editar, plan_nuevo, planes  # noqa: F401
 from .profesoras import (  # noqa: F401
     profesora_detalle,
     profesora_editar,
+    profesora_reenviar_acceso,
     profesora_nueva,
     profesoras,
 )

@@ -74,12 +74,23 @@ def profesora_editar(request, pk):
     profesora = get_object_or_404(User, pk=pk, rol=User.Rol.PROFESOR)
 
     if request.method == 'POST':
+        # Antes de guardar: despues form.save() ya piso el valor viejo.
+        email_anterior = profesora.email
+
         form = ProfesoraForm(request.POST, instance=profesora)
         if form.is_valid():
             profesora = form.save()
             registrar(request, AuditLog.Accion.EDITAR, profesora,
                       f'Editó a la profesora {profesora.get_full_name()}')
             messages.success(request, 'Datos actualizados.')
+
+            if 'email' in form.changed_data and profesora.email:
+                request.session['email_corregido'] = {
+                    'profesora': profesora.pk,
+                    'anterior': email_anterior or '(estaba vacío)',
+                    'nuevo': profesora.email,
+                }
+
             return redirect('gestion:profesora_detalle', pk=profesora.pk)
         messages.error(request, 'Revisa los datos.')
     else:
@@ -91,8 +102,53 @@ def profesora_editar(request, pk):
 
 
 @gestion_requerida
+def profesora_reenviar_acceso(request, pk):
+    """Genera un token nuevo y reenvía la bienvenida a la profesora.
+
+    Mismo caso que en los alumnos: si el email estaba mal escrito, ella
+    nunca recibió el enlace y el anterior no le sirve a nadie.
+    """
+    if request.method != 'POST':
+        return redirect('gestion:profesora_detalle', pk=pk)
+
+    profesora = get_object_or_404(User, pk=pk, rol=User.Rol.PROFESOR)
+
+    if not profesora.email:
+        messages.error(request, 'La profesora no tiene email registrado.')
+        return redirect('gestion:profesora_detalle', pk=pk)
+
+    from apps.portal.cuentas import crear_acceso_profesora
+
+    anterior = request.POST.get('anterior', '')
+    token = crear_acceso_profesora(profesora, True)
+    enviado, motivo = enviar_bienvenida_profesora(profesora, _url_activacion(token))
+
+    detalle = f'Reenvió el acceso de {profesora.get_full_name()} a {profesora.email}'
+    if anterior:
+        detalle = (f'Email corregido de {anterior} a {profesora.email}, '
+                   f'correo reenviado')
+    registrar(request, AuditLog.Accion.EDITAR, profesora, detalle)
+
+    if enviado:
+        messages.success(
+            request,
+            f'Correo reenviado a {profesora.email}. '
+            f'El enlace anterior quedó anulado.',
+        )
+    else:
+        messages.error(request, f'No se pudo reenviar: {motivo}')
+
+    return redirect('gestion:profesora_detalle', pk=pk)
+
+
+@gestion_requerida
 def profesora_detalle(request, pk):
     profesora = get_object_or_404(User, pk=pk, rol=User.Rol.PROFESOR)
+
+    # Se saca de la sesion al leerlo: se ofrece una vez, no siempre.
+    email_corregido = request.session.pop('email_corregido', None)
+    if email_corregido and email_corregido.get('profesora') != profesora.pk:
+        email_corregido = None
 
     clases = Clase.objects.filter(profesora=profesora).prefetch_related('inscripciones')
 
@@ -121,6 +177,7 @@ def profesora_detalle(request, pk):
     return render(request, 'gestion/profesoras/detalle.html', {
         'activo': 'profesoras',
         'profesora': profesora,
+        'email_corregido': email_corregido,
         'clases': clases,
         'sesiones': sesiones,
         'total_marcas': marcas.count(),

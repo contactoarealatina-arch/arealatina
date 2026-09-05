@@ -15,6 +15,44 @@
 
 {% block contenido %}
 
+<!-- ==================== SALUD DEL CORREO ==================== -->
+{% comment %}
+    Todo el sistema de avisos depende del correo. Cuando algo falla tiene
+    que verse acá arriba, no enterrado en un log que nadie abre.
+{% endcomment %}
+{% if correo_solo_consola %}
+<div class="g-aviso peligro mb-4">
+    <i class="bi bi-envelope-slash"></i>
+    <div>
+        <strong>Los correos NO se están enviando.</strong>
+        El sistema está en modo desarrollo: los correos se imprimen en la
+        terminal del servidor en vez de salir. Nadie los recibe, aunque el
+        panel los muestre como enviados.
+        <br>
+        <small>
+            Para activarlos, en el archivo <code>.env</code> pon
+            <code>EMAIL_BACKEND=smtp</code> y reinicia el servidor.
+        </small>
+    </div>
+</div>
+{% endif %}
+
+{% if correos_fallidos %}
+<div class="g-aviso peligro mb-4">
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>
+        <strong>
+            {{ correos_fallidos }} correo{{ correos_fallidos|pluralize }}
+            falló{{ correos_fallidos|pluralize:",n" }} hoy.
+        </strong>
+        Revisa la configuración de envío: puede que un alumno se haya
+        quedado sin su acceso al portal.
+        <a href="{% url 'admin:gestion_correoenviado_changelist' %}?enviado__exact=0"
+           target="_blank" rel="noopener">Ver el detalle</a>
+    </div>
+</div>
+{% endif %}
+
 <!-- ==================== MÉTRICAS ==================== -->
 <div class="row g-3 mb-4">
     <div class="col-6 col-lg-4 col-xl-2">

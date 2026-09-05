@@ -18,6 +18,39 @@
 
 {% block contenido %}
 
+<!-- ==================== EMAIL CORREGIDO ==================== -->
+{% comment %}
+    Aparece una sola vez, justo después de editar el email. No se reenvía
+    solo: puede haber sido una corrección menor y mandar otro correo
+    dejaría al alumno con dos enlaces y sin saber cuál usar.
+{% endcomment %}
+{% if email_corregido %}
+<div class="g-aviso aviso mb-4">
+    <i class="bi bi-envelope-arrow-up"></i>
+    <div>
+        <strong>El email fue modificado.</strong>
+        Antes era <code>{{ email_corregido.anterior }}</code> y ahora es
+        <code>{{ email_corregido.nuevo }}</code>.
+        Si nunca recibió su acceso, puedes reenviarle el correo de bienvenida
+        a la dirección nueva.
+        <br>
+        <small>
+            Se generará un enlace de activación nuevo y el anterior dejará
+            de funcionar.
+        </small>
+
+        <form method="post" action="{% url 'gestion:alumno_reenviar_acceso' alumno.pk %}"
+              class="mt-3">
+            {% csrf_token %}
+            <input type="hidden" name="anterior" value="{{ email_corregido.anterior }}">
+            <button type="submit" class="g-btn g-btn-primario g-btn-sm">
+                <i class="bi bi-send me-1"></i>Reenviar correo de bienvenida
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
 <!-- ==================== BANNERS ==================== -->
 {% if alumno.estado_pago == 'vencido' %}
     <div class="g-banner g-banner-peligro">
