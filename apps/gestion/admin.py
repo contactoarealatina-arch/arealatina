@@ -13,11 +13,13 @@ from .models import (
     CorreoEnviado,
     Inscripcion,
     NotaInterna,
+    AceptacionTerminos,
     Evento,
     Foto,
     Pago,
     Plan,
     Suscripcion,
+    TerminoCondicion,
     Testimonio,
 )
 
@@ -316,3 +318,50 @@ class EventoAdmin(admin.ModelAdmin):
                            'Las pasadas dejan de mostrarse solas.',
         }),
     )
+
+
+@admin.register(TerminoCondicion)
+class TerminoCondicionAdmin(admin.ModelAdmin):
+    list_display = ('titulo', 'version', 'fecha_vigencia', 'activo', 'cuantos')
+    list_filter = ('activo',)
+    search_fields = ('version', 'titulo', 'texto')
+    fieldsets = (
+        ('Documento', {'fields': ('titulo', 'version', 'texto', 'enlace')}),
+        ('Vigencia', {
+            'fields': ('fecha_vigencia', 'activo'),
+            'description': 'Al activar una versión nueva, a todos se les vuelve '
+                           'a pedir que acepten. La anterior no se borra: hay que '
+                           'poder demostrar qué aceptó cada uno.',
+        }),
+    )
+
+    @admin.display(description='Aceptaciones')
+    def cuantos(self, obj):
+        return obj.aceptaciones.count()
+
+
+@admin.register(AceptacionTerminos)
+class AceptacionTerminosAdmin(admin.ModelAdmin):
+    list_display = ('quien', 'termino', 'fecha_aceptacion', 'ip')
+    list_filter = ('termino', 'fecha_aceptacion')
+    search_fields = ('alumno__nombre_completo', 'usuario__username', 'ip')
+    date_hierarchy = 'fecha_aceptacion'
+
+    # Es evidencia legal: se lee, no se edita.
+    readonly_fields = ('alumno', 'usuario', 'termino', 'fecha_aceptacion',
+                       'ip', 'user_agent')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description='Quién')
+    def quien(self, obj):
+        if obj.alumno:
+            return obj.alumno.nombre_completo
+        return obj.usuario.get_full_name() if obj.usuario else '—'

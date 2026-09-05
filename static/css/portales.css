@@ -1103,3 +1103,84 @@ a:hover { color: var(--naranja-cla); }
 @media (prefers-reduced-motion: reduce) {
     .p-sesion-profe { transition: none; }
 }
+
+/* --------------------------------------------------------------------------
+   Términos y condiciones
+   -------------------------------------------------------------------------- */
+.p-terminos { max-width: 720px; margin: 0 auto; }
+
+.p-terminos-bajada {
+    color: var(--suave);
+    margin-bottom: 1.25rem;
+}
+
+.p-terminos-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.85rem;
+    color: var(--suave);
+}
+
+.p-terminos-meta i { color: var(--naranja); margin-right: 0.35rem; }
+
+/* Con scroll propio y alto acotado: el texto va completo a la vista, pero
+   sin empujar el botón de aceptar fuera de la pantalla. */
+.p-terminos-texto {
+    max-height: 46vh;
+    overflow-y: auto;
+    padding: 1.35rem 1.5rem;
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    font-size: 0.94rem;
+    line-height: 1.7;
+}
+
+.p-terminos-texto:focus-visible {
+    outline: 2px solid var(--naranja);
+    outline-offset: 2px;
+}
+
+.p-terminos-texto p { margin-bottom: 0.9rem; }
+.p-terminos-texto p:last-child { margin-bottom: 0; }
+
+.p-terminos-enlace {
+    margin: 0.85rem 0 0;
+    font-size: 0.9rem;
+}
+
+.p-terminos-enlace a { color: var(--naranja); }
+
+.p-terminos-form { margin-top: 1.5rem; }
+
+.p-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.15rem;
+    margin-bottom: 1rem;
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    cursor: pointer;
+}
+
+.p-check:hover { border-color: var(--naranja); }
+
+.p-check input {
+    /* Grande a propósito: se marca desde el celular, con el dedo. */
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    accent-color: var(--naranja);
+}
+
+.p-terminos-nota {
+    margin: 0.9rem 0 0;
+    font-size: 0.83rem;
+    color: var(--suave);
+    text-align: center;
+}

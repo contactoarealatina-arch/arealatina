@@ -98,6 +98,69 @@ def _estado_barra(dias):
     return 'bien'
 
 
+# ---------------------------------------------------------------------------
+# Términos y condiciones
+# ---------------------------------------------------------------------------
+@alumno_requerido
+def terminos(request):
+    """Pantalla obligatoria antes de entrar al portal.
+
+    No se puede saltar: el decorador redirige acá desde cualquier vista
+    mientras falte la aceptación. Al aceptar se manda un correo con copia
+    de lo aceptado, que es la evidencia del consentimiento informado que
+    pide la Ley 21.719.
+    """
+    from apps.gestion.models import AceptacionTerminos, TerminoCondicion
+
+    vigente = TerminoCondicion.vigente()
+    if vigente is None:
+        return redirect('portal:panel')
+
+    ya = AceptacionTerminos.objects.filter(
+        usuario=request.user, termino=vigente,
+    ).first()
+    if ya:
+        return redirect('portal:panel')
+
+    if request.method == 'POST':
+        if not request.POST.get('acepto'):
+            messages.error(
+                request,
+                'Tienes que marcar la casilla para poder continuar.',
+            )
+        else:
+            from apps.gestion.correos import enviar_confirmacion_terminos
+
+            aceptacion = AceptacionTerminos.objects.create(
+                usuario=request.user,
+                alumno=request.alumno,
+                termino=vigente,
+                ip=_ip_del_visitante(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')[:250],
+            )
+            enviar_confirmacion_terminos(aceptacion)
+
+            messages.success(request, 'Gracias. Ya puedes usar tu portal.')
+            return redirect('portal:panel')
+
+    return render(request, 'portal/terminos.html', {
+        'activo': 'terminos',
+        'termino': vigente,
+    })
+
+
+def _ip_del_visitante(request):
+    """La IP real, mirando primero la cabecera del proxy.
+
+    En Railway la petición llega por un balanceador, así que REMOTE_ADDR
+    es la del balanceador y no la de la persona.
+    """
+    reenviada = request.META.get('HTTP_X_FORWARDED_FOR', '')
+    if reenviada:
+        return reenviada.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
+
 @alumno_requerido
 def panel(request):
     """Todo lo que el alumno necesita, en una sola pantalla.

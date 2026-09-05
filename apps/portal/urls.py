@@ -9,6 +9,7 @@ urlpatterns = [
     path('activar/<str:token>/', views.activar, name='activar'),
     path('activar/<str:token>/expirado/', views.token_expirado, name='token_expirado'),
 
+    path('terminos/', views.terminos, name='terminos'),
     path('', views.panel, name='panel'),
     path('renovar/', views.solicitar_renovacion, name='solicitar_renovacion'),
     path('pagos/', views.pagos, name='pagos'),

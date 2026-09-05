@@ -1,0 +1,27 @@
+AREA LATINA ESTUDIO - Constancia de aceptacion
+============================================================
+
+Hola {{ nombre }}, quedo registrado.
+
+Este correo es tu comprobante de que aceptaste los terminos y
+condiciones de Area Latina Estudio. Guardalo: es tuyo y sirve
+como respaldo.
+
+{{ termino.titulo }}
+Version: {{ termino.version }}
+Aceptado el {{ aceptacion.fecha_aceptacion|date:"d/m/Y" }} a las {{ aceptacion.fecha_aceptacion|time:"H:i" }} hrs{% if aceptacion.ip %}
+Desde la direccion {{ aceptacion.ip }}{% endif %}
+
+------------------------------------------------------------
+ESTO FUE LO QUE ACEPTASTE:
+
+{{ termino.texto }}
+------------------------------------------------------------
+{% if termino.enlace %}
+Ver el documento en el sitio: {{ termino.enlace }}
+{% endif %}
+Si crees que esto es un error o no fuiste tu, escribenos a
+{{ academia.email }}.
+
+============================================================
+{{ academia.nombre }} - {{ academia.direccion_completa }}

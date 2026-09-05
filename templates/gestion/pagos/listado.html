@@ -217,6 +217,11 @@
 
 {% block extra_js %}
 {{ grafico_metodos|json_script:"datosMetodos" }}
+{% comment %}
+    Chart.js vive en el dashboard, no en la base: se carga acá también
+    porque esta es la otra página del panel que dibuja un gráfico.
+{% endcomment %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script nonce="{{ request.csp_nonce }}">
 // Torta de métodos de pago del mes. Si Chart.js no cargó, la tarjeta de
 // la izquierda ya dio la misma información en texto y barras.

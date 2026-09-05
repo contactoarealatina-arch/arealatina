@@ -939,6 +939,7 @@ class CorreoEnviado(models.Model):
         AUSENCIA = 'AUSENCIA', 'Aviso de ausencia prolongada'
         INFORME = 'INFORME', 'Informe mensual'
         RESENA = 'RESENA', 'Pedido de resena en Google'
+        TERMINOS = 'TERMINOS', 'Aceptacion de terminos y condiciones'
 
     tipo = models.CharField('Tipo', max_length=15, choices=Tipo.choices)
     destinatario = models.EmailField('Destinatario')
@@ -1368,3 +1369,104 @@ class Foto(TimeStampedModel):
 
     def __str__(self):
         return self.titulo
+
+
+class TerminoCondicion(TimeStampedModel):
+    """Una versión de los términos y condiciones.
+
+    Se versiona en vez de editarse en el sitio porque la aceptación es
+    evidencia legal: hay que poder demostrar qué texto exacto aceptó cada
+    persona, no el que está publicado hoy.
+    """
+
+    version = models.CharField(
+        'Versión',
+        max_length=20,
+        unique=True,
+        help_text='Ej: 1.0, 2026-09. Se muestra en el correo de aceptación.',
+    )
+    titulo = models.CharField('Título', max_length=150,
+                              default='Términos y condiciones')
+    texto = models.TextField(
+        'Texto',
+        help_text='El documento completo. Es lo que la persona lee y acepta.',
+    )
+    enlace = models.URLField(
+        'Enlace al documento',
+        blank=True,
+        help_text='Opcional. Si el documento oficial vive en otra parte.',
+    )
+    fecha_vigencia = models.DateField(
+        'Vigente desde',
+        default=timezone.localdate,
+        help_text='Desde esta fecha se pide aceptar esta versión.',
+    )
+    activo = models.BooleanField('Activo', default=True)
+
+    class Meta:
+        verbose_name = 'Término y condición'
+        verbose_name_plural = 'Términos y condiciones'
+        ordering = ['-fecha_vigencia', '-version']
+
+    def __str__(self):
+        return f'{self.titulo} v{self.version}'
+
+    @classmethod
+    def vigente(cls):
+        """La versión que hay que aceptar hoy, o None si no hay ninguna."""
+        return cls.objects.filter(
+            activo=True,
+            fecha_vigencia__lte=timezone.localdate(),
+        ).first()
+
+
+class AceptacionTerminos(TimeStampedModel):
+    """Registro de que una persona aceptó una versión concreta.
+
+    Guarda la IP y el momento porque es lo que exige poder acreditar un
+    consentimiento informado (Ley 21.719). No se borra al eliminar al
+    alumno: la evidencia tiene que sobrevivir a la baja.
+    """
+
+    alumno = models.ForeignKey(
+        Alumno,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='aceptaciones',
+        verbose_name='Alumno',
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='aceptaciones',
+        verbose_name='Usuario',
+    )
+    termino = models.ForeignKey(
+        TerminoCondicion,
+        on_delete=models.PROTECT,
+        related_name='aceptaciones',
+        verbose_name='Versión aceptada',
+    )
+    fecha_aceptacion = models.DateTimeField('Aceptado el', default=timezone.now)
+    ip = models.GenericIPAddressField('IP', null=True, blank=True)
+    user_agent = models.CharField('Navegador', max_length=250, blank=True)
+
+    class Meta:
+        verbose_name = 'Aceptación de términos'
+        verbose_name_plural = 'Aceptaciones de términos'
+        ordering = ['-fecha_aceptacion']
+        # Una persona acepta una versión una sola vez. Si sale una
+        # versión nueva, vuelve a aceptar y queda otro registro.
+        constraints = [
+            models.UniqueConstraint(
+                fields=['usuario', 'termino'],
+                name='una_aceptacion_por_version',
+            ),
+        ]
+
+    def __str__(self):
+        quien = self.alumno or self.usuario or 'alguien'
+        return f'{quien} aceptó v{self.termino.version}'

@@ -1,0 +1,64 @@
+{% extends 'portal/base_portal.html' %}
+
+{% block titulo %}Términos y condiciones{% endblock %}
+
+{% block contenido %}
+
+{% comment %}
+    Pantalla obligatoria: mientras no acepte, el decorador del portal lo
+    devuelve acá desde cualquier URL. No se puede saltar escribiendo la
+    dirección a mano.
+{% endcomment %}
+
+<div class="p-terminos">
+    <h1 class="p-saludo">{{ termino.titulo }}</h1>
+    <p class="p-terminos-bajada">
+        Antes de entrar a tu portal necesitamos que leas y aceptes esto.
+        Es la única vez que te lo vamos a pedir, salvo que el documento
+        cambie.
+    </p>
+
+    <div class="p-terminos-meta">
+        <span><i class="bi bi-file-earmark-text"></i> Versión {{ termino.version }}</span>
+        <span><i class="bi bi-calendar3"></i> Vigente desde {{ termino.fecha_vigencia|date:"d/m/Y" }}</span>
+    </div>
+
+    {% comment %}
+        El texto va completo y con scroll propio, no detrás de un enlace:
+        nadie acepta lo que no puede leer sin salir de la página.
+    {% endcomment %}
+    <div class="p-terminos-texto" tabindex="0">
+        {{ termino.texto|linebreaks }}
+    </div>
+
+    {% if termino.enlace %}
+        <p class="p-terminos-enlace">
+            <a href="{{ termino.enlace }}" target="_blank" rel="noopener">
+                Ver el documento completo <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+        </p>
+    {% endif %}
+
+    <form method="post" class="p-terminos-form">
+        {% csrf_token %}
+
+        <label class="p-check">
+            <input type="checkbox" name="acepto" value="1" required>
+            <span>
+                He leído y acepto los términos y condiciones de
+                Área Latina Estudio.
+            </span>
+        </label>
+
+        <button type="submit" class="p-boton grande">
+            Aceptar y entrar
+        </button>
+
+        <p class="p-terminos-nota">
+            Al aceptar te enviaremos un correo con una copia de este texto,
+            la fecha y la hora. Es tu comprobante.
+        </p>
+    </form>
+</div>
+
+{% endblock %}

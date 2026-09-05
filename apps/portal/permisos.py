@@ -34,5 +34,30 @@ def alumno_requerido(vista):
             raise PermissionDenied('Esta ficha ya no está activa.')
 
         request.alumno = ficha
+
+        # Antes de dejarlo entrar: si hay términos vigentes sin aceptar,
+        # va primero a esa pantalla. Se comprueba acá y no en cada vista
+        # para que no se pueda saltar escribiendo la URL a mano.
+        if _debe_aceptar(request.user) and request.resolver_match:
+            if request.resolver_match.url_name != 'terminos':
+                return redirect('portal:terminos')
+
         return vista(request, *args, **kwargs)
     return envoltura
+
+
+def _debe_aceptar(usuario):
+    """¿Le falta aceptar la versión vigente de los términos?
+
+    Si el estudio todavía no cargó ningún documento, no se le pide nada:
+    una pantalla obligatoria sin texto que leer sería un muro sin puerta.
+    """
+    from apps.gestion.models import AceptacionTerminos, TerminoCondicion
+
+    vigente = TerminoCondicion.vigente()
+    if vigente is None:
+        return False
+
+    return not AceptacionTerminos.objects.filter(
+        usuario=usuario, termino=vigente,
+    ).exists()

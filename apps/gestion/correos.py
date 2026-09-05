@@ -657,3 +657,35 @@ def enviar_pedido_resena(alumno, semanas, clases_asistidas):
         # Una vez por alumno y nunca mas: insistir molesta y no sirve.
         referencia=f'RESENA-{alumno.pk}',
     )
+
+
+def enviar_confirmacion_terminos(aceptacion):
+    """Le manda a la persona copia de lo que acaba de aceptar.
+
+    Es evidencia: la Ley 21.719 pide poder acreditar el consentimiento, y
+    un registro en la base que solo ve el estudio no le sirve de nada a
+    la persona. El correo le deja la fecha, la hora y la versión exacta
+    en su propia bandeja.
+    """
+    from .models import CorreoEnviado
+
+    usuario = aceptacion.usuario
+    destino = (aceptacion.alumno.email if aceptacion.alumno else '') or usuario.email
+    nombre = (
+        aceptacion.alumno.primer_nombre if aceptacion.alumno
+        else (usuario.first_name or usuario.username)
+    )
+
+    return _enviar(
+        tipo=CorreoEnviado.Tipo.TERMINOS,
+        destinatarios=[destino],
+        asunto=f'Aceptaste los términos y condiciones · {aceptacion.termino.titulo}',
+        plantilla='terminos_aceptados',
+        contexto={
+            'nombre': nombre,
+            'aceptacion': aceptacion,
+            'termino': aceptacion.termino,
+        },
+        alumno=aceptacion.alumno,
+        referencia=f'TERMINOS-{usuario.pk}-{aceptacion.termino.pk}',
+    )
