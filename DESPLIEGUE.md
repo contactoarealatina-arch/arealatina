@@ -60,7 +60,7 @@ DEFAULT_FROM_EMAIL=Area Latina Estudio <contacto@arealatinaestudio.cl>
 CONTACTO_EMAIL=contacto.arealatina@gmail.com
 
 SITIO_URL=https://arealatinaestudio.cl
-DOMINIO_PROFESORAS=arealatina.cl
+DOMINIO_PROFESORAS=arealatinaestudio.cl
 
 FIELD_ENCRYPTION_KEY=      (ver abajo; si se pierde, los datos cifrados no vuelven)
 
@@ -102,20 +102,59 @@ viajan.
 
 ---
 
-## 5. El dominio de nic.cl
+## 5. El dominio
 
-1. Comprar el dominio en <https://nic.cl>.
-2. En Railway: **Settings → Networking → Custom Domain**, escribir el
-   dominio. Railway entrega un destino `CNAME`.
-3. En el panel de nic.cl, en la zona DNS, crear el registro que Railway
-   pide. El certificado HTTPS lo emite Railway solo, en unos minutos.
+El dominio es **arealatinaestudio.cl**, inscrito en nic.cl a nombre de
+Area Latina SpA, con vencimiento el 11/08/2027. El sitio y los correos
+con que entran las profesoras usan ese mismo dominio.
 
-Hay una decision pendiente: hoy el sistema usa **dos** dominios
-distintos — `arealatinaestudio.cl` para el sitio y `arealatina.cl` para
-los correos de las profesoras. Hay que comprar el que quede y avisar,
-para dejar los dos apuntando a lo mismo.
+Para apuntarlo a Railway:
+
+1. En Railway: **Settings → Networking → Custom Domain** y escribir
+   `arealatinaestudio.cl`. Railway entrega un destino tipo
+   `algo.up.railway.app`.
+2. En nic.cl: **Mis dominios → arealatinaestudio.cl → Cambiar DNS**.
+3. Crear el registro que Railway pide. El certificado HTTPS lo emite
+   Railway solo, en unos minutos.
+
+Los dominios .cl no aceptan un CNAME en la raiz. Si Railway pide un
+CNAME para `arealatinaestudio.cl` pelado, la salida es delegar el DNS a
+Cloudflare (que si lo resuelve, con su "CNAME flattening"): en nic.cl se
+cambian los servidores de nombres por los dos que entrega Cloudflare, y
+el registro se crea alla. Con `www.arealatinaestudio.cl` el CNAME
+funciona directo en nic.cl, sin mover nada.
 
 ---
+
+## 5b. Cloudflare R2 (las fotos y las boletas)
+
+El disco de Railway se borra entero en cada despliegue. Sin R2, la foto
+de un alumno y la boleta de un pago desaparecen la proxima vez que se
+sube un cambio. Esto va **antes** de que alguien cargue el primer
+archivo de verdad.
+
+1. En Cloudflare, menu izquierdo: **R2 Object Storage**. La primera vez
+   pide activarlo (pide una tarjeta, pero el plan gratis cubre 10 GB y
+   el estudio va a usar unos pocos cientos de MB).
+2. **Create bucket**, nombre `arealatina`, ubicacion automatica.
+   Dejarlo **privado**: las fotos de alumnos no pueden quedar abiertas
+   en internet, y el sistema arma enlaces firmados que vencen en una
+   hora.
+3. En R2, **Manage API Tokens → Create API Token**:
+   - Permiso: **Object Read & Write**
+   - Alcance: solo el bucket `arealatina`
+   - Guardar el **Access Key ID** y el **Secret Access Key**: el secreto
+     se muestra una sola vez.
+4. Esas dos claves van directo a las variables de Railway
+   (`R2_ACCESS_KEY_ID` y `R2_SECRET_ACCESS_KEY`). No se guardan en el
+   repositorio ni se mandan por chat.
+5. `R2_ENDPOINT` es `https://IDCUENTA.r2.cloudflarestorage.com`, donde
+   IDCUENTA es el codigo largo que sale en la direccion del panel de
+   Cloudflare.
+
+Con `R2_ACCESS_KEY_ID` vacio el sistema sigue usando el disco local, asi
+que en el computador de desarrollo no hay que configurar nada.
+
 
 ## 6. Encender y apagar
 

@@ -583,7 +583,7 @@ class PagoForm(MixinWidgets, forms.ModelForm):
 class ProfesoraForm(MixinWidgets, forms.ModelForm):
     """Ficha de una profesora.
 
-    El correo del estudio (camila.soto@arealatina.cl) se genera solo a
+    El correo del estudio (camila.soto@arealatinaestudio.cl) se genera solo a
     partir del nombre y es con lo que entra al sistema. Ojo: es una
     identidad, no una casilla de correo — las casillas reales las da un
     proveedor aparte. Por eso los avisos van al correo personal.

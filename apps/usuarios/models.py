@@ -34,7 +34,7 @@ class CustomUser(AbstractUser):
         choices=Rol.choices,
         default=Rol.ALUMNO,
     )
-    # Identidad interna del estudio, tipo camila@arealatina.cl. NO es una
+    # Identidad interna del estudio, tipo camila@arealatinaestudio.cl. NO es una
     # casilla de correo: es el nombre con el que la profesora entra al
     # sistema. Las casillas reales las da un proveedor de correo, no
     # Django. Por eso los avisos van al correo personal de más abajo.
@@ -127,7 +127,7 @@ class CustomUser(AbstractUser):
 
     @classmethod
     def generar_correo_institucional(cls, nombre, apellido, dominio=None):
-        """nombre.apellido@arealatina.cl, sin tildes ni repetidos.
+        """nombre.apellido@arealatinaestudio.cl, sin tildes ni repetidos.
 
         Si ya existe, agrega un número: no puede haber dos personas con la
         misma identidad de acceso.
@@ -137,7 +137,7 @@ class CustomUser(AbstractUser):
         from django.conf import settings
 
         dominio = dominio or getattr(
-            settings, 'DOMINIO_PROFESORAS', 'arealatina.cl',
+            settings, 'DOMINIO_PROFESORAS', 'arealatinaestudio.cl',
         )
 
         def limpiar(texto):

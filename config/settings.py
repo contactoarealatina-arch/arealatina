@@ -374,7 +374,7 @@ SITIO_URL = env('SITIO_URL', default='http://localhost:8000')
 # nombre con el que entran al sistema, NO una casilla de correo. Las
 # casillas reales las da un proveedor (Zoho, Google Workspace) y hay que
 # contratarlas aparte.
-DOMINIO_PROFESORAS = env('DOMINIO_PROFESORAS', default='arealatina.cl')
+DOMINIO_PROFESORAS = env('DOMINIO_PROFESORAS', default='arealatinaestudio.cl')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

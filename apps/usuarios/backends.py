@@ -1,7 +1,7 @@
 """Entrar con el correo además de con el nombre de usuario.
 
 El estudio quiere que las profesoras entren con su correo del estudio
-(camila.soto@arealatina.cl) y no con un nombre de usuario que hay que
+(camila.soto@arealatinaestudio.cl) y no con un nombre de usuario que hay que
 recordar aparte. Los alumnos y el equipo siguen entrando como siempre.
 
 Va como backend y no como un cambio en el formulario para que valga en

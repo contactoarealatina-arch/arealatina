@@ -1,7 +1,7 @@
 """Creación de las cuentas de acceso de alumnos y profesoras.
 
 El alumno entra con su correo. La profesora, con el correo del estudio
-(nombre.apellido@arealatina.cl); su correo personal solo sirve para
+(nombre.apellido@arealatinaestudio.cl); su correo personal solo sirve para
 recibir mensajes, nunca para entrar.
 
 Las dos cuentas nacen con una contraseña temporal que viaja por correo y
