@@ -1,0 +1,5 @@
+# El script de arranque lo ejecuta bash en Linux. Con finales de linea de
+# Windows falla con un "bad interpreter" que no dice nada util, asi que se
+# fuerza LF pase lo que pase en el computador de desarrollo.
+*.sh text eol=lf
+Procfile text eol=lf
