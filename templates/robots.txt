@@ -1,4 +1,6 @@
-User-agent: *
+{% if privado %}User-agent: *
+Disallow: /
+{% else %}User-agent: *
 Allow: /
 
 # El panel y los portales no tienen nada que indexar y ademas son
@@ -11,3 +13,4 @@ Disallow: /asistencia/
 Disallow: /cuentas/
 
 Sitemap: https://arealatinaestudio.cl/sitemap.xml
+{% endif %}

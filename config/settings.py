@@ -21,6 +21,18 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
+# Railway le pone al servicio un dominio propio (algo.up.railway.app) y lo
+# publica en esta variable. Se agrega solo: si hubiera que escribirlo a
+# mano, cada vez que Railway lo cambie el sitio responderia
+# "DisallowedHost" y pareceria caido sin estarlo.
+DOMINIO_RAILWAY = env('RAILWAY_PUBLIC_DOMAIN', default='')
+if DOMINIO_RAILWAY and DOMINIO_RAILWAY not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS = list(ALLOWED_HOSTS) + [DOMINIO_RAILWAY]
+
+# Mientras esto sea verdadero, el sitio solo se le muestra a quien tenga
+# cuenta. Es el interruptor para tenerlo arriba sin que lo vea la gente.
+SITIO_PRIVADO = env.bool('SITIO_PRIVADO', default=False)
+
 # ---------------------------------------------------------------------------
 # Aplicaciones
 # ---------------------------------------------------------------------------
@@ -64,7 +76,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'axes.middleware.AxesMiddleware',
-    # Despues del de autenticacion: necesita request.user resuelto.
+    # Despues del de autenticacion: necesitan request.user resuelto.
+    'apps.web.middleware.SitioPrivado',
     'apps.usuarios.middleware.CambioDeClaveObligatorio',
 ]
 
@@ -108,20 +121,33 @@ ASGI_APPLICATION = 'config.asgi.application'
 # ---------------------------------------------------------------------------
 # Base de datos - PostgreSQL
 # ---------------------------------------------------------------------------
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST', default='localhost'),
-        'PORT': env('DB_PORT', default='5432'),
-        # En produccion la base viaja por internet: TLS obligatorio.
-        # En local Postgres suele no tener certificado, por eso se relaja.
-        'OPTIONS': {'sslmode': env('DB_SSLMODE', default='prefer')},
-        'CONN_MAX_AGE': 60,
+# Railway entrega la base como una sola URL (DATABASE_URL). En el
+# computador de desarrollo no existe esa variable y se siguen usando los
+# cinco datos sueltos del .env. Asi el mismo settings sirve en los dos
+# lados sin tener que acordarse de cambiar nada al desplegar.
+URL_BASE_DATOS = env('DATABASE_URL', default='')
+
+if URL_BASE_DATOS:
+    DATABASES = {'default': env.db_url('DATABASE_URL')}
+    DATABASES['default'].setdefault('OPTIONS', {})
+    DATABASES['default']['OPTIONS']['sslmode'] = env('DB_SSLMODE', default='require')
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': env('DB_NAME'),
+            'USER': env('DB_USER'),
+            'PASSWORD': env('DB_PASSWORD'),
+            'HOST': env('DB_HOST', default='localhost'),
+            'PORT': env('DB_PORT', default='5432'),
+            # En produccion la base viaja por internet: TLS obligatorio.
+            # En local Postgres suele no tener certificado, por eso se relaja.
+            'OPTIONS': {'sslmode': env('DB_SSLMODE', default='prefer')},
+        }
     }
-}
+
+# La conexion se reusa un minuto en vez de abrirse en cada peticion.
+DATABASES['default']['CONN_MAX_AGE'] = 60
 
 # ---------------------------------------------------------------------------
 # Usuario personalizado
@@ -210,6 +236,12 @@ if not DEBUG:
         'CSRF_TRUSTED_ORIGINS',
         default=['https://arealatinaestudio.cl', 'https://www.arealatinaestudio.cl'],
     )
+    # Sin esto, en el dominio de Railway todo formulario responde
+    # "CSRF verification failed" y no se puede ni entrar.
+    if DOMINIO_RAILWAY:
+        origen = f'https://{DOMINIO_RAILWAY}'
+        if origen not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS = list(CSRF_TRUSTED_ORIGINS) + [origen]
 
 # ---------------------------------------------------------------------------
 # django-axes: freno a la fuerza bruta

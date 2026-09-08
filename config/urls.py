@@ -3,10 +3,23 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
+from django.shortcuts import render
 from django.urls import include, path
-from django.views.generic import TemplateView
 
 from apps.web.sitemaps import SITEMAPS
+
+
+def robots(request):
+    """El robots.txt, leyendo el modo en cada visita.
+
+    Se resuelve aca y no con extra_context porque ese diccionario se
+    arma una sola vez al arrancar: si alguien apaga el modo privado, el
+    robots seguiria diciendo "no entres" hasta el siguiente reinicio.
+    """
+    return render(request, 'robots.txt',
+                  {'privado': settings.SITIO_PRIVADO},
+                  content_type='text/plain')
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -14,8 +27,10 @@ urlpatterns = [
     # Buscadores
     path('sitemap.xml', sitemap, {'sitemaps': SITEMAPS},
          name='django.contrib.sitemaps.views.sitemap'),
-    path('robots.txt', TemplateView.as_view(
-        template_name='robots.txt', content_type='text/plain'), name='robots'),
+    # El robots cambia segun el modo: mientras el sitio sea privado le
+    # dice al buscador que no entre a nada. Si se indexara ahora, en
+    # Google quedarian guardadas paginas con datos de prueba.
+    path('robots.txt', robots, name='robots'),
 
     path('', include('apps.web.urls')),
     path('cuentas/', include('apps.usuarios.urls')),
