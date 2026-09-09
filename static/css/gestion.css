@@ -1362,3 +1362,180 @@ a:hover { color: var(--al-orange-lite); }
     background: rgba(255, 255, 255, 0.05);
     border-color: var(--al-border);
 }
+
+/* --------------------------------------------------------------------------
+   Lista de alertas (negocio y sistema)
+   Una lista y no una tabla: cada alerta tiene un mensaje largo y un
+   detalle plegable, y eso en celdas queda ilegible.
+   -------------------------------------------------------------------------- */
+.g-lista-alertas {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.g-alerta-fila {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    background-color: var(--al-card);
+    border: 1px solid var(--al-border);
+    border-left: 3px solid var(--al-border);
+    border-radius: var(--radio);
+    padding: 0.9rem 1.1rem;
+}
+
+/* El color del borde izquierdo dice la severidad de un vistazo, sin
+   tener que leer la etiqueta. */
+.g-alerta-fila.sev-urgente  { border-left-color: #F44336; }
+.g-alerta-fila.sev-atencion { border-left-color: #FFC107; }
+.g-alerta-fila.sev-info     { border-left-color: var(--al-orange); }
+
+/* Sin leer se ve un punto más viva. Leída no se apaga del todo: sigue
+   siendo información útil, solo que ya vista. */
+.g-alerta-fila.sin-leer { background-color: rgba(255, 255, 255, 0.03); }
+
+.g-alerta-icono {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background-color: rgba(255, 87, 34, 0.12);
+    color: var(--al-orange-lite);
+    font-size: 1rem;
+}
+
+.g-alerta-cuerpo { flex: 1; min-width: 0; }
+
+.g-alerta-cabeza {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.76rem;
+    margin-bottom: 0.35rem;
+}
+
+.g-alerta-fecha { margin-left: auto; }
+
+.g-alerta-mensaje {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--al-text);
+    /* Un nombre largo sin espacios no puede empujar la tarjeta. */
+    overflow-wrap: anywhere;
+}
+
+.g-alerta-datos { margin-top: 0.5rem; font-size: 0.8rem; }
+.g-alerta-datos summary { cursor: pointer; color: var(--al-muted); }
+.g-alerta-datos summary:hover { color: var(--al-orange-lite); }
+
+.g-alerta-datos dl {
+    display: grid;
+    grid-template-columns: minmax(120px, auto) 1fr;
+    gap: 0.2rem 0.8rem;
+    margin: 0.5rem 0 0;
+    padding: 0.6rem 0.8rem;
+    background-color: rgba(0, 0, 0, 0.22);
+    border-radius: 8px;
+}
+
+.g-alerta-datos dt { color: var(--al-muted); }
+.g-alerta-datos dd { margin: 0; color: var(--al-text); overflow-wrap: anywhere; }
+
+@media (max-width: 575.98px) {
+    .g-alerta-fecha { margin-left: 0; }
+    .g-alerta-datos dl { grid-template-columns: 1fr; }
+    .g-alerta-datos dt { margin-top: 0.35rem; }
+}
+
+/* --------------------------------------------------------------------------
+   Mini gráfico de tráfico
+   -------------------------------------------------------------------------- */
+.g-trafico {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.4rem;
+    height: 118px;
+    padding-top: 0.5rem;
+    overflow-x: auto;
+}
+
+.g-trafico-dia {
+    flex: 1 1 0;
+    min-width: 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+}
+
+.g-trafico-barra {
+    width: 100%;
+    max-width: 34px;
+    background: linear-gradient(180deg, var(--al-orange) 0%, rgba(255, 87, 34, 0.45) 100%);
+    border-radius: 4px 4px 0 0;
+}
+
+.g-trafico-etiqueta {
+    font-size: 0.66rem;
+    color: var(--al-muted);
+    margin-top: 0.35rem;
+    white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Estado general del dashboard
+   -------------------------------------------------------------------------- */
+.g-estado-lista { display: flex; flex-direction: column; gap: 0.55rem; }
+
+.g-estado-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.6rem 0.7rem;
+    border-radius: 9px;
+    border-left: 3px solid var(--al-border);
+    background-color: rgba(255, 255, 255, 0.03);
+    font-size: 0.82rem;
+}
+
+.g-estado-item.sev-urgente  { border-left-color: #F44336; }
+.g-estado-item.sev-atencion { border-left-color: #FFC107; }
+.g-estado-item.sev-info     { border-left-color: var(--al-orange); }
+
+.g-estado-item > i { color: var(--al-orange-lite); margin-top: 2px; flex-shrink: 0; }
+.g-estado-item p {
+    margin: 0 0 0.15rem;
+    color: var(--al-text);
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+.g-estado-item span { font-size: 0.72rem; }
+
+.g-card-pie {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.8rem;
+    font-size: 0.8rem;
+    color: var(--al-orange-lite);
+    text-decoration: none;
+}
+.g-card-pie:hover { color: var(--al-orange); }
+
+.g-seccion-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--al-text);
+    margin: 0 0 0.9rem;
+}
+.g-seccion-titulo i { color: var(--al-orange); }

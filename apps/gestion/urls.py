@@ -48,6 +48,22 @@ urlpatterns = [
     path('alertas/configuracion/', views.alertas_configuracion, name='alertas_configuracion'),
     path('alertas/<int:pk>/gestionar/', views.alerta_gestionar, name='alerta_gestionar'),
 
+    # Alertas de negocio: como va el estudio, no que hay que hacer hoy.
+    path('alertas-negocio/', views.alertas_negocio, name='alertas_negocio'),
+    path('alertas-negocio/revisar/', views.alertas_negocio_revisar,
+         name='alertas_negocio_revisar'),
+    path('alertas-negocio/leer-todas/', views.alertas_negocio_leer_todas,
+         name='alertas_negocio_leer_todas'),
+    path('alertas-negocio/<int:pk>/leer/', views.alerta_negocio_leer,
+         name='alerta_negocio_leer'),
+
+    # Estado tecnico. Solo superadmin.
+    path('sistema/alertas/', views.alertas_sistema, name='alertas_sistema'),
+    path('sistema/alertas/revisar/', views.alertas_sistema_revisar,
+         name='alertas_sistema_revisar'),
+    path('sistema/alertas/<int:pk>/leer/', views.alerta_sistema_leer,
+         name='alerta_sistema_leer'),
+
     # Módulo 7 — Reportes
     path('asistencia/resumen/', views.asistencia_resumen,
          name='asistencia_resumen'),

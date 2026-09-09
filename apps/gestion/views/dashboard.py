@@ -5,8 +5,10 @@ from django.conf import settings
 from django.shortcuts import render
 from django.utils import timezone
 
-from ..models import (Alumno, Clase, ConfiguracionAlertas, CorreoEnviado,
-                      Pago, Suscripcion)
+from ..models import (AlertaNegocio, AlertaSistema, Alumno, Clase,
+                      ConfiguracionAlertas, CorreoEnviado, Pago,
+                      Suscripcion)
+from .. import sistema as vigilancia
 from ..permisos import gestion_requerida
 from .. import servicios
 
@@ -109,5 +111,25 @@ def dashboard(request):
             'datos': [d['total'] for d in distribucion],
         },
         'hay_distribucion': bool(distribucion),
+
+        # ------------------------------------------------------------------
+        # Estado general: negocio, trafico y seguridad de un vistazo
+        # ------------------------------------------------------------------
+        # Tres columnas y no una lista: son tres preguntas distintas
+        # ("como va el estudio", "llega gente al sitio", "esta todo sano")
+        # y mezclarlas obligaria a leerlas todas para encontrar la que
+        # importa.
+        'estado_negocio': AlertaNegocio.objects.all()[:3],
+        'estado_negocio_total': AlertaNegocio.objects.filter(leida=False).count(),
+        'estado_trafico': AlertaSistema.objects.filter(tipo__in=[
+            AlertaSistema.Tipo.TRAFICO_PICO,
+            AlertaSistema.Tipo.TRAFICO_CAIDA,
+        ])[:3],
+        'ga_enlace': 'https://analytics.google.com/',
+        # Seguridad solo para el superadmin: al resto le mostraria
+        # movimientos de acceso que no le corresponde revisar.
+        'estado_seguridad': (vigilancia.linea_de_tiempo(limite=3, tipo='SEGURIDAD')
+                             if request.user.es_superadmin else []),
+        've_seguridad': request.user.es_superadmin,
     }
     return render(request, 'gestion/dashboard.html', contexto)

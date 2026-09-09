@@ -39,10 +39,12 @@ class Command(BaseCommand):
 
         if not elegido:
             self.stdout.write('Trabajos disponibles:')
-            for identificador, _, hora, minuto, dia in TRABAJOS:
+            for identificador, _, hora, minuto, dia, dia_semana in TRABAJOS:
                 cuando = f'{hora:02d}:{minuto:02d}'
                 if dia:
                     cuando = f'día {dia} a las {cuando}'
+                elif dia_semana:
+                    cuando = f'{dia_semana} a las {cuando}'
                 self.stdout.write(f'  {identificador:26} {cuando}')
             return
 

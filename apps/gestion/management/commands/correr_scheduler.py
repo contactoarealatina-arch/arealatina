@@ -22,6 +22,10 @@ from apps.gestion.jobs import TRABAJOS
 
 logger = logging.getLogger(__name__)
 
+DIAS = {'mon': 'lunes', 'tue': 'martes', 'wed': 'miércoles',
+        'thu': 'jueves', 'fri': 'viernes', 'sat': 'sábado',
+        'sun': 'domingo'}
+
 
 def limpiar_historial():
     """Borra ejecuciones viejas para que la tabla no crezca sin control."""
@@ -37,10 +41,11 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('Trabajos programados:'))
 
-        for identificador, funcion, hora, minuto, dia_mes in TRABAJOS:
+        for identificador, funcion, hora, minuto, dia_mes, dia_semana in TRABAJOS:
             disparador = CronTrigger(
                 hour=hora, minute=minuto,
                 **({'day': dia_mes} if dia_mes else {}),
+                **({'day_of_week': dia_semana} if dia_semana else {}),
             )
             planificador.add_job(
                 funcion,
@@ -52,6 +57,8 @@ class Command(BaseCommand):
             cuando = f'{hora:02d}:{minuto:02d}'
             if dia_mes:
                 cuando = f'día {dia_mes} a las {cuando}'
+            elif dia_semana:
+                cuando = f'{DIAS.get(dia_semana, dia_semana)} a las {cuando}'
             self.stdout.write(f'  {identificador:26} {cuando}')
 
         planificador.add_job(

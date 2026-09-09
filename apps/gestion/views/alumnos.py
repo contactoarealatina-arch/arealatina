@@ -176,6 +176,15 @@ def alumno_nuevo(request):
             registrar(request, AuditLog.Accion.CREAR, alumno,
                       f'Creó al alumno {alumno.nombre_completo}')
 
+            # La alerta de negocio va fuera de la transacción y en un
+            # try: es información, no parte del alta. Si algo falla acá,
+            # el alumno ya quedó guardado y eso es lo que importa.
+            try:
+                from .. import negocio
+                negocio.registrar_alumno_nuevo(alumno)
+            except Exception:
+                pass
+
             # El correo va fuera de la transacción: si el SMTP falla, el
             # alumno igual quedó guardado.
             aviso = f'{alumno.nombre_completo} quedó registrado.'

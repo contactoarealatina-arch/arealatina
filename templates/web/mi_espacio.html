@@ -161,7 +161,9 @@
     <div class="container fade-in">
         <h2>¿Todavía no eres parte?</h2>
         <p>Inscríbete y tu cuenta queda creada el mismo día.</p>
-        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg" data-iman="0.3">
+        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg" data-iman="0.3"
+           data-evento="click_boton_inscripcion"
+           data-evento-datos='{"lugar": "mi_espacio"}'>
             Únete ahora
         </a>
     </div>

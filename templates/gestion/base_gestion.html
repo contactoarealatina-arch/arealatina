@@ -40,6 +40,18 @@
                 <span class="g-badge-alerta">{{ alertas_pendientes }}</span>
             {% endif %}
         </a>
+        {% comment %}
+            Aparte de Alertas y no dentro: aquella es la lista de tareas
+            del dia, esta es como va el negocio. Juntas, lo segundo se
+            perderia entre veinte vencimientos.
+        {% endcomment %}
+        <a href="{% url 'gestion:alertas_negocio' %}"
+           class="g-nav-item {% if activo == 'alertas_negocio' %}activo{% endif %}">
+            <i class="bi bi-graph-up"></i><span>Negocio</span>
+            {% if negocio_sin_leer %}
+                <span class="g-badge-alerta">{{ negocio_sin_leer }}</span>
+            {% endif %}
+        </a>
 
         <div class="g-nav-grupo">Academia</div>
         <a href="{% url 'gestion:alumnos' %}"
@@ -90,6 +102,13 @@
         <a href="{% url 'gestion:auditoria' %}"
            class="g-nav-item {% if activo == 'auditoria' %}activo{% endif %}">
             <i class="bi bi-shield-check"></i><span>Auditoría</span>
+        </a>
+        <a href="{% url 'gestion:alertas_sistema' %}"
+           class="g-nav-item {% if activo == 'alertas_sistema' %}activo{% endif %}">
+            <i class="bi bi-cpu"></i><span>Sistema</span>
+            {% if sistema_sin_leer %}
+                <span class="g-badge-alerta">{{ sistema_sin_leer }}</span>
+            {% endif %}
         </a>
         {% endif %}
         <a href="{% url 'web:index' %}" class="g-nav-item" target="_blank">

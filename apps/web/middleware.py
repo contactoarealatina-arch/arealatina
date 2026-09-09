@@ -64,3 +64,65 @@ class SitioPrivado:
         nombre = (f'{coincidencia.namespace}:{coincidencia.url_name}'
                   if coincidencia.namespace else (coincidencia.url_name or ''))
         return nombre not in self.PERMITIDAS
+
+
+class ContadorVisitas:
+    """Cuenta visitas al sitio público, una fila por día.
+
+    Google Analytics es la fuente buena para analizar tráfico; esto es
+    otra cosa. Existe para que el sistema pueda avisar solo cuando algo
+    se sale de lo normal sin depender de la API de Google, que es una
+    pieza más que se puede caer, y sin depender tampoco de que el
+    visitante haya aceptado la medición: acá no se guarda nada de la
+    persona, solo cuántas páginas se pidieron ese día.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        respuesta = self.get_response(request)
+
+        try:
+            if self._hay_que_contar(request, respuesta):
+                self._sumar(request)
+        except Exception:
+            # Contar visitas jamás puede voltear una página. Si la tabla
+            # no existe todavía o la base va lenta, se pierde el conteo
+            # de esa visita y no pasa nada más.
+            pass
+
+        return respuesta
+
+    def _hay_que_contar(self, request, respuesta):
+        if request.method != 'GET' or respuesta.status_code != 200:
+            return False
+
+        # El equipo entrando a mirar su propio sitio no es tráfico.
+        usuario = getattr(request, 'user', None)
+        if usuario is not None and usuario.is_authenticated:
+            return False
+
+        coincidencia = getattr(request, 'resolver_match', None)
+        return bool(coincidencia) and coincidencia.namespace == 'web'
+
+    def _sumar(self, request):
+        from django.db.models import F
+        from django.utils import timezone
+
+        from apps.gestion.models import EstadisticaDiaria
+
+        hoy = timezone.localdate()
+        fila, creada = EstadisticaDiaria.objects.get_or_create(fecha=hoy)
+
+        # F() y no fila.visitas += 1: dos visitas al mismo tiempo leerían
+        # el mismo número y una pisaría a la otra. Con F() la suma la
+        # hace la base de datos.
+        campos = {'visitas_estimadas': F('visitas_estimadas') + 1}
+
+        coincidencia = request.resolver_match
+        if coincidencia.url_name == 'contacto' and request.GET.get('enviado'):
+            campos['formularios_contacto_enviados'] = (
+                F('formularios_contacto_enviados') + 1)
+
+        EstadisticaDiaria.objects.filter(pk=fila.pk).update(**campos)

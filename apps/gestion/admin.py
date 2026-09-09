@@ -2,6 +2,8 @@ from django.contrib import admin
 
 from .models import (
     Alerta,
+    AlertaNegocio,
+    AlertaSistema,
     Alumno,
     AuditLog,
     BrechaSeguridad,
@@ -12,6 +14,7 @@ from .models import (
     Clase,
     ConfiguracionAlertas,
     CorreoEnviado,
+    EstadisticaDiaria,
     Inscripcion,
     NotaInterna,
     AceptacionTerminos,
@@ -379,3 +382,45 @@ class DisciplinaAdmin(admin.ModelAdmin):
     def cuantas_clases(self, obj):
         from .models import Clase
         return Clase.objects.filter(nombre__iexact=obj.nombre).count()
+
+
+# ---------------------------------------------------------------------------
+# Alertas de negocio y estado del sistema
+# ---------------------------------------------------------------------------
+# Van solo de lectura: las genera el cron y editarlas a mano dejaría el
+# panel diciendo cosas que nunca pasaron. Lo único que se toca desde acá
+# es marcarlas leídas, que es lo mismo que hace el panel.
+@admin.register(AlertaNegocio)
+class AlertaNegocioAdmin(admin.ModelAdmin):
+    list_display = ('creada_en', 'severidad', 'tipo', 'mensaje', 'leida')
+    list_filter = ('tipo', 'severidad', 'leida', 'creada_en')
+    search_fields = ('mensaje',)
+    list_editable = ('leida',)
+    readonly_fields = ('tipo', 'mensaje', 'datos_json', 'severidad', 'creada_en')
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(AlertaSistema)
+class AlertaSistemaAdmin(admin.ModelAdmin):
+    list_display = ('creada_en', 'severidad', 'tipo', 'mensaje', 'leida')
+    list_filter = ('tipo', 'severidad', 'leida', 'creada_en')
+    search_fields = ('mensaje', 'detalle')
+    list_editable = ('leida',)
+    readonly_fields = ('tipo', 'mensaje', 'detalle', 'datos_json',
+                       'severidad', 'creada_en')
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(EstadisticaDiaria)
+class EstadisticaDiariaAdmin(admin.ModelAdmin):
+    list_display = ('fecha', 'visitas_estimadas', 'formularios_contacto_enviados')
+    list_filter = ('fecha',)
+    readonly_fields = ('fecha', 'visitas_estimadas',
+                       'formularios_contacto_enviados')
+
+    def has_add_permission(self, request):
+        return False

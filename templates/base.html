@@ -40,6 +40,17 @@
         window.AL = window.AL || {};
         window.AL.urls = { heroWebgl: "{% static 'js/hero-webgl.js' %}" };
     </script>
+    {% comment %}
+        El codigo de medicion viaja como atributo y no dentro de un
+        script: asi lo escapa el HTML y no hay forma de que se cuele
+        codigo por ahi. Ademas queda legible en el fuente, que es como
+        se comprueba una instalacion de Analytics.
+
+        Quien decide si Google llega a cargarse es analitica.js, despues
+        de que el visitante acepte. ga_id ya viene vacio en el panel y
+        en los portales.
+    {% endcomment %}
+    <script src="{% static 'js/analitica.js' %}" data-ga="{{ ga_id }}" defer></script>
 </head>
 <body>
 
@@ -89,7 +100,9 @@
                         <i class="bi bi-person-circle"></i><span>Entrar</span>
                     </a>
                 {% endif %}
-                <a href="{% url 'web:contacto' %}" class="btn btn-acento" data-iman="0.3">
+                <a href="{% url 'web:contacto' %}" class="btn btn-acento" data-iman="0.3"
+                   data-evento="click_boton_inscripcion"
+                   data-evento-datos='{"lugar": "barra_superior"}'>
                     Únete ahora
                 </a>
             </div>
@@ -153,7 +166,8 @@
                         lleva a ninguna parte es peor que no tenerlo.
                     {% endcomment %}
                     <a href="{{ academia.google_resenas }}" target="_blank"
-                       rel="noopener" class="btn-resena btn-resena-sm mt-3">
+                       rel="noopener" class="btn-resena btn-resena-sm mt-3"
+                       data-evento="click_resena_google">
                         <i class="bi bi-star-fill"></i>
                         <span>Déjanos tu reseña</span>
                     </a>
@@ -218,46 +232,34 @@
 
 <!-- ==================== BANNER DE COOKIES ==================== -->
 {% comment %}
-    Solo cookies técnicas: no hay que pedir permiso para esas, pero sí
-    informar. Por eso es un aviso con "Entendido" y no un consentimiento
-    con opciones que no existen.
+    Dos botones y no uno: desde que el sitio mide con Analytics, las
+    cookies dejaron de ser solo tecnicas. Un aviso con un unico
+    "Entendido" da por aceptado algo que la persona nunca eligio, y la
+    Ley 21.719 pide consentimiento informado, no un acuse de recibo.
+
+    Quien aprieta "Solo lo necesario" navega igual: lo unico que no
+    ocurre es la medicion. La logica vive en static/js/analitica.js.
 {% endcomment %}
 <div class="cookies" id="avisoCookies" hidden>
     <div class="cookies-texto">
         <i class="bi bi-shield-check"></i>
         <div>
-            Usamos solo cookies técnicas, las necesarias para mantener tu sesión
-            y proteger los formularios. <strong>No usamos publicidad ni rastreo.</strong>
+            Usamos cookies técnicas para mantener tu sesión y proteger los
+            formularios. Con tu permiso usamos también Google Analytics para
+            saber qué partes del sitio se visitan.
+            <strong>Nunca para publicidad.</strong>
             <a href="{% url 'web:privacidad' %}">Ver política de privacidad</a>
         </div>
     </div>
-    <button type="button" class="btn btn-acento btn-sm" id="aceptarCookies">Entendido</button>
+    <div class="cookies-botones">
+        <button type="button" class="btn btn-cookies-no btn-sm" id="rechazarCookies">
+            Solo lo necesario
+        </button>
+        <button type="button" class="btn btn-acento btn-sm" id="aceptarCookies">
+            Aceptar
+        </button>
+    </div>
 </div>
-
-<script nonce="{{ request.csp_nonce }}">
-// El aviso se muestra una vez y se recuerda en el navegador. Si el
-// almacenamiento no esta disponible (modo privado), simplemente se muestra
-// siempre: es preferible a que reviente.
-(function () {
-    var aviso = document.getElementById('avisoCookies');
-    var boton = document.getElementById('aceptarCookies');
-    if (!aviso || !boton) { return; }
-
-    var visto = false;
-    try { visto = localStorage.getItem('al-cookies') === 'ok'; } catch (e) {}
-
-    if (!visto) {
-        aviso.hidden = false;
-        requestAnimationFrame(function () { aviso.classList.add('visible'); });
-    }
-
-    boton.addEventListener('click', function () {
-        aviso.classList.remove('visible');
-        setTimeout(function () { aviso.hidden = true; }, 300);
-        try { localStorage.setItem('al-cookies', 'ok'); } catch (e) {}
-    });
-})();
-</script>
 
 {% if seccion == 'inicio' %}
 <script type="application/ld+json" nonce="{{ request.csp_nonce }}">

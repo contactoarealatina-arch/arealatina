@@ -5,6 +5,17 @@ from .alertas import (  # noqa: F401
     alertas_configuracion,
     alertas_regenerar,
 )
+from .negocio import (  # noqa: F401
+    alerta_negocio_leer,
+    alertas_negocio,
+    alertas_negocio_leer_todas,
+    alertas_negocio_revisar,
+)
+from .sistema import (  # noqa: F401
+    alerta_sistema_leer,
+    alertas_sistema,
+    alertas_sistema_revisar,
+)
 from .alumnos import (  # noqa: F401
     alumno_detalle,
     alumno_editar,

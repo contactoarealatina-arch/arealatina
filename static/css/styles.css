@@ -1877,8 +1877,32 @@ html[data-nivel="bajo"] .entrando { animation: none; }
 .cookies-texto strong { color: var(--color-text); font-weight: 500; }
 .cookies .btn { flex-shrink: 0; }
 
+.cookies-botones {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+/* Rechazar tiene que verse tan disponible como aceptar. Un boton
+   deslavado al lado de uno naranja empuja la respuesta, y un
+   consentimiento empujado no es consentimiento. */
+.btn-cookies-no {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+}
+
+.btn-cookies-no:hover,
+.btn-cookies-no:focus-visible {
+    border-color: var(--color-text);
+    color: var(--color-text);
+    background: rgba(255, 255, 255, 0.04);
+}
+
 @media (max-width: 575.98px) {
     .cookies { bottom: 0.5rem; padding: 0.9rem 1rem; }
+    .cookies-botones { width: 100%; }
     .cookies .btn { width: 100%; }
 }
 

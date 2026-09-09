@@ -10,6 +10,7 @@ vive dentro del inicio.
 """
 from django.contrib import messages
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from apps.gestion.models import Categoria, Clase, Evento, Foto, Plan, Testimonio
@@ -236,7 +237,11 @@ def contacto(request):
                 request,
                 'Gracias por escribirnos. Te responderemos a la brevedad.',
             )
-            return redirect('web:contacto')
+            # El ?enviado=1 es lo que le permite a la pagina saber que
+            # viene de un envio exitoso y registrar la conversion. Sin
+            # eso el evento habria que dispararlo antes de guardar, y se
+            # contarian como logrados los formularios que fallaron.
+            return redirect(f"{reverse('web:contacto')}?enviado=1")
         messages.error(request, 'Revisa los datos del formulario, hay campos con errores.')
     else:
         form = ContactoForm()

@@ -637,6 +637,38 @@ def enviar_informe_mensual(referencia=None):
 
 
 # ---------------------------------------------------------------------------
+# Resumen semanal de negocio
+# ---------------------------------------------------------------------------
+def enviar_resumen_semanal(referencia=None):
+    """Los lunes: como fue la semana que termino.
+
+    Es distinto del resumen diario, que lista tareas del dia. Este mira
+    hacia atras y compara, que es lo que sirve para decidir.
+    """
+    from .negocio import resumen_semanal
+
+    if not _configurado():
+        return False, 'SMTP sin configurar.'
+
+    config = ConfiguracionAlertas.obtener()
+    if not config.enviar_resumen_semanal:
+        return False, 'Resumen semanal desactivado.'
+
+    datos = resumen_semanal(referencia)
+
+    return _enviar(
+        tipo=CorreoEnviado.Tipo.RESUMEN_SEMANAL,
+        destinatarios=config.lista_emails,
+        asunto='Resumen semanal — Área Latina 📊',
+        plantilla='resumen_semanal',
+        contexto={**datos, 'url_panel': _url('gestion:dashboard')},
+        # Una por semana: la referencia lleva el año y el numero de
+        # semana, asi un reintento el mismo lunes no manda dos correos.
+        referencia=f'RESSEM-{datos["hasta"]:%G-W%V}',
+    )
+
+
+# ---------------------------------------------------------------------------
 # Pedido de resena en Google
 # ---------------------------------------------------------------------------
 SEMANAS_ANTES_DE_PEDIR = 3

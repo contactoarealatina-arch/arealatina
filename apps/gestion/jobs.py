@@ -9,8 +9,11 @@ Horarios:
     08:00  recordatorio de clases a las profesoras
     09:00  alertas de vencimiento + avisos a alumnos + resumen al equipo
            + saludos de cumpleaños + revisión de ausencias
+    09:05  alertas de negocio (meta, inscripciones, ausencias, atrasos)
     10:00  pedido de reseña a los alumnos con más de 3 semanas
     18:00  recordatorio de la clase de mañana a los alumnos
+    23:45  revisión del tráfico del día
+    lunes  resumen semanal de negocio (09:00)
     día 1  informe mensual al dueño
 """
 import logging
@@ -104,6 +107,36 @@ def job_informe_mensual():
 
 
 # ---------------------------------------------------------------------------
+# 09:05 — como va el negocio (despues de las alertas de las 09:00)
+# ---------------------------------------------------------------------------
+def job_alertas_negocio():
+    """Meta del mes, inscripciones, ausencias y pagos muy atrasados."""
+    from . import negocio
+    return _seguro('alertas de negocio', negocio.revisar_todo)
+
+
+# ---------------------------------------------------------------------------
+# 23:45 — el trafico del dia que termina
+# ---------------------------------------------------------------------------
+def job_revisar_trafico():
+    """Compara las visitas de hoy con el promedio de la semana.
+
+    Va casi a medianoche y no en la manana a proposito: a las 09:00 el
+    dia recien empieza y cualquier comparacion daria "caida del 90%"
+    todos los dias.
+    """
+    from . import sistema
+    return _seguro('revisar trafico', sistema.revisar_todo)
+
+
+# ---------------------------------------------------------------------------
+# Lunes 09:00 — como fue la semana
+# ---------------------------------------------------------------------------
+def job_resumen_semanal():
+    return _seguro('resumen semanal', correos.enviar_resumen_semanal)
+
+
+# ---------------------------------------------------------------------------
 # Registro para el planificador
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
@@ -166,11 +199,14 @@ def job_pedir_resenas():
 
 
 TRABAJOS = [
-    # (id, función, hora, minuto, día del mes)
-    ('planes_vencidos', job_marcar_planes_vencidos, 0, 1, None),
-    ('recordatorio_profesoras', job_recordatorio_profesoras, 8, 0, None),
-    ('alertas_manana', job_manana, 9, 0, None),
-    ('recordatorio_clases', job_recordatorio_clases, 18, 0, None),
-    ('pedir_resenas', job_pedir_resenas, 10, 0, None),
-    ('informe_mensual', job_informe_mensual, 8, 0, 1),
+    # (id, función, hora, minuto, día del mes, día de la semana)
+    ('planes_vencidos', job_marcar_planes_vencidos, 0, 1, None, None),
+    ('recordatorio_profesoras', job_recordatorio_profesoras, 8, 0, None, None),
+    ('alertas_manana', job_manana, 9, 0, None, None),
+    ('alertas_negocio', job_alertas_negocio, 9, 5, None, None),
+    ('pedir_resenas', job_pedir_resenas, 10, 0, None, None),
+    ('recordatorio_clases', job_recordatorio_clases, 18, 0, None, None),
+    ('revisar_trafico', job_revisar_trafico, 23, 45, None, None),
+    ('resumen_semanal', job_resumen_semanal, 9, 0, None, 'mon'),
+    ('informe_mensual', job_informe_mensual, 8, 0, 1, None),
 ]

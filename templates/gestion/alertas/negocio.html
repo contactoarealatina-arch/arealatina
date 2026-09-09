@@ -1,0 +1,152 @@
+{% extends 'gestion/base_gestion.html' %}
+
+{% block titulo %}Alertas de negocio{% endblock %}
+{% block encabezado %}Alertas de negocio{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo">
+        {{ total }} alerta{{ total|pluralize }}{% if conteo.sin_leer %} · {{ conteo.sin_leer }} sin leer{% endif %}
+    </div>
+{% endblock %}
+
+{% block acciones %}
+    <form method="post" action="{% url 'gestion:alertas_negocio_revisar' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="g-btn g-btn-neutro g-btn-sm">
+            <i class="bi bi-arrow-clockwise"></i> <span class="d-none d-sm-inline">Revisar ahora</span>
+        </button>
+    </form>
+    {% if conteo.sin_leer %}
+    <form method="post" action="{% url 'gestion:alertas_negocio_leer_todas' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="g-btn g-btn-primario g-btn-sm">
+            <i class="bi bi-check2-all"></i> <span class="d-none d-sm-inline">Marcar leídas</span>
+        </button>
+    </form>
+    {% endif %}
+{% endblock %}
+
+{% block contenido %}
+
+<div class="g-banner g-banner-info">
+    <i class="bi bi-graph-up"></i>
+    <div>
+        Cómo va el estudio, no qué hay que hacer hoy. Las tareas del día
+        —renovaciones, cobros, llamados— siguen en
+        <a href="{% url 'gestion:alertas' %}">Alertas</a>.
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-4">
+        <div class="g-metrica {% if conteo.urgentes %}peligro{% endif %}">
+            <div class="g-metrica-etiqueta"><i class="bi bi-exclamation-octagon"></i> Urgentes</div>
+            <div class="g-metrica-valor">{{ conteo.urgentes }}</div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="g-metrica {% if conteo.atencion %}aviso{% endif %}">
+            <div class="g-metrica-etiqueta"><i class="bi bi-exclamation-triangle"></i> Atención</div>
+            <div class="g-metrica-valor">{{ conteo.atencion }}</div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="g-metrica">
+            <div class="g-metrica-etiqueta"><i class="bi bi-envelope"></i> Sin leer</div>
+            <div class="g-metrica-valor">{{ conteo.sin_leer }}</div>
+        </div>
+    </div>
+</div>
+
+<form method="get" class="g-barra">
+    <select name="tipo" class="g-filtro-select" data-filtro-auto>
+        <option value="">Todos los tipos</option>
+        {% for valor, etiqueta in tipos %}
+            <option value="{{ valor }}" {% if filtros.tipo == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+    </select>
+    <select name="severidad" class="g-filtro-select" data-filtro-auto>
+        <option value="">Cualquier severidad</option>
+        {% for valor, etiqueta in severidades %}
+            <option value="{{ valor }}" {% if filtros.severidad == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+    </select>
+    <select name="ver" class="g-filtro-select" data-filtro-auto>
+        <option value="todas" {% if filtros.ver == 'todas' %}selected{% endif %}>Todas</option>
+        <option value="pendientes" {% if filtros.ver == 'pendientes' %}selected{% endif %}>Solo sin leer</option>
+    </select>
+    {% if filtros.tipo or filtros.severidad or filtros.ver != 'todas' %}
+        <a href="{% url 'gestion:alertas_negocio' %}" class="g-btn g-btn-neutro g-btn-sm">
+            <i class="bi bi-x-lg"></i> Limpiar
+        </a>
+    {% endif %}
+    <noscript><button type="submit" class="g-btn g-btn-primario g-btn-sm">Filtrar</button></noscript>
+</form>
+
+{% if pagina.object_list %}
+<div class="g-lista-alertas">
+    {% for alerta in pagina.object_list %}
+    <article class="g-alerta-fila {% if not alerta.leida %}sin-leer{% endif %} sev-{{ alerta.severidad|lower }}">
+        <div class="g-alerta-icono"><i class="bi {{ alerta.icono }}"></i></div>
+
+        <div class="g-alerta-cuerpo">
+            <div class="g-alerta-cabeza">
+                <span class="g-badge {% if alerta.severidad == 'URGENTE' %}g-badge-rojo{% elif alerta.severidad == 'ATENCION' %}g-badge-amarillo{% else %}g-badge-gris{% endif %}">
+                    {{ alerta.get_severidad_display }}
+                </span>
+                <span class="g-muted">{{ alerta.get_tipo_display }}</span>
+                <span class="g-muted g-alerta-fecha">{{ alerta.creada_en|date:"d/m/Y H:i" }}</span>
+            </div>
+
+            <p class="g-alerta-mensaje">{{ alerta.mensaje }}</p>
+
+            {% if alerta.datos_json %}
+            {% comment %}
+                El contexto guardado va plegado. Sirve para releer la
+                alerta meses después y entender de dónde salió el número,
+                sin tener que recalcularlo a mano.
+            {% endcomment %}
+            <details class="g-alerta-datos">
+                <summary>Ver el detalle</summary>
+                <dl>
+                    {% for clave, valor in alerta.datos_json.items %}
+                        <dt>{{ clave }}</dt><dd>{{ valor }}</dd>
+                    {% endfor %}
+                </dl>
+            </details>
+            {% endif %}
+        </div>
+
+        {% if not alerta.leida %}
+        <form method="post" action="{% url 'gestion:alerta_negocio_leer' alerta.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="siguiente" value="{{ request.get_full_path }}">
+            <button type="submit" class="g-btn g-btn-neutro g-btn-sm" title="Marcar como leída">
+                <i class="bi bi-check2"></i>
+            </button>
+        </form>
+        {% endif %}
+    </article>
+    {% endfor %}
+</div>
+
+{% include 'gestion/_paginacion.html' %}
+
+{% else %}
+<div class="g-tabla-envoltura">
+    <div class="g-vacio">
+        <i class="bi bi-emoji-smile"></i>
+        <h3>Nada que reportar</h3>
+        <p>
+            {% if filtros.tipo or filtros.severidad or filtros.ver != 'todas' %}
+                Ninguna alerta coincide con los filtros.
+            {% else %}
+                El sistema revisa todos los días la meta del mes, las
+                inscripciones, las ausencias y los pagos atrasados. Cuando
+                encuentre algo, aparece acá.
+            {% endif %}
+        </p>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

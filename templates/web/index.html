@@ -362,7 +362,9 @@
             Escríbenos y te contamos horarios, planes y todo lo que necesitas
             para empezar esta semana.
         </p>
-        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg" data-iman="0.3">
+        <a href="{% url 'web:contacto' %}" class="btn btn-blanco btn-lg" data-iman="0.3"
+           data-evento="click_boton_inscripcion"
+           data-evento-datos='{"lugar": "cierre_inicio"}'>
             Únete ahora
         </a>
     </div>

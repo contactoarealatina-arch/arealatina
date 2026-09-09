@@ -71,6 +71,10 @@ R2_ENDPOINT=https://IDCUENTA.r2.cloudflarestorage.com
 
 WHATSAPP_NUMERO=
 GOOGLE_REVIEW_LINK=
+
+GA_MEASUREMENT_ID=G-LXN4MY2SB5
+ADMINS=Equipo:contacto.arealatina@gmail.com
+SERVER_EMAIL=sistema@arealatinaestudio.cl
 ```
 
 Las dos claves se generan asi, y se guardan en un lugar seguro:
@@ -186,6 +190,8 @@ La base de datos no se toca, los datos quedan.
 - [ ] Terminos y condiciones con texto legal real (hoy esta inactivo)
 - [ ] Fotos, textos e historia que tiene que mandar el estudio
 - [ ] Verificar el dominio en Brevo, o los correos se van a spam
+- [ ] Configurar la meta mensual de ingresos (sin eso, esa alerta no avisa)
+- [ ] Monitoreo externo con UptimeRobot — ver [MONITOREO.md](MONITOREO.md)
 
 ### Tareas automaticas
 

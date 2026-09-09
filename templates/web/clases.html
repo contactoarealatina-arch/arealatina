@@ -34,7 +34,9 @@
                         data-bs-toggle="collapse"
                         data-bs-target="#detalle-{{ bloque.pilar.slug }}"
                         aria-expanded="false"
-                        aria-controls="detalle-{{ bloque.pilar.slug }}">
+                        aria-controls="detalle-{{ bloque.pilar.slug }}"
+                        data-evento="ver_detalle_clase"
+                        data-evento-datos='{"categoria": "{{ bloque.pilar.slug }}"}'>
                     <span class="pilar-icono"><i class="bi {{ bloque.pilar.icono }}"></i></span>
 
                     <span class="pilar-texto">

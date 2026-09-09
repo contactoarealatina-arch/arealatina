@@ -217,3 +217,18 @@
 </section>
 
 {% endblock %}
+
+{% block extra_js %}
+    {% if request.GET.enviado %}
+        {% comment %}
+            Se dispara acá y no al apretar "Enviar" porque el formulario
+            puede fallar la validación: contar el intento como conversión
+            haría creer que llegan más mensajes de los que llegan.
+        {% endcomment %}
+        <script nonce="{{ request.csp_nonce }}">
+            if (window.AL && window.AL.evento) {
+                window.AL.evento('formulario_contacto_enviado');
+            }
+        </script>
+    {% endif %}
+{% endblock %}

@@ -910,6 +910,17 @@ class ConfiguracionAlertas(TimeStampedModel):
     enviar_recordatorios = models.BooleanField(
         'Aviso al alumno antes de que venza su plan', default=True)
 
+    # Meta de ingresos del mes. En 0 la alerta de meta no se genera: es
+    # preferible que no avise a que avise contra un número inventado.
+    meta_mensual_clp = models.PositiveIntegerField(
+        'Meta mensual de ingresos',
+        default=0,
+        help_text='En pesos. Cuando los ingresos del mes la superan, se '
+                  'genera una alerta de negocio. En 0 no se revisa.',
+    )
+    enviar_resumen_semanal = models.BooleanField(
+        'Enviar resumen semanal los lunes', default=True)
+
     class Meta:
         verbose_name = 'Configuración de alertas'
         verbose_name_plural = 'Configuración de alertas'
@@ -1000,6 +1011,7 @@ class CorreoEnviado(models.Model):
         RECIBO = 'RECIBO', 'Comprobante de pago'
         RECORDATORIO = 'RECORDATORIO', 'Aviso de vencimiento'
         RESUMEN = 'RESUMEN', 'Resumen para el equipo'
+        RESUMEN_SEMANAL = 'RES_SEMANAL', 'Resumen semanal de negocio'
         CONTACTO = 'CONTACTO', 'Mensaje del formulario web'
         RECORDATORIO_CLASE = 'REC_CLASE', 'Recordatorio de clase al alumno'
         CONFIRMACION = 'CONFIRMACION', 'Confirmacion de asistencia'
@@ -1540,3 +1552,144 @@ class AceptacionTerminos(TimeStampedModel):
     def __str__(self):
         quien = self.alumno or self.usuario or 'alguien'
         return f'{quien} aceptó v{self.termino.version}'
+
+
+# ===========================================================================
+# ALERTAS DE NEGOCIO
+# ===========================================================================
+class AlertaNegocio(models.Model):
+    """Avisos sobre la salud del negocio, no sobre un alumno puntual.
+
+    Va aparte de Alerta y no como un tipo más adentro porque las dos
+    responden preguntas distintas y las mira gente distinta. Alerta dice
+    "a Camila se le vence el plan": es una tarea, alguien la gestiona y
+    se cierra. Esta dice "las inscripciones bajaron 45%": es información
+    para decidir, no una tarea. Mezclarlas haría que lo segundo se
+    perdiera entre veinte vencimientos.
+    """
+
+    class Tipo(models.TextChoices):
+        NUEVO_ALUMNO = 'NUEVO_ALUMNO', 'Alumno nuevo'
+        META_MENSUAL_ALCANZADA = 'META_MENSUAL', 'Meta mensual alcanzada'
+        CAIDA_INSCRIPCIONES = 'CAIDA_INSCRIPCIONES', 'Caída de inscripciones'
+        ALUMNO_AUSENTE_PROLONGADO = 'AUSENTE', 'Alumno ausente hace tiempo'
+        PAGO_ATRASADO_CRITICO = 'PAGO_CRITICO', 'Pago muy atrasado'
+
+    class Severidad(models.TextChoices):
+        INFO = 'INFO', 'Informativa'
+        ATENCION = 'ATENCION', 'Requiere atención'
+        URGENTE = 'URGENTE', 'Urgente'
+
+    tipo = models.CharField('Tipo', max_length=20, choices=Tipo.choices)
+    mensaje = models.CharField('Mensaje', max_length=250)
+    # El contexto que dio origen a la alerta: montos, nombres, porcentajes.
+    # Se guarda para que dentro de seis meses se pueda releer la alerta y
+    # entender de dónde salió el número, sin tener que recalcularlo.
+    datos_json = models.JSONField('Datos', default=dict, blank=True)
+    severidad = models.CharField(
+        'Severidad', max_length=10,
+        choices=Severidad.choices, default=Severidad.INFO,
+    )
+    leida = models.BooleanField('Leída', default=False)
+    creada_en = models.DateTimeField('Creada el', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Alerta de negocio'
+        verbose_name_plural = 'Alertas de negocio'
+        ordering = ['-creada_en']
+        indexes = [
+            models.Index(fields=['-creada_en']),
+            models.Index(fields=['leida', '-creada_en']),
+        ]
+
+    def __str__(self):
+        return f'[{self.get_severidad_display()}] {self.mensaje[:60]}'
+
+    @property
+    def icono(self):
+        return {
+            self.Tipo.NUEVO_ALUMNO: 'bi-person-plus',
+            self.Tipo.META_MENSUAL_ALCANZADA: 'bi-trophy',
+            self.Tipo.CAIDA_INSCRIPCIONES: 'bi-graph-down-arrow',
+            self.Tipo.ALUMNO_AUSENTE_PROLONGADO: 'bi-person-dash',
+            self.Tipo.PAGO_ATRASADO_CRITICO: 'bi-cash-stack',
+        }.get(self.tipo, 'bi-bell')
+
+
+# ===========================================================================
+# ESTADO TECNICO DEL SITIO
+# ===========================================================================
+class EstadisticaDiaria(models.Model):
+    """Un conteo propio de visitas, una fila por día.
+
+    Google Analytics es la fuente buena para analizar tráfico. Esto no
+    compite con eso: existe para que el sistema pueda avisar solo cuando
+    algo se sale de lo normal, sin depender de las credenciales ni de la
+    API de Google, que es una pieza más que se puede romper.
+
+    Se cuentan visitas del sitio público, no personas: dos pestañas del
+    mismo visitante suman dos. Por eso el campo se llama "estimadas".
+    """
+
+    fecha = models.DateField('Fecha', unique=True)
+    visitas_estimadas = models.PositiveIntegerField('Visitas', default=0)
+    formularios_contacto_enviados = models.PositiveIntegerField(
+        'Formularios de contacto', default=0)
+
+    class Meta:
+        verbose_name = 'Estadística diaria'
+        verbose_name_plural = 'Estadísticas diarias'
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f'{self.fecha}: {self.visitas_estimadas} visitas'
+
+
+class AlertaSistema(models.Model):
+    """Lo que le pasa al sistema, no al negocio.
+
+    El público de esta tabla es el superadmin: caídas de tráfico,
+    errores del servidor y movimientos raros en el acceso. Son cosas que
+    al dueño del estudio no le dicen nada y que a quien mantiene el
+    sistema le importan todas.
+    """
+
+    class Tipo(models.TextChoices):
+        TRAFICO_PICO = 'TRAFICO_PICO', 'Pico de tráfico'
+        TRAFICO_CAIDA = 'TRAFICO_CAIDA', 'Caída de tráfico'
+        ERROR_SERVIDOR = 'ERROR_SERVIDOR', 'Error del servidor'
+        SEGURIDAD = 'SEGURIDAD', 'Seguridad'
+
+    class Severidad(models.TextChoices):
+        INFO = 'INFO', 'Informativa'
+        ATENCION = 'ATENCION', 'Requiere atención'
+        URGENTE = 'URGENTE', 'Urgente'
+
+    tipo = models.CharField('Tipo', max_length=20, choices=Tipo.choices)
+    mensaje = models.CharField('Mensaje', max_length=250)
+    detalle = models.TextField('Detalle', blank=True)
+    datos_json = models.JSONField('Datos', default=dict, blank=True)
+    severidad = models.CharField(
+        'Severidad', max_length=10,
+        choices=Severidad.choices, default=Severidad.INFO,
+    )
+    leida = models.BooleanField('Leída', default=False)
+    creada_en = models.DateTimeField('Creada el', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Alerta de sistema'
+        verbose_name_plural = 'Alertas de sistema'
+        ordering = ['-creada_en']
+        indexes = [models.Index(fields=['-creada_en'])]
+
+    def __str__(self):
+        return f'[{self.get_tipo_display()}] {self.mensaje[:60]}'
+
+    @property
+    def icono(self):
+        return {
+            self.Tipo.TRAFICO_PICO: 'bi-graph-up-arrow',
+            self.Tipo.TRAFICO_CAIDA: 'bi-graph-down-arrow',
+            self.Tipo.ERROR_SERVIDOR: 'bi-bug',
+            self.Tipo.SEGURIDAD: 'bi-shield-exclamation',
+        }.get(self.tipo, 'bi-cpu')

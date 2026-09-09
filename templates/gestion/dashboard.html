@@ -152,6 +152,118 @@
     </div>
 </div>
 
+<!-- ==================== ESTADO GENERAL ==================== -->
+<h2 class="g-seccion-titulo">
+    <i class="bi bi-activity"></i> Estado general
+</h2>
+{% comment %}
+    Tres preguntas distintas, tres columnas: como va el estudio, si llega
+    gente al sitio y si esta todo sano por debajo. En una sola lista
+    habria que leerlas todas para encontrar la que importa.
+{% endcomment %}
+<div class="row g-3 mb-4">
+
+    <!-- Negocio -->
+    <div class="col-lg-4">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo">
+                <span><i class="bi bi-graph-up"></i> Negocio</span>
+                {% if estado_negocio_total %}
+                    <span class="g-badge g-badge-naranja">{{ estado_negocio_total }}</span>
+                {% endif %}
+            </h2>
+
+            {% if estado_negocio %}
+                <div class="g-estado-lista">
+                {% for alerta in estado_negocio %}
+                    <div class="g-estado-item sev-{{ alerta.severidad|lower }}">
+                        <i class="bi {{ alerta.icono }}"></i>
+                        <div>
+                            <p>{{ alerta.mensaje }}</p>
+                            <span class="g-muted">{{ alerta.creada_en|date:"d/m H:i" }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+                <a href="{% url 'gestion:alertas_negocio' %}" class="g-card-pie">
+                    Ver todas <i class="bi bi-arrow-right"></i>
+                </a>
+            {% else %}
+                <div class="g-vacio">
+                    <i class="bi bi-emoji-smile"></i>
+                    <p class="mb-0">Sin novedades del negocio.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Trafico -->
+    <div class="col-lg-4">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo"><span><i class="bi bi-bar-chart"></i> Tráfico</span></h2>
+
+            <p class="g-muted" style="font-size:.82rem; line-height:1.6">
+                Las visitas al sitio, de dónde llegan y qué páginas miran
+                están en Google Analytics.
+            </p>
+            <a href="{{ ga_enlace }}" target="_blank" rel="noopener"
+               class="g-btn g-btn-neutro g-btn-sm">
+                <i class="bi bi-box-arrow-up-right"></i> Abrir Google Analytics
+            </a>
+
+            {% if estado_trafico %}
+                <div class="g-estado-lista" style="margin-top:.9rem">
+                {% for alerta in estado_trafico %}
+                    <div class="g-estado-item sev-{{ alerta.severidad|lower }}">
+                        <i class="bi {{ alerta.icono }}"></i>
+                        <div>
+                            <p>{{ alerta.mensaje }}</p>
+                            <span class="g-muted">{{ alerta.creada_en|date:"d/m H:i" }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Seguridad -->
+    <div class="col-lg-4">
+        <div class="g-card h-100">
+            <h2 class="g-card-titulo"><span><i class="bi bi-shield-check"></i> Seguridad</span></h2>
+
+            {% if not ve_seguridad %}
+                <div class="g-vacio">
+                    <i class="bi bi-lock"></i>
+                    <p class="mb-0">Solo lo revisa el superadministrador.</p>
+                </div>
+            {% elif estado_seguridad %}
+                <div class="g-estado-lista">
+                {% for evento in estado_seguridad %}
+                    <div class="g-estado-item sev-{{ evento.severidad|lower }}">
+                        <i class="bi {{ evento.icono }}"></i>
+                        <div>
+                            <p>{{ evento.mensaje }}</p>
+                            <span class="g-muted">
+                                {{ evento.cuando|date:"d/m H:i" }}{% if evento.ip %} · {{ evento.ip }}{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+                <a href="{% url 'gestion:alertas_sistema' %}" class="g-card-pie">
+                    Ver el estado del sistema <i class="bi bi-arrow-right"></i>
+                </a>
+            {% else %}
+                <div class="g-vacio">
+                    <i class="bi bi-shield-check"></i>
+                    <p class="mb-0">Sin movimientos raros de acceso.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
 <!-- ==================== GRÁFICOS ==================== -->
 <div class="row g-3 mb-4">
     <div class="col-lg-7">

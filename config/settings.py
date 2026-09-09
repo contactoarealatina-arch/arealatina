@@ -78,6 +78,7 @@ MIDDLEWARE = [
     'axes.middleware.AxesMiddleware',
     # Despues del de autenticacion: necesitan request.user resuelto.
     'apps.web.middleware.SitioPrivado',
+    'apps.web.middleware.ContadorVisitas',
     'apps.usuarios.middleware.CambioDeClaveObligatorio',
 ]
 
@@ -109,6 +110,7 @@ TEMPLATES = [
                 'django.template.context_processors.media',
                 'apps.web.context_processors.academia',
                 'apps.web.context_processors.areas',
+                'apps.web.context_processors.analitica',
                 'apps.gestion.context_processors.panel',
             ],
         },
@@ -244,6 +246,25 @@ if not DEBUG:
             CSRF_TRUSTED_ORIGINS = list(CSRF_TRUSTED_ORIGINS) + [origen]
 
 # ---------------------------------------------------------------------------
+# Avisos de errores del servidor
+# ---------------------------------------------------------------------------
+# Con DEBUG=False, Django manda un correo con el detalle completo cada vez
+# que una vista revienta con un 500. Sin esto, un error que le sale a un
+# alumno no se entera nadie hasta que alguien reclama.
+ADMINS = [
+    (nombre.strip(), correo.strip())
+    for nombre, _, correo in (
+        pareja.partition(':')
+        for pareja in env.list('ADMINS', default=['Equipo:contacto.arealatina@gmail.com'])
+    )
+    if correo.strip()
+]
+MANAGERS = ADMINS
+# Remitente de los correos de error. Va aparte de DEFAULT_FROM_EMAIL para
+# distinguir de un vistazo un aviso tecnico de un correo a un alumno.
+SERVER_EMAIL = env('SERVER_EMAIL', default='sistema@arealatinaestudio.cl')
+
+# ---------------------------------------------------------------------------
 # django-axes: freno a la fuerza bruta
 # ---------------------------------------------------------------------------
 # Reemplaza al freno artesanal que habia antes. Se prefiere axes porque
@@ -267,8 +288,23 @@ AXES_VERBOSE = True
 # ---------------------------------------------------------------------------
 # Es la defensa real contra XSS: aunque alguien logre inyectar un <script>,
 # el navegador se niega a ejecutarlo si no viene de un origen permitido.
+# Google Analytics. Se agrega aca y no solo en la plantilla porque la
+# CSP bloquea en silencio: el script no carga, no sale ningun error a la
+# vista, y el sitio pareceria estar midiendo sin medir nada.
+GA_MEASUREMENT_ID = env('GA_MEASUREMENT_ID', default='G-LXN4MY2SB5')
+# En la maquina de desarrollo no se mide: si no, las visitas de las
+# pruebas se mezclan con las de la gente y el informe deja de servir.
+GA_EN_DESARROLLO = env.bool('GA_EN_DESARROLLO', default=False)
+_HOSTS_ANALYTICS = (
+    'https://www.googletagmanager.com',
+    'https://www.google-analytics.com',
+    'https://analytics.google.com',
+    'https://stats.g.doubleclick.net',
+)
+
 CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", 'https://cdn.jsdelivr.net')
+CSP_SCRIPT_SRC = ("'self'", 'https://cdn.jsdelivr.net',
+                  'https://www.googletagmanager.com')
 # Cada carga genera un nonce distinto y solo los <script> que lo llevan
 # se ejecutan. Asi los scripts propios en linea funcionan sin abrir la
 # puerta con 'unsafe-inline': un script inyectado no puede adivinarlo.
@@ -276,7 +312,7 @@ CSP_INCLUDE_NONCE_IN = ['script-src']
 # Los navegadores piden los .map de las librerias cuando estan abiertas
 # las herramientas de desarrollo. Sin esto la consola se llena de errores
 # que no son problemas reales.
-CSP_CONNECT_SRC = ("'self'", 'https://cdn.jsdelivr.net')
+CSP_CONNECT_SRC = ("'self'", 'https://cdn.jsdelivr.net') + _HOSTS_ANALYTICS
 CSP_STYLE_SRC = ("'self'", 'https://cdn.jsdelivr.net',
                  'https://fonts.googleapis.com', "'unsafe-inline'")
 CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net')

@@ -1,0 +1,26 @@
+{% load formato %}AREA LATINA ESTUDIO - Resumen semanal
+Semana del {{ desde|date:"d/m/Y" }} al {{ hasta|date:"d/m/Y" }}
+============================================================
+
+INGRESOS:       ${{ ingresos|clp }}{% if variacion_ingresos is not None %} ({% if variacion_ingresos >= 0 %}+{% endif %}{{ variacion_ingresos }}% vs semana anterior){% else %} (semana anterior: ${{ ingresos_previos|clp }}){% endif %}
+ALUMNOS NUEVOS: {{ alumnos_nuevos }}
+{% if nombres_nuevos %}
+SE SUMARON
+------------------------------------------------------------
+{% for nombre in nombres_nuevos %}- {{ nombre }}
+{% endfor %}{% endif %}{% if clase_top %}
+ASISTENCIA DE LA SEMANA
+------------------------------------------------------------
+Mas asistencia:  {{ clase_top.clase__nombre }} ({{ clase_top.total }}){% if clase_baja %}
+Menos asistencia: {{ clase_baja.clase__nombre }} ({{ clase_baja.total }}){% endif %}
+
+Solo se cuentan las clases donde alguien paso lista. Una clase que
+no aparece no es una clase vacia: es una lista sin tomar.
+{% endif %}
+ALERTAS DE NEGOCIO
+------------------------------------------------------------
+{% if alertas_negocio %}{{ alertas_negocio }} alerta(s) generadas esta semana.{% else %}Ninguna esta semana.{% endif %}
+
+------------------------------------------------------------
+Ver el panel: {{ url_panel }}
+============================================================

@@ -1,0 +1,128 @@
+{% extends 'gestion/base_gestion.html' %}
+
+{% block titulo %}Estado del sistema{% endblock %}
+{% block encabezado %}Estado del sistema{% endblock %}
+{% block subtitulo %}
+    <div class="g-subtitulo">
+        Seguridad, errores y tráfico en una sola línea de tiempo
+    </div>
+{% endblock %}
+
+{% block acciones %}
+    <form method="post" action="{% url 'gestion:alertas_sistema_revisar' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="g-btn g-btn-neutro g-btn-sm">
+            <i class="bi bi-arrow-clockwise"></i> <span class="d-none d-sm-inline">Revisar tráfico</span>
+        </button>
+    </form>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="g-banner g-banner-info">
+    <i class="bi bi-cpu"></i>
+    <div>
+        Lo técnico, en un solo lugar. Los errores del servidor además llegan
+        por correo apenas ocurren; acá quedan registrados para poder contar
+        cuántos van y desde cuándo.
+    </div>
+</div>
+
+{% if trafico %}
+{% comment %}
+    El tráfico de los últimos días como barras. Sin la serie al lado, un
+    "340% sobre el promedio" no se puede juzgar: puede ser de 10 a 34
+    visitas, que no es noticia.
+{% endcomment %}
+<div class="g-card mb-3">
+    <div class="g-card-titulo">
+        <span><i class="bi bi-bar-chart"></i> Visitas de los últimos días</span>
+    </div>
+    <div class="g-trafico">
+        {% for dia in trafico %}
+        <div class="g-trafico-dia" title="{{ dia.fecha|date:'d/m/Y' }}: {{ dia.visitas_estimadas }} visita{{ dia.visitas_estimadas|pluralize }}">
+            <div class="g-trafico-barra" style="height: {{ dia.altura_px }}px"></div>
+            <div class="g-trafico-etiqueta">{{ dia.fecha|date:"d/m" }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    <p class="g-muted" style="font-size:.78rem; margin:.6rem 0 0">
+        Conteo propio de páginas vistas en el sitio público, sin contar al
+        equipo. Para analizar de verdad el tráfico está
+        <a href="https://analytics.google.com/" target="_blank" rel="noopener">Google Analytics</a>.
+    </p>
+</div>
+{% endif %}
+
+<form method="get" class="g-barra">
+    <select name="tipo" class="g-filtro-select" data-filtro-auto>
+        <option value="">Todo</option>
+        {% for valor, etiqueta in tipos %}
+            <option value="{{ valor }}" {% if tipo == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+    </select>
+    {% if tipo %}
+        <a href="{% url 'gestion:alertas_sistema' %}" class="g-btn g-btn-neutro g-btn-sm">
+            <i class="bi bi-x-lg"></i> Limpiar
+        </a>
+    {% endif %}
+    <noscript><button type="submit" class="g-btn g-btn-primario g-btn-sm">Filtrar</button></noscript>
+</form>
+
+{% if eventos %}
+<div class="g-lista-alertas">
+    {% for evento in eventos %}
+    <article class="g-alerta-fila {% if not evento.leida %}sin-leer{% endif %} sev-{{ evento.severidad|lower }}">
+        <div class="g-alerta-icono"><i class="bi {{ evento.icono }}"></i></div>
+
+        <div class="g-alerta-cuerpo">
+            <div class="g-alerta-cabeza">
+                <span class="g-badge {% if evento.severidad == 'URGENTE' %}g-badge-rojo{% elif evento.severidad == 'ATENCION' %}g-badge-amarillo{% else %}g-badge-gris{% endif %}">
+                    {{ evento.origen }}
+                </span>
+                {% if evento.quien %}<span class="g-muted">{{ evento.quien }}</span>{% endif %}
+                {% if evento.ip %}<span class="g-muted">{{ evento.ip }}</span>{% endif %}
+                <span class="g-muted g-alerta-fecha">{{ evento.cuando|date:"d/m/Y H:i" }}</span>
+            </div>
+
+            <p class="g-alerta-mensaje">{{ evento.mensaje }}</p>
+
+            {% if evento.detalle %}
+            <details class="g-alerta-datos">
+                <summary>Ver el detalle</summary>
+                <p style="margin:.5rem 0 0">{{ evento.detalle }}</p>
+            </details>
+            {% endif %}
+        </div>
+
+        {% if evento.id_alerta and not evento.leida %}
+        <form method="post" action="{% url 'gestion:alerta_sistema_leer' evento.id_alerta %}">
+            {% csrf_token %}
+            <input type="hidden" name="siguiente" value="{{ request.get_full_path }}">
+            <button type="submit" class="g-btn g-btn-neutro g-btn-sm" title="Marcar como leída">
+                <i class="bi bi-check2"></i>
+            </button>
+        </form>
+        {% endif %}
+    </article>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="g-tabla-envoltura">
+    <div class="g-vacio">
+        <i class="bi bi-shield-check"></i>
+        <h3>Todo tranquilo</h3>
+        <p>
+            {% if tipo %}
+                Nada de ese tipo por ahora.
+            {% else %}
+                Sin errores del servidor, sin accesos sospechosos y con el
+                tráfico dentro de lo normal.
+            {% endif %}
+        </p>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
