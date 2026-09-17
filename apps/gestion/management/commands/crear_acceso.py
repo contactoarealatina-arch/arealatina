@@ -14,7 +14,7 @@ más la conoce).
 
 Con --sin-correo se crea la cuenta pero no se envía nada.
 
-El envío va por SMTP real aunque DEBUG esté en True: si no, el correo se
+El envío va por la API real aunque DEBUG esté en True: si no, el correo se
 imprimiría en la consola y no llegaría a ninguna parte.
 """
 from django.contrib.auth import get_user_model
@@ -27,7 +27,7 @@ from apps.gestion.models import Alumno, Clase, Plan, Suscripcion, TokenActivacio
 
 Usuario = get_user_model()
 
-BACKEND_REAL = 'django.core.mail.backends.smtp.EmailBackend'
+BACKEND_REAL = 'apps.gestion.email_backends.BrevoAPIBackend'
 
 
 class Command(BaseCommand):
@@ -67,7 +67,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING('Correo omitido (--sin-correo).'))
             return
 
-        self._enviar(usuario, token, alumno)
+        self._enviar(usuario, token, alumno, opciones.get('clave') or '')
 
     # ------------------------------------------------------------------
     def _profesor(self, opciones):
@@ -179,14 +179,14 @@ class Command(BaseCommand):
         return usuario
 
     # ------------------------------------------------------------------
-    def _enviar(self, usuario, token, alumno):
+    def _enviar(self, usuario, token, alumno, clave_temporal=''):
         from apps.gestion import correos
         from django.conf import settings
         from django.urls import reverse
 
-        if not settings.EMAIL_HOST_PASSWORD:
+        if not settings.BREVO_API_KEY:
             self.stdout.write(self.style.ERROR(
-                'Falta EMAIL_HOST_PASSWORD en el .env: el correo no puede salir.'))
+                'Falta BREVO_API_KEY en el .env: el correo no puede salir.'))
             return
 
         enlace = ''
@@ -194,11 +194,16 @@ class Command(BaseCommand):
             base = getattr(settings, 'SITIO_URL', 'http://localhost:8000').rstrip('/')
             enlace = base + reverse('portal:activar', args=[token.token])
 
-        # SMTP real aunque DEBUG esté activo: si no, el correo solo se
+        # API real aunque DEBUG esté activo: si no, el correo solo se
         # imprimiría en la consola.
         with override_settings(EMAIL_BACKEND=BACKEND_REAL):
             if alumno is not None:
-                enviado, motivo = correos.enviar_bienvenida(alumno, enlace, usuario)
+                enviado, motivo = correos.enviar_bienvenida(
+                    alumno,
+                    usuario=usuario,
+                    clave_temporal=clave_temporal,
+                    url_activacion=enlace,
+                )
             else:
                 enviado, motivo = correos.enviar_bienvenida_profesora(usuario, enlace)
 

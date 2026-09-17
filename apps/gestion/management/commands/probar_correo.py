@@ -1,13 +1,11 @@
-"""Prueba el envío real por SMTP, sin importar el valor de DEBUG.
+"""Prueba el envío real por la API HTTPS de Brevo.
 
 Uso:
     python manage.py probar_correo destino@ejemplo.cl
     python manage.py probar_correo destino@ejemplo.cl --plantilla bienvenida
 
-Sirve para verificar que la clave de Brevo funciona y para revisar cómo se
-ve cada plantilla en un cliente de correo de verdad. Fuerza el backend SMTP
-porque en desarrollo (DEBUG=True) los correos solo se imprimen en consola y
-eso no prueba nada.
+Sirve para verificar que la clave API de Brevo funciona y para revisar cómo
+se ve cada plantilla en un cliente de correo de verdad.
 """
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, get_connection
@@ -22,7 +20,7 @@ PLANTILLAS = [
 
 
 class Command(BaseCommand):
-    help = 'Envía un correo de prueba por SMTP real para verificar Brevo.'
+    help = 'Envía un correo de prueba por la API HTTPS de Brevo.'
 
     def add_arguments(self, parser):
         parser.add_argument('destino', help='Correo que recibirá la prueba.')
@@ -36,15 +34,14 @@ class Command(BaseCommand):
         destino = opciones['destino']
         plantilla = opciones.get('plantilla')
 
-        if not settings.EMAIL_HOST_PASSWORD:
+        if not settings.BREVO_API_KEY:
             raise CommandError(
-                'Falta EMAIL_HOST_PASSWORD en el archivo .env. '
-                'Sin la clave SMTP de Brevo no se puede enviar nada.'
+                'Falta BREVO_API_KEY en el archivo .env. '
+                'Sin la clave API de Brevo no se puede enviar nada.'
             )
 
         self.stdout.write('Configuración:')
-        self.stdout.write(f'  Servidor:   {settings.EMAIL_HOST}:{settings.EMAIL_PORT}')
-        self.stdout.write(f'  Usuario:    {settings.EMAIL_HOST_USER}')
+        self.stdout.write('  Transporte: API HTTPS de Brevo')
         self.stdout.write(f'  Remitente:  {settings.DEFAULT_FROM_EMAIL}')
         self.stdout.write(f'  Destino:    {destino}')
         self.stdout.write('')
@@ -54,14 +51,9 @@ class Command(BaseCommand):
         else:
             asunto, texto, html = self._correo_simple()
 
-        # Conexión SMTP explícita: ignora el backend de consola de DEBUG.
+        # Conexion API explicita: ignora el backend de consola de DEBUG.
         conexion = get_connection(
-            backend='django.core.mail.backends.smtp.EmailBackend',
-            host=settings.EMAIL_HOST,
-            port=settings.EMAIL_PORT,
-            username=settings.EMAIL_HOST_USER,
-            password=settings.EMAIL_HOST_PASSWORD,
-            use_tls=settings.EMAIL_USE_TLS,
+            backend='apps.gestion.email_backends.BrevoAPIBackend',
             fail_silently=False,
         )
 
@@ -81,7 +73,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'FALLÓ: {error}'))
             self.stdout.write('')
             self.stdout.write(self.style.WARNING('Posibles causas:'))
-            self.stdout.write('  · La clave SMTP no es la correcta.')
+            self.stdout.write('  · La clave API no es correcta o expiró.')
             self.stdout.write('  · El remitente no está verificado en Brevo.')
             self.stdout.write('  · Se acabaron los créditos del día (300 en el plan gratis).')
             raise CommandError('No se pudo enviar.')

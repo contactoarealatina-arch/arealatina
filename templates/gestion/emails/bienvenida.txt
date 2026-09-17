@@ -20,15 +20,20 @@ Plan:         {{ suscripcion.plan.nombre }}
 Desde:        {{ suscripcion.fecha_inicio|date:"d/m/Y" }}
 Valido hasta: {{ suscripcion.fecha_vencimiento|date:"d/m/Y" }}
 {% endif %}
-{% if clave %}TU ACCESO
+{% if clave or url_activacion %}TU ACCESO
 ------------------------------------------------------------
 Entras con tu correo: {{ usuario.username }}
+{% if clave %}
 Contrasena temporal:  {{ clave }}
 
 Entra aqui: {{ url_portal }}
 
 Apenas entres te vamos a pedir que elijas tu propia contrasena.
 La de arriba deja de servir en ese momento.
+{% else %}
+Crea tu contrasena aqui: {{ url_activacion }}
+Este enlace es personal y se puede usar una sola vez.
+{% endif %}
 
 Desde tu espacio ves tu plan, cuanto te queda y tus clases de
 la semana.

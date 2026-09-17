@@ -81,9 +81,10 @@ quedar en el cron del hosting, una vez al día. Alternativa: dejar corriendo
 ## Configuración
 
 Las credenciales viven en `.env` (no versionado); `.env.example` muestra las
-variables. Para el envío real de correos hay que completar
-`EMAIL_HOST_PASSWORD` con la clave SMTP de Brevo y poner `DEBUG=False`.
-Con `DEBUG=True` los correos se imprimen en la consola.
+variables. Para el envío real de correos en Railway hay que completar
+`BREVO_API_KEY`, usar `EMAIL_BACKEND=brevo` y poner `DEBUG=False`.
+Con `DEBUG=True` los correos se imprimen en la consola salvo que se fuerce el
+backend de Brevo.
 
 ## Paleta
 

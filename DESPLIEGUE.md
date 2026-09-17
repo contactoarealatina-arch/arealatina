@@ -12,7 +12,7 @@ equipo del estudio mientras se prueba.
 | Cuenta en railway.com | Donde vive el sistema | Diego |
 | Dominio en nic.cl | La direccion final | El estudio (lo paga) |
 | Cuenta Cloudflare + bucket R2 | Guardar fotos y boletas | Diego |
-| Clave SMTP de Brevo | Que salgan los correos | Ya existe |
+| Clave API de Brevo | Que salgan los correos | Ya existe |
 | Clave nueva de administrador | Reemplazar la de prueba | El estudio la elige |
 
 ---
@@ -51,11 +51,8 @@ DB_SSLMODE=require
 ALLOWED_HOSTS=arealatinaestudio.cl,www.arealatinaestudio.cl
 CSRF_TRUSTED_ORIGINS=https://arealatinaestudio.cl,https://www.arealatinaestudio.cl
 
-EMAIL_BACKEND=smtp
-EMAIL_HOST=smtp-relay.brevo.com
-EMAIL_PORT=587
-EMAIL_HOST_USER=b31a8d001@smtp-brevo.com
-EMAIL_HOST_PASSWORD=       (la clave SMTP de Brevo)
+EMAIL_BACKEND=brevo
+BREVO_API_KEY=             (la clave API de Brevo; no la clave SMTP)
 DEFAULT_FROM_EMAIL=Area Latina Estudio <contacto@arealatinaestudio.cl>
 CONTACTO_EMAIL=contacto.arealatina@gmail.com
 

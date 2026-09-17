@@ -180,10 +180,10 @@ class Command(BaseCommand):
         from apps.gestion.models import ConfiguracionAlertas, CorreoEnviado
 
         config = ConfiguracionAlertas.obtener()
-        if not config.envio_activo or not settings.EMAIL_HOST_PASSWORD:
+        if not config.envio_activo or not settings.BREVO_API_KEY:
             return
 
-        backend = 'django.core.mail.backends.smtp.EmailBackend'
+        backend = 'apps.gestion.email_backends.BrevoAPIBackend'
         with override_settings(EMAIL_BACKEND=backend):
             correos._enviar(
                 tipo=CorreoEnviado.Tipo.RESUMEN,

@@ -1,6 +1,6 @@
 """Todos los correos que manda el sistema.
 
-Se envían por el relay SMTP de Brevo. Cada envío queda registrado en
+Se envian por la API HTTPS de Brevo. Cada envio queda registrado en
 CorreoEnviado, por dos motivos concretos:
 
 - No repetir un aviso que ya se mandó (el cron corre todos los días).
@@ -92,7 +92,7 @@ def _enviar(tipo, destinatarios, asunto, plantilla, contexto,
     if solo_consola:
         logger.warning(
             'Correo %s a %s NO se envió: el backend está en consola. '
-            'Define EMAIL_BACKEND=smtp en el .env para enviar de verdad.',
+            'Define EMAIL_BACKEND=brevo en el .env para enviar de verdad.',
             tipo, destinatarios,
         )
         return True, ('Impreso en consola, NO enviado: el backend de correo '
@@ -137,16 +137,18 @@ def _url(nombre, *args):
 
 
 def _configurado():
-    """En producción sin clave SMTP no se intenta siquiera."""
+    """En produccion no intenta enviar sin la credencial del backend."""
     if settings.DEBUG:
         return True
+    if settings.EMAIL_BACKEND == 'apps.gestion.email_backends.BrevoAPIBackend':
+        return bool(settings.BREVO_API_KEY)
     return bool(settings.EMAIL_HOST_PASSWORD)
 
 
 # ---------------------------------------------------------------------------
 # 1. Bienvenida
 # ---------------------------------------------------------------------------
-def enviar_bienvenida(alumno, usuario=None, clave_temporal=''):
+def enviar_bienvenida(alumno, usuario=None, clave_temporal='', url_activacion=''):
     """La bienvenida con el detalle del registro y su acceso.
 
     Lleva la contraseña temporal en el cuerpo. No es lo ideal —queda
@@ -170,6 +172,7 @@ def enviar_bienvenida(alumno, usuario=None, clave_temporal=''):
             'clases': [i.clase for i in alumno.inscripciones.select_related('clase')],
             'usuario': usuario or alumno.usuario,
             'clave': clave_temporal,
+            'url_activacion': url_activacion,
             'url_portal': _url('portal:login'),
         },
         alumno=alumno,
@@ -248,7 +251,7 @@ def enviar_bienvenida_profesora(profesora, clave_temporal=''):
     casilla que reciba mensajes.
     """
     if not _configurado():
-        return False, 'SMTP sin configurar.'
+        return False, 'Correo sin configurar.'
     if not profesora.correo_de_contacto:
         return False, 'La profesora no tiene email registrado.'
 
@@ -337,7 +340,7 @@ def enviar_recordatorios_profesoras(fecha=None):
 # ---------------------------------------------------------------------------
 def enviar_mensaje_contacto(mensaje_web):
     if not _configurado():
-        return False, 'SMTP sin configurar.'
+        return False, 'Correo sin configurar.'
 
     return _enviar(
         tipo=CorreoEnviado.Tipo.CONTACTO,
@@ -438,7 +441,7 @@ def enviar_confirmacion_asistencia(confirmacion):
 def avisar_solicitud_renovacion(alumno):
     """El alumno pidió renovar desde su portal."""
     if not _configurado():
-        return False, 'SMTP sin configurar.'
+        return False, 'Correo sin configurar.'
 
     suscripcion = (alumno.suscripcion_vigente
                    or alumno.suscripciones.order_by('-fecha_vencimiento').first())
@@ -461,7 +464,7 @@ def avisar_solicitud_renovacion(alumno):
 def avisar_token_expirado(usuario):
     """Alguien intentó activar su cuenta con un enlace vencido."""
     if not _configurado():
-        return False, 'SMTP sin configurar.'
+        return False, 'Correo sin configurar.'
 
     return _enviar(
         tipo=CorreoEnviado.Tipo.CONTACTO,
@@ -489,7 +492,7 @@ def enviar_resumen(resumen):
     if not config.envio_activo:
         return False, 'El resumen diario está desactivado.'
     if not _configurado():
-        return False, 'Falta la clave SMTP en el archivo .env.'
+        return False, 'Falta la credencial de Brevo en el entorno.'
 
     destinatarios = config.lista_emails
     if not destinatarios:
@@ -618,7 +621,7 @@ def enviar_informe_mensual(referencia=None):
     from .servicios import cierre_mensual
 
     if not _configurado():
-        return False, 'SMTP sin configurar.'
+        return False, 'Correo sin configurar.'
 
     datos = cierre_mensual(referencia)
 
@@ -648,7 +651,7 @@ def enviar_resumen_semanal(referencia=None):
     from .negocio import resumen_semanal
 
     if not _configurado():
-        return False, 'SMTP sin configurar.'
+        return False, 'Correo sin configurar.'
 
     config = ConfiguracionAlertas.obtener()
     if not config.enviar_resumen_semanal:
@@ -687,7 +690,7 @@ def enviar_pedido_resena(alumno, semanas, clases_asistidas):
     if not enlace:
         return False, 'Falta configurar el enlace de resenas de Google.'
     if not _configurado():
-        return False, 'SMTP sin configurar.'
+        return False, 'Correo sin configurar.'
 
     return _enviar(
         tipo=CorreoEnviado.Tipo.RESENA,

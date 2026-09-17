@@ -418,13 +418,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Email
 # ---------------------------------------------------------------------------
 # Por defecto en desarrollo el correo sale por consola, y en produccion
-# por SMTP. Pero se puede forzar desde el .env con EMAIL_BACKEND.
+# por la API HTTPS de Brevo. Pero se puede forzar desde EMAIL_BACKEND.
 #
 # Esto existe porque ataba el backend a DEBUG: en la maquina de desarrollo
 # los correos solo se imprimian en la terminal y el sistema los daba por
 # enviados, asi que parecia que "no llegaban" sin ningun error a la vista.
-# Para probar envios reales en local:  EMAIL_BACKEND=smtp
+# Para probar envios reales en local:  EMAIL_BACKEND=brevo
 ATAJOS_EMAIL = {
+    'brevo': 'apps.gestion.email_backends.BrevoAPIBackend',
     'smtp': 'django.core.mail.backends.smtp.EmailBackend',
     'consola': 'apps.gestion.email_backends.EmailBackend',
     'dummy': 'django.core.mail.backends.dummy.EmailBackend',
@@ -437,7 +438,7 @@ elif DEBUG:
     # con UTF-8.
     EMAIL_BACKEND = ATAJOS_EMAIL['consola']
 else:
-    EMAIL_BACKEND = ATAJOS_EMAIL['smtp']
+    EMAIL_BACKEND = ATAJOS_EMAIL['brevo']
 
 # True cuando el correo se esta imprimiendo en vez de enviarse. El panel
 # lo muestra para que nadie vuelva a creer que los correos se perdieron.
@@ -455,10 +456,11 @@ EMAIL_USE_TLS = True
 # de la academia: son cosas distintas y confundirlas rebota el envío.
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+BREVO_API_KEY = env('BREVO_API_KEY', default='')
 # Tiene que ser un remitente VERIFICADO en Brevo o el envío se rechaza.
 DEFAULT_FROM_EMAIL = env(
     'DEFAULT_FROM_EMAIL',
-    default='Area Latina Estudio <contacto.arealatina@gmail.com>',
+    default='Area Latina Estudio <contacto@arealatinaestudio.cl>',
 )
 
 # Dominio para los enlaces de los correos: en un correo una ruta relativa
