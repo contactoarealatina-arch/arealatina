@@ -1,17 +1,13 @@
-"""Mantiene privados los paneles internos mientras se revisa el sitio.
-
-Las paginas publicas se pueden recorrer y el formulario de contacto queda
-disponible para nuevas inscripciones. Los paneles y rutas internas siguen
-protegidos por sus permisos normales; para una visita anonima se conserva
-la pantalla de preparacion como respaldo.
-"""
+"""Mantiene el sitio fuera de la vista publica mientras se revisa."""
 from django.conf import settings
 from django.shortcuts import render
 from django.urls import resolve
 
 
 class SitioPrivado:
-    """Deja abierta la web publica y tapa las rutas internas anonimas."""
+    """Deja pasar a usuarios autenticados o navegadores con PIN valido."""
+
+    SESION_REVISION = 'sitio_revision_autorizada'
 
     # Las puertas quedan abiertas: si se cerraran, nadie del estudio
     # podria entrar a probar, que es justo para lo que esta arriba.
@@ -21,6 +17,7 @@ class SitioPrivado:
         'portal:login',
         'portal:activar',
         'portal:token_expirado',
+        'web:revision',
         'robots',
     }
 
@@ -36,7 +33,12 @@ class SitioPrivado:
             # 503 y no 404: le dice al buscador "vuelve despues, esto no
             # es una pagina que no existe". Con 404 podria darla de baja
             # de su indice y despues costaria recuperar la posicion.
-            return render(request, 'web/privado.html', status=503)
+            return render(
+                request,
+                'web/privado.html',
+                {'next': request.get_full_path()},
+                status=503,
+            )
 
         return self.get_response(request)
 
@@ -46,6 +48,11 @@ class SitioPrivado:
 
         usuario = getattr(request, 'user', None)
         if usuario is not None and usuario.is_authenticated:
+            return False
+
+        # El PIN no inicia una cuenta ni abre los paneles: solo permite que
+        # este navegador recorra la web para revisarla antes de publicarla.
+        if request.session.get(self.SESION_REVISION, False):
             return False
 
         if request.path.startswith(self.PREFIJOS):
@@ -59,10 +66,6 @@ class SitioPrivado:
 
         nombre = (f'{coincidencia.namespace}:{coincidencia.url_name}'
                   if coincidencia.namespace else (coincidencia.url_name or ''))
-        # Inicio, clases, contacto/inscripcion, privacidad y derechos son
-        # paginas publicas incluso durante la revision previa al lanzamiento.
-        if coincidencia.namespace == 'web':
-            return False
         return nombre not in self.PERMITIDAS
 
 
@@ -76,6 +79,8 @@ class ContadorVisitas:
     visitante haya aceptado la medición: acá no se guarda nada de la
     persona, solo cuántas páginas se pidieron ese día.
     """
+
+    SESION_REVISION = SitioPrivado.SESION_REVISION
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -101,6 +106,11 @@ class ContadorVisitas:
         # El equipo entrando a mirar su propio sitio no es tráfico.
         usuario = getattr(request, 'user', None)
         if usuario is not None and usuario.is_authenticated:
+            return False
+
+        # El PIN no inicia una cuenta ni abre los paneles: solo permite que
+        # este navegador recorra la web para revisarla antes de publicarla.
+        if request.session.get(self.SESION_REVISION, False):
             return False
 
         coincidencia = getattr(request, 'resolver_match', None)

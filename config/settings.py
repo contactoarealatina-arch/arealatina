@@ -30,8 +30,9 @@ if DOMINIO_RAILWAY and DOMINIO_RAILWAY not in ALLOWED_HOSTS:
     ALLOWED_HOSTS = list(ALLOWED_HOSTS) + [DOMINIO_RAILWAY]
 
 # Mientras esto sea verdadero, el sitio solo se le muestra a quien tenga
-# cuenta. Es el interruptor para tenerlo arriba sin que lo vea la gente.
+# cuenta o haya abierto la vista previa con el PIN de revision.
 SITIO_PRIVADO = env.bool('SITIO_PRIVADO', default=False)
+SITIO_PIN = env('SITIO_PIN', default='5577')
 
 # ---------------------------------------------------------------------------
 # Aplicaciones

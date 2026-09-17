@@ -1,9 +1,6 @@
 {% comment %}
     Lo que ve alguien de afuera mientras el estudio prueba el sistema.
-
-    No extiende la base del sitio a proposito: la base trae el menu, y
-    cada enlace de ese menu lleva a una pagina que esta tapada. Mejor una
-    sola pantalla que se explique sola.
+    El PIN abre solo la vista previa; los paneles mantienen su login.
 {% endcomment %}<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -24,7 +21,7 @@
             padding: 24px;
             box-sizing: border-box;
         }
-        .caja { max-width: 460px; text-align: center; }
+        .caja { width: 100%; max-width: 500px; text-align: center; }
         .marca {
             font-size: 12px;
             letter-spacing: 3px;
@@ -33,21 +30,71 @@
             font-weight: 700;
             margin-bottom: 18px;
         }
-        h1 { font-size: 26px; line-height: 1.3; margin: 0 0 14px; }
-        p { color: #B0B0B0; line-height: 1.7; margin: 0 0 26px; font-size: 15px; }
-        .entrar {
-            display: inline-block;
-            padding: 13px 30px;
+        h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.15; margin: 0 0 16px; }
+        p { color: #B0B0B0; line-height: 1.7; margin: 0; font-size: 15px; }
+        .acceso {
+            max-width: 370px;
+            margin: 34px auto 0;
+            padding: 24px;
+            border: 1px solid #302824;
+            border-radius: 16px;
+            background: #151311;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, .28);
+        }
+        .acceso-titulo {
+            display: block;
+            margin-bottom: 6px;
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .acceso-ayuda {
+            display: block;
+            margin-bottom: 15px;
+            color: #817A76;
+            font-size: 12px;
+        }
+        .fila-pin { display: flex; gap: 10px; }
+        .pin {
+            width: 100%;
+            min-width: 0;
+            padding: 13px 14px;
+            border: 1px solid #403630;
+            border-radius: 9px;
+            outline: none;
+            background: #0D0D0D;
+            color: #FFFFFF;
+            text-align: center;
+            font: 700 18px/1 system-ui, sans-serif;
+            letter-spacing: 6px;
+        }
+        .pin:focus {
+            border-color: #FF5722;
+            box-shadow: 0 0 0 3px rgba(255, 87, 34, .15);
+        }
+        .boton {
+            border: 0;
+            padding: 13px 20px;
             background: #FF5722;
             color: #FFFFFF;
-            border-radius: 8px;
-            text-decoration: none;
+            border-radius: 9px;
             font-weight: 700;
-            font-size: 15px;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
         }
-        .entrar:hover { background: #E64A19; }
-        .pie { margin-top: 30px; font-size: 13px; color: #7A716C; }
-        .pie a { color: #7A716C; }
+        .boton:hover { background: #E64A19; }
+        .error {
+            margin: 12px 0 0;
+            color: #FF8A65;
+            font-size: 13px;
+        }
+        .pie { margin-top: 24px; font-size: 13px; color: #7A716C; }
+        .pie a { color: #A9A29E; text-underline-offset: 3px; }
+        @media (max-width: 480px) {
+            .fila-pin { flex-direction: column; }
+            .boton { width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -58,9 +105,28 @@
             Volvemos muy pronto. Mientras tanto nos escribes por WhatsApp o
             nos pasas a ver a Guillermo Gallardo 310, Puerto Montt.
         </p>
-        <a class="entrar" href="{% url 'usuarios:login' %}">Entrar</a>
+
+        <form class="acceso" method="post" action="{% url 'web:revision' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next|default:'/' }}">
+            <label class="acceso-titulo" for="pin">Vista previa privada</label>
+            <span class="acceso-ayuda" id="ayuda-pin">Ingresa el PIN entregado al equipo de revisión.</span>
+            <div class="fila-pin">
+                <input class="pin" id="pin" name="pin" type="password"
+                       inputmode="numeric" pattern="[0-9]*" maxlength="8"
+                       autocomplete="one-time-code"
+                       aria-describedby="ayuda-pin{% if error_pin %} pin-error{% endif %}"
+                       placeholder="• • • •" required autofocus>
+                <button class="boton" type="submit">Ver el sitio</button>
+            </div>
+            {% if error_pin %}
+                <div class="error" id="pin-error" role="alert">{{ error_pin }}</div>
+            {% endif %}
+        </form>
+
         <div class="pie">
-            Si eres parte del estudio, entra con tu correo.
+            ¿Eres parte del estudio?
+            <a href="{% url 'usuarios:login' %}">Entrar con tu cuenta</a>
         </div>
     </main>
 </body>

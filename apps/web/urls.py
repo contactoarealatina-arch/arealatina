@@ -8,6 +8,7 @@ app_name = 'web'
 # solo la usa quien ya es parte del estudio, y llega por el pie o por el
 # botón "Entrar".
 urlpatterns = [
+    path('revision/', views.acceso_revision, name='revision'),
     path('', views.index, name='index'),
     path('clases/', views.clases, name='clases'),
     path('contacto/', views.contacto, name='contacto'),

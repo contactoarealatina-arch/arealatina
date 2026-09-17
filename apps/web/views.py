@@ -8,14 +8,21 @@ el mensaje se diluía. Ahora el estudio cuenta dos cosas, Baile Urbano y
 Bienestar, y todo lo demás (quiénes somos, las fotos, los testimonios)
 vive dentro del inicio.
 """
+import secrets
+
+from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from apps.gestion.models import Categoria, Clase, Evento, Foto, Plan, Testimonio
 
 from .forms import ContactoForm
+
+
+SESION_REVISION = 'sitio_revision_autorizada'
 
 # ---------------------------------------------------------------------------
 # Textos institucionales
@@ -179,6 +186,35 @@ def _pilares():
 # ---------------------------------------------------------------------------
 # Páginas
 # ---------------------------------------------------------------------------
+
+def acceso_revision(request):
+    """Abre la vista previa del sitio en este navegador mediante un PIN."""
+    destino = request.POST.get('next') or '/'
+    if not url_has_allowed_host_and_scheme(
+        destino,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        destino = '/'
+
+    if not settings.SITIO_PRIVADO:
+        return redirect(destino)
+
+    if request.method == 'POST':
+        pin_recibido = request.POST.get('pin', '').strip()
+        pin_correcto = str(getattr(settings, 'SITIO_PIN', ''))
+        if pin_correcto and secrets.compare_digest(pin_recibido, pin_correcto):
+            request.session.cycle_key()
+            request.session[SESION_REVISION] = True
+            request.session.set_expiry(60 * 60 * 8)
+            return redirect(destino)
+
+        return render(request, 'web/privado.html', {
+            'error_pin': 'El PIN no es correcto. Inténtalo nuevamente.',
+            'next': destino,
+        })
+
+    return render(request, 'web/privado.html', {'next': destino})
 
 def index(request):
     """Inicio: hero, los dos pilares, quiénes somos, fotos y testimonios.

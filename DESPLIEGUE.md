@@ -44,6 +44,7 @@ Railway rota la clave de la base, la referencia se actualiza sola.
 SECRET_KEY=              (generar una nueva, ver abajo)
 DEBUG=False
 SITIO_PRIVADO=True
+SITIO_PIN=5577
 
 DATABASE_URL=${{Postgres.DATABASE_URL}}
 DB_SSLMODE=require
@@ -166,10 +167,11 @@ No hace falta bajar el servidor para que la gente no lo vea.
 | Que nadie lo vea, pero el equipo entre a probar | `SITIO_PRIVADO=True` |
 | Abrirlo al publico | `SITIO_PRIVADO=False` |
 
-Con `SITIO_PRIVADO=True`, quien llegue de afuera ve una pantalla de
-"estamos preparando el sitio" con un boton para entrar, y el
-`robots.txt` le dice a Google que no indexe nada. Quien tiene cuenta y
-sesion iniciada ve el sitio completo, igual que siempre.
+Con `SITIO_PRIVADO=True`, quien llegue de afuera ve la pantalla de
+"estamos preparando el sitio". El equipo de revision puede ingresar el
+`SITIO_PIN` y recorrer la web completa durante 8 horas en ese navegador.
+Los paneles internos conservan sus logins y permisos normales. El
+`robots.txt` le dice a Google que no indexe nada.
 
 Cambiar la variable reinicia el servicio: son unos 40 segundos.
 

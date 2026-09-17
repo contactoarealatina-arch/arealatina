@@ -1,38 +1,49 @@
-from django.contrib.auth.models import AnonymousUser
-from django.http import HttpResponse
-from django.test import RequestFactory, SimpleTestCase, override_settings
-
-from apps.web.context_processors import academia
-from apps.web.middleware import SitioPrivado
+from django.test import TestCase, override_settings
+from django.urls import reverse
 
 
-@override_settings(SITIO_PRIVADO=True)
-class SitioPrivadoTests(SimpleTestCase):
-    def setUp(self):
-        self.factory = RequestFactory()
-        self.middleware = SitioPrivado(lambda request: HttpResponse('visible'))
-
-    def _get(self, ruta):
-        request = self.factory.get(ruta)
-        request.user = AnonymousUser()
-        return self.middleware(request)
-
-    def test_paginas_publicas_siguen_visibles(self):
-        for ruta in ('/', '/clases/', '/contacto/', '/privacidad/'):
-            with self.subTest(ruta=ruta):
-                respuesta = self._get(ruta)
-                self.assertEqual(respuesta.status_code, 200)
-                self.assertEqual(respuesta.content, b'visible')
-
-    def test_ruta_interna_anonima_sigue_tapada(self):
-        respuesta = self._get('/gestion/')
+@override_settings(SITIO_PRIVADO=True, SITIO_PIN='5577')
+class SitioPrivadoTests(TestCase):
+    def test_publico_ve_la_pantalla_de_preparacion(self):
+        respuesta = self.client.get(reverse('web:index'))
 
         self.assertEqual(respuesta.status_code, 503)
         self.assertContains(
             respuesta, 'Estamos preparando el sitio', status_code=503,
         )
+        self.assertContains(respuesta, 'Vista previa privada', status_code=503)
 
-    def test_contexto_muestra_el_aviso(self):
-        contexto = academia(self.factory.get('/'))
+    def test_pin_correcto_abre_la_web_en_la_sesion(self):
+        respuesta = self.client.post(reverse('web:revision'), {
+            'pin': '5577',
+            'next': reverse('web:clases'),
+        })
 
-        self.assertTrue(contexto['sitio_en_preparacion'])
+        self.assertRedirects(respuesta, reverse('web:clases'),
+                             fetch_redirect_response=False)
+        self.assertTrue(self.client.session['sitio_revision_autorizada'])
+        self.assertEqual(self.client.get(reverse('web:clases')).status_code, 200)
+
+    def test_pin_incorrecto_no_abre_la_web(self):
+        respuesta = self.client.post(reverse('web:revision'), {
+            'pin': '0000',
+            'next': reverse('web:index'),
+        })
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, 'El PIN no es correcto')
+        self.assertNotIn('sitio_revision_autorizada', self.client.session)
+        self.assertEqual(self.client.get(reverse('web:index')).status_code, 503)
+
+    def test_destino_externo_se_descarta(self):
+        respuesta = self.client.post(reverse('web:revision'), {
+            'pin': '5577',
+            'next': 'https://ejemplo.com/',
+        })
+
+        self.assertRedirects(respuesta, '/', fetch_redirect_response=False)
+
+    def test_login_del_equipo_sigue_disponible(self):
+        respuesta = self.client.get(reverse('usuarios:login'))
+
+        self.assertEqual(respuesta.status_code, 200)
