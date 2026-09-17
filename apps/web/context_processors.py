@@ -3,7 +3,10 @@ from django.conf import settings
 
 
 def academia(request):
-    return {'academia': settings.ACADEMIA}
+    return {
+        'academia': settings.ACADEMIA,
+        'sitio_en_preparacion': settings.SITIO_PRIVADO,
+    }
 
 
 def areas(request):

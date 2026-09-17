@@ -1,13 +1,9 @@
-"""El sitio arriba, pero todavia no a la vista de todos.
+"""Mantiene privados los paneles internos mientras se revisa el sitio.
 
-Mientras el estudio prueba el sistema, la direccion ya existe y responde,
-pero no corresponde que un vecino que la escriba por casualidad vea una
-academia a medio llenar con alumnos de prueba adentro.
-
-Va como middleware y no como una vista de "en construccion" porque tiene
-que tapar TODO —las tres puertas, el sitio publico, el sitio de mapas—
-con una sola variable. Apagarlo es cambiar SITIO_PRIVADO a False en
-Railway: no hay que tocar codigo ni volver a desplegar.
+Las paginas publicas se pueden recorrer y el formulario de contacto queda
+disponible para nuevas inscripciones. Los paneles y rutas internas siguen
+protegidos por sus permisos normales; para una visita anonima se conserva
+la pantalla de preparacion como respaldo.
 """
 from django.conf import settings
 from django.shortcuts import render
@@ -15,7 +11,7 @@ from django.urls import resolve
 
 
 class SitioPrivado:
-    """Le muestra el sitio solo a quien tenga cuenta."""
+    """Deja abierta la web publica y tapa las rutas internas anonimas."""
 
     # Las puertas quedan abiertas: si se cerraran, nadie del estudio
     # podria entrar a probar, que es justo para lo que esta arriba.
@@ -63,6 +59,10 @@ class SitioPrivado:
 
         nombre = (f'{coincidencia.namespace}:{coincidencia.url_name}'
                   if coincidencia.namespace else (coincidencia.url_name or ''))
+        # Inicio, clases, contacto/inscripcion, privacidad y derechos son
+        # paginas publicas incluso durante la revision previa al lanzamiento.
+        if coincidencia.namespace == 'web':
+            return False
         return nombre not in self.PERMITIDAS
 
 

@@ -52,7 +52,7 @@
     {% endcomment %}
     <script src="{% static 'js/analitica.js' %}" data-ga="{{ ga_id }}" defer></script>
 </head>
-<body>
+<body{% if sitio_en_preparacion %} class="con-aviso-preparacion"{% endif %}>
 
 <!-- ==================== NAVBAR ==================== -->
 <nav class="navbar navbar-expand-lg navbar-al fixed-top">
@@ -109,6 +109,23 @@
         </div>
     </div>
 </nav>
+
+{% if sitio_en_preparacion %}
+<aside class="aviso-preparacion" aria-label="Aviso del sitio">
+    <div class="container aviso-preparacion-contenido">
+        <div>
+            <strong>Estamos preparando el sitio.</strong>
+            <span>Ya puedes conocer nuestras clases y solicitar tu inscripción.</span>
+        </div>
+        <div class="aviso-preparacion-acciones">
+            <a href="{% url 'web:clases' %}">Ver clases</a>
+            <a href="{% url 'web:contacto' %}" class="aviso-preparacion-principal">
+                Inscribirme
+            </a>
+        </div>
+    </div>
+</aside>
+{% endif %}
 
 <!-- ==================== MENSAJES ==================== -->
 {% if messages %}

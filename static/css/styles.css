@@ -38,6 +38,58 @@
     --navbar-alto: 76px;
 }
 
+/* Aviso compacto durante la revisión previa al lanzamiento. La web sigue
+   navegable y el formulario de inscripción permanece disponible. */
+.aviso-preparacion {
+    position: fixed;
+    top: var(--navbar-alto);
+    right: 0;
+    left: 0;
+    z-index: 1020;
+    color: #fff;
+    background: #171717;
+    border-bottom: 1px solid rgba(255, 87, 34, .45);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+}
+
+.aviso-preparacion-contenido {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    font-size: .88rem;
+}
+
+.aviso-preparacion-contenido strong { color: #ff7043; }
+.aviso-preparacion-contenido span { color: #d0d0d0; margin-left: 6px; }
+.aviso-preparacion-acciones { display: flex; align-items: center; gap: 10px; }
+.aviso-preparacion-acciones a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.aviso-preparacion-acciones .aviso-preparacion-principal {
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: #ff5722;
+}
+.con-aviso-preparacion main { padding-top: 56px; }
+
+@media (max-width: 767.98px) {
+    .aviso-preparacion-contenido {
+        min-height: 88px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .aviso-preparacion-contenido span { display: block; margin-left: 0; }
+    .con-aviso-preparacion main { padding-top: 88px; }
+}
+
 /* --------------------------------------------------------------------------
    Base
    -------------------------------------------------------------------------- */
