@@ -23,13 +23,17 @@ class SeguridadSesionesTests(TestCase):
         Usuario = get_user_model()
         for identidad in (
             'sergio@arealatinaestudio.cl',
-            'katy@arealatinaestudio.cl',
+            'katherine@arealatinaestudio.cl',
         ):
             usuario = Usuario.objects.get(username=identidad)
             self.assertTrue(usuario.is_superuser)
             self.assertTrue(usuario.is_staff)
             self.assertEqual(usuario.rol, Usuario.Rol.SUPERADMIN)
             self.assertTrue(usuario.debe_cambiar_clave)
+
+        self.assertFalse(
+            Usuario.objects.filter(username='katy@arealatinaestudio.cl').exists()
+        )
 
     def test_clave_temporal_no_puede_saltar_al_admin(self):
         revisor = get_user_model().objects.get(
