@@ -12,8 +12,10 @@ verdaderos de la academia.
 import random
 from datetime import time, timedelta
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 from django.utils import timezone
 
 from apps.asistencia.models import RegistroAsistencia
@@ -114,6 +116,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['borrar_demo']:
             return self.borrar_demo()
+
+        if not settings.DEBUG:
+            raise CommandError(
+                'Los datos demo están bloqueados fuera del entorno de desarrollo.'
+            )
 
         profes = self.crear_profesoras()
         self.crear_planes()
@@ -289,7 +296,18 @@ class Command(BaseCommand):
         """Borra de verdad (no lógico) solo los alumnos del rango de prueba."""
         demo = Alumno.todos.filter(rut__startswith=PREFIJO_DEMO)
         cantidad = demo.count()
-        demo.delete()
+        usuarios_demo = list(
+            demo.exclude(usuario_id=None).values_list('usuario_id', flat=True)
+        )
+        with transaction.atomic():
+            demo.delete()
+            User.objects.filter(
+                pk__in=usuarios_demo,
+                rol=User.Rol.ALUMNO,
+                is_staff=False,
+                is_superuser=False,
+                email__iendswith='@ejemplo.cl',
+            ).delete()
         self.stdout.write(self.style.SUCCESS(
             f'Alumnos de prueba borrados: {cantidad}. '
             'Planes, clases y profesoras quedaron intactos.'
