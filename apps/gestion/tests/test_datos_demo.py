@@ -17,7 +17,7 @@ class LimpiezaDatosDemoTests(TestCase):
         )
         Alumno.todos.create(
             nombre_completo='Persona Demo',
-            rut='90.999.999-1',
+            rut='90.000.000-6',
             contacto_emergencia='',
             telefono_emergencia='',
             usuario=acceso_demo,
@@ -31,7 +31,7 @@ class LimpiezaDatosDemoTests(TestCase):
 
         call_command('datos_demo', '--borrar-demo')
 
-        self.assertFalse(Alumno.todos.filter(rut__startswith='90.').exists())
+        self.assertFalse(Alumno.todos.filter(rut='90.000.000-6').exists())
         self.assertFalse(Usuario.objects.filter(pk=acceso_demo.pk).exists())
         self.assertTrue(Alumno.todos.filter(pk=real.pk).exists())
 

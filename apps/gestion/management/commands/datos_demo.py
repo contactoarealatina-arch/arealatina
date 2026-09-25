@@ -294,7 +294,8 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
     def borrar_demo(self):
         """Borra de verdad (no lógico) solo los alumnos del rango de prueba."""
-        demo = Alumno.todos.filter(rut__startswith=PREFIJO_DEMO)
+        ruts_demo = [rut_demo(i) for i in range(len(NOMBRES_DEMO))]
+        demo = Alumno.todos.filter(rut__in=ruts_demo)
         cantidad = demo.count()
         usuarios_demo = list(
             demo.exclude(usuario_id=None).values_list('usuario_id', flat=True)

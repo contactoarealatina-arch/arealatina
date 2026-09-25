@@ -3,7 +3,11 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.db import migrations
 
 
-PREFIJO_DEMO = '90.'
+RUTS_DEMO = (
+    '90.000.000-6', '90.000.001-4', '90.000.002-2', '90.000.003-0',
+    '90.000.004-9', '90.000.005-7', '90.000.006-5', '90.000.007-3',
+    '90.000.008-1', '90.000.009-K', '90.000.010-3', '90.000.011-1',
+)
 USUARIOS_PROFESOR_DEMO = ('camila', 'daniela', 'matias')
 CLAVE_DEMO_CONOCIDA = 'arealatina2025'
 
@@ -12,7 +16,9 @@ def limpiar_demo(apps, schema_editor):
     Alumno = apps.get_model('gestion', 'Alumno')
     Usuario = apps.get_model('usuarios', 'CustomUser')
 
-    alumnos = Alumno.objects.filter(rut__startswith=PREFIJO_DEMO)
+    # Coincidencia exacta con los doce RUT generados por datos_demo. No se usa
+    # un prefijo amplio para no arriesgar un registro agregado manualmente.
+    alumnos = Alumno.objects.filter(rut__in=RUTS_DEMO)
     usuarios_alumno = list(
         alumnos.exclude(usuario_id=None).values_list('usuario_id', flat=True)
     )
