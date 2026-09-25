@@ -1,5 +1,6 @@
 [phases.setup]
 # pg_dump se usa para el respaldo lógico nocturno de PostgreSQL.
-# "..." conserva Python y los paquetes detectados automáticamente.
-nixPkgs = ["...", "postgresql"]
-
+# Se instala desde APT para no duplicar pg_config, que Nixpacks ya incorpora
+# mediante libpq al preparar psycopg. Instalar PostgreSQL completo con Nix
+# provoca una colisión de archivos y hace fallar la construcción de la imagen.
+aptPkgs = ["...", "postgresql-client"]
