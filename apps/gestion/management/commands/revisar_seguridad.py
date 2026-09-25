@@ -139,10 +139,26 @@ class Command(BaseCommand):
                      OK if getattr(settings, 'SESSION_COOKIE_SAMESITE', None) else FALLA,
                      str(getattr(settings, 'SESSION_COOKIE_SAMESITE', '')))
         horas = settings.SESSION_COOKIE_AGE / 3600
-        self._marcar('La sesión expira', OK if settings.SESSION_COOKIE_AGE <= 86400 else AVISO,
-                     f'{horas:.0f} horas')
+        self._marcar('Sesión por inactividad de máximo 30 minutos',
+                     OK if settings.SESSION_COOKIE_AGE <= 1800 else FALLA,
+                     f'{horas * 60:.0f} minutos')
+        self._marcar('La sesión termina al cerrar el navegador',
+                     OK if settings.SESSION_EXPIRE_AT_BROWSER_CLOSE else FALLA)
+        self._marcar('La actividad renueva la ventana de sesión',
+                     OK if settings.SESSION_SAVE_EVERY_REQUEST else FALLA)
+        self._marcar('Páginas privadas fuera de caché',
+                     OK if 'apps.usuarios.middleware.NoCachePrivado'
+                     in settings.MIDDLEWARE else FALLA)
         self._marcar('Protección CSRF activa',
                      OK if 'django.middleware.csrf.CsrfViewMiddleware' in settings.MIDDLEWARE else FALLA)
+
+        if getattr(settings, 'SITIO_PRIVADO', False):
+            pin = str(getattr(settings, 'SITIO_PIN', ''))
+            seguro = bool(pin) and pin != '5577' and len(pin) >= 6
+            self._marcar('PIN de revisión rotado y privado',
+                         OK if seguro else FALLA,
+                         'definido fuera del código' if seguro else
+                         'falta o sigue usando el PIN comprometido')
 
     def _autenticacion(self):
         self._seccion('Autenticación')
@@ -245,6 +261,12 @@ class Command(BaseCommand):
                          f'último hace {dias} día(s)')
         else:
             self._marcar('Respaldo de la base', FALLA, 'nunca se ha corrido')
+
+        from apps.gestion.jobs import TRABAJOS
+        trabajos = {identificador for identificador, *_ in TRABAJOS}
+        self._marcar('Respaldo automático programado',
+                     OK if 'respaldo_postgresql' in trabajos else FALLA,
+                     'diario a las 02:30')
 
     def _secretos(self):
         self._seccion('Secretos y cumplimiento')

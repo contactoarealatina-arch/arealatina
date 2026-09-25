@@ -32,7 +32,15 @@ if DOMINIO_RAILWAY and DOMINIO_RAILWAY not in ALLOWED_HOSTS:
 # Mientras esto sea verdadero, el sitio solo se le muestra a quien tenga
 # cuenta o haya abierto la vista previa con el PIN de revision.
 SITIO_PRIVADO = env.bool('SITIO_PRIVADO', default=False)
-SITIO_PIN = env('SITIO_PIN', default='5577')
+# No existe un PIN por defecto: en producción debe vivir exclusivamente
+# como variable privada del servicio. Si falta, la vista previa queda
+# cerrada en vez de aceptar una clave conocida desde el repositorio.
+_sitio_pin = env('SITIO_PIN', default='').strip()
+# 5577 apareció en el repositorio público y debe considerarse comprometido.
+# Un valor ausente, corto o conocido cierra la vista previa por completo.
+SITIO_PIN = (_sitio_pin
+             if len(_sitio_pin) >= 6 and _sitio_pin != '5577'
+             else '')
 
 # ---------------------------------------------------------------------------
 # Aplicaciones
@@ -74,6 +82,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Impide que el navegador, un proxy o una CDN reutilicen una pantalla
+    # privada después de cerrar sesión o al cambiar de computador.
+    'apps.usuarios.middleware.NoCachePrivado',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'axes.middleware.AxesMiddleware',
@@ -222,8 +233,14 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # SECURE_BROWSER_XSS_FILTER queda fuera a proposito: la cabecera
 # X-XSS-Protection esta obsoleta y los navegadores actuales la ignoran o
 # la desaconsejan. Quien protege de XSS hoy es la CSP de mas abajo.
-SESSION_COOKIE_AGE = 60 * 60 * 8          # 8 horas de jornada
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+# Nombre nuevo: al desplegar, las cookies emitidas antes del incidente dejan
+# de ser reconocidas incluso antes de que se limpien las filas antiguas.
+SESSION_COOKIE_NAME = 'arealatina_session_v2'
+# Ventana deslizante de 30 minutos: cada petición válida renueva la expiración
+# y 30 minutos sin actividad obligan a identificarse nuevamente.
+SESSION_COOKIE_AGE = env.int('SESSION_COOKIE_AGE', default=30 * 60)
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 if not DEBUG:
     # Con HTTPS en el hosting. Si el dominio aun no tiene certificado,

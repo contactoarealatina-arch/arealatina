@@ -130,6 +130,15 @@ def job_revisar_trafico():
 
 
 # ---------------------------------------------------------------------------
+# 02:30 — copia lógica de PostgreSQL fuera de Railway
+# ---------------------------------------------------------------------------
+def job_respaldo_bd():
+    """Genera el dump y lo guarda bajo respaldos/ en el bucket privado R2."""
+    from django.core.management import call_command
+    return _seguro('respaldo de PostgreSQL', call_command, 'respaldar_bd')
+
+
+# ---------------------------------------------------------------------------
 # Lunes 09:00 — como fue la semana
 # ---------------------------------------------------------------------------
 def job_resumen_semanal():
@@ -201,6 +210,7 @@ def job_pedir_resenas():
 TRABAJOS = [
     # (id, función, hora, minuto, día del mes, día de la semana)
     ('planes_vencidos', job_marcar_planes_vencidos, 0, 1, None, None),
+    ('respaldo_postgresql', job_respaldo_bd, 2, 30, None, None),
     ('recordatorio_profesoras', job_recordatorio_profesoras, 8, 0, None, None),
     ('alertas_manana', job_manana, 9, 0, None, None),
     ('alertas_negocio', job_alertas_negocio, 9, 5, None, None),

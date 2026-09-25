@@ -44,7 +44,7 @@ Railway rota la clave de la base, la referencia se actualiza sola.
 SECRET_KEY=              (generar una nueva, ver abajo)
 DEBUG=False
 SITIO_PRIVADO=True
-SITIO_PIN=5577
+SITIO_PIN=<PIN_PRIVADO_GENERADO_EN_RAILWAY>
 
 DATABASE_URL=${{Postgres.DATABASE_URL}}
 DB_SSLMODE=require
@@ -169,7 +169,8 @@ No hace falta bajar el servidor para que la gente no lo vea.
 
 Con `SITIO_PRIVADO=True`, quien llegue de afuera ve la pantalla de
 "estamos preparando el sitio". El equipo de revision puede ingresar el
-`SITIO_PIN` y recorrer la web completa durante 8 horas en ese navegador.
+`SITIO_PIN` y recorrer la web mientras mantenga abierta esa sesión. El acceso
+vence al cerrar el navegador o tras 30 minutos sin actividad.
 Los paneles internos conservan sus logins y permisos normales. El
 `robots.txt` le dice a Google que no indexe nada.
 

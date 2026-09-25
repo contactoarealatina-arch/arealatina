@@ -11,6 +11,7 @@ vive dentro del inicio.
 import secrets
 
 from django.conf import settings
+from django.core.cache import cache
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -23,6 +24,8 @@ from .forms import ContactoForm
 
 
 SESION_REVISION = 'sitio_revision_autorizada'
+INTENTOS_PIN = 5
+BLOQUEO_PIN_SEGUNDOS = 15 * 60
 
 # ---------------------------------------------------------------------------
 # Textos institucionales
@@ -201,13 +204,27 @@ def acceso_revision(request):
         return redirect(destino)
 
     if request.method == 'POST':
+        ip = _ip_cliente(request)
+        clave_intentos = f'sitio-pin:{ip}'
+        intentos = cache.get(clave_intentos, 0)
+        if intentos >= INTENTOS_PIN:
+            return render(request, 'web/privado.html', {
+                'error_pin': 'Demasiados intentos. Espera 15 minutos antes de volver a probar.',
+                'next': destino,
+            }, status=429)
+
         pin_recibido = request.POST.get('pin', '').strip()
         pin_correcto = str(getattr(settings, 'SITIO_PIN', ''))
         if pin_correcto and secrets.compare_digest(pin_recibido, pin_correcto):
+            cache.delete(clave_intentos)
             request.session.cycle_key()
             request.session[SESION_REVISION] = True
-            request.session.set_expiry(60 * 60 * 8)
+            # Sesión de navegador y el mismo límite de inactividad que las
+            # cuentas internas. Cerrar el navegador elimina este acceso.
+            request.session.set_expiry(0)
             return redirect(destino)
+
+        cache.set(clave_intentos, intentos + 1, BLOQUEO_PIN_SEGUNDOS)
 
         return render(request, 'web/privado.html', {
             'error_pin': 'El PIN no es correcto. Inténtalo nuevamente.',
@@ -215,6 +232,13 @@ def acceso_revision(request):
         })
 
     return render(request, 'web/privado.html', {'next': destino})
+
+
+def _ip_cliente(request):
+    """IP normalizada para limitar intentos detrás del proxy de Railway."""
+    reenviada = request.META.get('HTTP_X_FORWARDED_FOR', '')
+    return (reenviada.split(',')[0].strip()
+            if reenviada else request.META.get('REMOTE_ADDR', 'desconocida'))
 
 def index(request):
     """Inicio: hero, los dos pilares, quiénes somos, fotos y testimonios.

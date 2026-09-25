@@ -2,7 +2,11 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 
-@override_settings(SITIO_PRIVADO=True, SITIO_PIN='5577')
+@override_settings(
+    SITIO_PRIVADO=True,
+    SITIO_PIN='5577',
+    CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}},
+)
 class SitioPrivadoTests(TestCase):
     def test_publico_ve_la_pantalla_de_preparacion(self):
         respuesta = self.client.get(reverse('web:index'))
@@ -47,3 +51,30 @@ class SitioPrivadoTests(TestCase):
         respuesta = self.client.get(reverse('usuarios:login'))
 
         self.assertEqual(respuesta.status_code, 200)
+
+    def test_bloquea_tras_cinco_pines_incorrectos(self):
+        for numero in range(5):
+            respuesta = self.client.post(
+                reverse('web:revision'),
+                {'pin': f'000{numero}', 'next': reverse('web:index')},
+                REMOTE_ADDR='192.0.2.25',
+            )
+            self.assertEqual(respuesta.status_code, 200)
+
+        respuesta = self.client.post(
+            reverse('web:revision'),
+            {'pin': '5577', 'next': reverse('web:index')},
+            REMOTE_ADDR='192.0.2.25',
+        )
+        self.assertEqual(respuesta.status_code, 429)
+        self.assertContains(respuesta, 'Demasiados intentos', status_code=429)
+
+    @override_settings(SITIO_PIN='')
+    def test_sin_variable_privada_no_existe_pin_por_defecto(self):
+        respuesta = self.client.post(reverse('web:revision'), {
+            'pin': '5577',
+            'next': reverse('web:index'),
+        }, REMOTE_ADDR='192.0.2.30')
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertNotIn('sitio_revision_autorizada', self.client.session)

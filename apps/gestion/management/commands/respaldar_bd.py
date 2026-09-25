@@ -19,7 +19,7 @@ import tempfile
 from datetime import timedelta
 
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from apps.gestion.models import RespaldoLog
@@ -52,8 +52,7 @@ class Command(BaseCommand):
             RespaldoLog.objects.create(
                 archivo=nombre, estado=RespaldoLog.Estado.ERROR,
                 detalle=str(error)[:2000])
-            self.stdout.write(self.style.ERROR(f'Falló el volcado: {error}'))
-            return
+            raise CommandError(f'Falló el volcado: {error}') from error
 
         tamano = os.path.getsize(destino)
         self.stdout.write(self.style.SUCCESS(
@@ -72,11 +71,14 @@ class Command(BaseCommand):
                     archivo=nombre, tamano_bytes=tamano,
                     estado=RespaldoLog.Estado.ERROR,
                     detalle=f'Volcado correcto, falló la subida: {error}'[:2000])
-                self.stdout.write(self.style.ERROR(f'  No se pudo subir: {error}'))
-                return
+                raise CommandError(f'No se pudo subir: {error}') from error
         elif not opciones['sin_subir']:
-            self.stdout.write(self.style.WARNING(
-                '  R2 sin configurar: el respaldo quedó solo en disco local.'))
+            detalle = ('R2 no está configurado: un archivo en el disco efímero '
+                       'de Railway no es un respaldo recuperable.')
+            RespaldoLog.objects.create(
+                archivo=nombre, tamano_bytes=tamano,
+                estado=RespaldoLog.Estado.ERROR, detalle=detalle)
+            raise CommandError(detalle)
 
         registro = RespaldoLog.objects.create(
             archivo=nombre, destino=ruta_remota, tamano_bytes=tamano,
@@ -90,6 +92,7 @@ class Command(BaseCommand):
         """pg_dump a un archivo comprimido."""
         entorno = os.environ.copy()
         entorno['PGPASSWORD'] = bd['PASSWORD']
+        entorno['PGSSLMODE'] = bd.get('OPTIONS', {}).get('sslmode', 'require')
 
         comando = [
             self._ruta_pg_dump(),
@@ -97,7 +100,7 @@ class Command(BaseCommand):
             '--port', str(bd.get('PORT') or 5432),
             '--username', bd['USER'],
             '--no-password',
-            '--clean', '--if-exists',
+            '--clean', '--if-exists', '--no-owner', '--no-privileges',
             bd['NAME'],
         ]
 
