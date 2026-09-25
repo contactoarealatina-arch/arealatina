@@ -1,6 +1,16 @@
 [phases.setup]
 # pg_dump se usa para el respaldo lógico nocturno de PostgreSQL.
-# Se instala desde APT para no duplicar pg_config, que Nixpacks ya incorpora
-# mediante libpq al preparar psycopg. Instalar PostgreSQL completo con Nix
-# provoca una colisión de archivos y hace fallar la construcción de la imagen.
-aptPkgs = ["...", "postgresql-client"]
+# Ubuntu 24.04 trae el cliente 16, pero Railway sirve PostgreSQL 18. Instalar
+# solo curl y certificados aquí evita la colisión de pg_config de Nix; abajo
+# se agrega el repositorio oficial de PostgreSQL y se instala el cliente 18.
+aptPkgs = ["...", "ca-certificates", "curl"]
+
+[phases.install]
+cmds = [
+  "...",
+  "install -d /usr/share/postgresql-common/pgdg",
+  "curl --fail --silent --show-error https://www.postgresql.org/media/keys/ACCC4CF8.asc --output /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc",
+  "sh -c '. /etc/os-release && echo \"deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main\" > /etc/apt/sources.list.d/pgdg.list'",
+  "apt-get update && apt-get install -y --no-install-recommends postgresql-client-18 && rm -rf /var/lib/apt/lists/*",
+  "pg_dump --version",
+]

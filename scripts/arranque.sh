@@ -10,9 +10,11 @@ echo "==> Migraciones"
 python manage.py migrate --noinput
 
 echo "==> Respaldo verificable de PostgreSQL en R2"
-# Si esto falla, Railway conserva el despliegue anterior. Es preferible no
-# publicar una migración nueva a declarar que hay respaldo cuando no existe.
-python manage.py respaldar_bd
+# Un respaldo fallido queda registrado y se vuelve a intentar a las 02:30,
+# pero nunca debe derribar el portal ni provocar un ciclo de reinicios.
+if ! python manage.py respaldar_bd; then
+    echo "ADVERTENCIA: el respaldo falló; el portal seguirá iniciando."
+fi
 
 echo "==> Tabla de cache (la usa el freno de intentos de login)"
 python manage.py createcachetable
